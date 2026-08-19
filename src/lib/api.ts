@@ -824,6 +824,130 @@ export const api = {
     if (!res.ok) throw new Error("Failed to fetch granular token telemetry");
     return res.json();
   },
+
+  // ---------------- E-COMMERCE & CONVERSATIONAL COMMERCE ----------------
+  async getProducts(params?: { category?: string; search?: string; is_active?: boolean }) {
+    const q = new URLSearchParams();
+    if (params?.category) q.set("category", params.category);
+    if (params?.search) q.set("search", params.search);
+    if (params?.is_active !== undefined) q.set("is_active", String(params.is_active));
+
+    const res = await fetch(`${API_BASE_URL}/products?${q.toString()}`, {
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch products");
+    return res.json();
+  },
+
+  async createProduct(data: any) {
+    const res = await fetch(`${API_BASE_URL}/products`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Failed to create product");
+    }
+    return res.json();
+  },
+
+  async updateProduct(id: string, data: any) {
+    const res = await fetch(`${API_BASE_URL}/products/${id}`, {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Failed to update product");
+    }
+    return res.json();
+  },
+
+  async deleteProduct(id: string) {
+    const res = await fetch(`${API_BASE_URL}/products/${id}`, {
+      method: "DELETE",
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to delete product");
+    return res.json();
+  },
+
+  async getOrders(params?: { status?: string; search?: string }) {
+    const q = new URLSearchParams();
+    if (params?.status) q.set("status", params.status);
+    if (params?.search) q.set("search", params.search);
+
+    const res = await fetch(`${API_BASE_URL}/orders?${q.toString()}`, {
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch orders");
+    return res.json();
+  },
+
+  async getOrder(id: string) {
+    const res = await fetch(`${API_BASE_URL}/orders/${id}`, {
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch order details");
+    return res.json();
+  },
+
+  async updateOrderStatus(id: string, data: { order_status: string; payment_status?: string; tracking_notes?: string; send_sms_notification?: boolean }) {
+    const res = await fetch(`${API_BASE_URL}/orders/${id}/status`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Failed to update order status");
+    }
+    return res.json();
+  },
+
+  async getEcommerceSettings() {
+    const res = await fetch(`${API_BASE_URL}/tenant/ecommerce-settings`, {
+      headers: getHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch ecommerce settings");
+    return res.json();
+  },
+
+  async updateEcommerceSettings(data: any) {
+    const res = await fetch(`${API_BASE_URL}/tenant/ecommerce-settings`, {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Failed to update ecommerce settings");
+    }
+    return res.json();
+  },
+
+  async getPublicWidgetProducts(widgetKey: string, search?: string) {
+    const q = new URLSearchParams({ widget_key: widgetKey });
+    if (search) q.set("search", search);
+    const res = await fetch(`${API_BASE_URL}/public/widget/products?${q.toString()}`);
+    if (!res.ok) throw new Error("Failed to load widget products");
+    return res.json();
+  },
+
+  async submitPublicWidgetOrder(data: any) {
+    const res = await fetch(`${API_BASE_URL}/public/widget/orders/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Failed to place order");
+    }
+    return res.json();
+  },
 };
 
 

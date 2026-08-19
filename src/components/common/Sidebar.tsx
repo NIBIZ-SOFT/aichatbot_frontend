@@ -7,7 +7,8 @@ import {
   LayoutDashboard, MessageSquare, Users, Globe,
   BarChart3, Cpu, UserPlus, Settings, CreditCard, Sparkles, LogOut,
   ShieldCheck, Headphones, TrendingUp, Wrench, Eye, Building2,
-  DollarSign, Activity, Shield, Package, Tag, Layers, Palette, Bot, FileText
+  DollarSign, Activity, Shield, Package, Tag, Layers, Palette, Bot, FileText,
+  ShoppingBag
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
@@ -171,6 +172,26 @@ export default function Sidebar({ activeNav, onSelectNav }: SidebarProps) {
           route: "/contacts",
           icon: Users,
           checkPermission: (r) => isOwner || isCustomerSupport || isSales 
+        }
+      ]
+    },
+    {
+      title: "E-COMMERCE STORE",
+      items: [
+        { 
+          id: "products", 
+          label: "Product Catalog", 
+          route: "/products",
+          icon: ShoppingBag,
+          checkPermission: () => isOwner || isSales || isCustomerSupport 
+        },
+        { 
+          id: "orders", 
+          label: "Order Management", 
+          route: "/orders",
+          icon: Package,
+          badge: "Orders",
+          checkPermission: () => isOwner || isSales || isCustomerSupport 
         }
       ]
     },

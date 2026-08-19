@@ -1,10 +1,10 @@
-export type UserRole = 
-  | "super_admin" 
-  | "tenant_owner" 
-  | "tenant_admin" 
-  | "support_agent" 
-  | "sales_agent" 
-  | "member" 
+export type UserRole =
+  | "super_admin"
+  | "tenant_owner"
+  | "tenant_admin"
+  | "support_agent"
+  | "sales_agent"
+  | "member"
   | "viewer";
 
 export type SubscriptionTier = "free" | "starter" | "growth" | "enterprise";
@@ -96,8 +96,109 @@ export interface Website {
   header_title: string;
   welcome_message: string;
   position: string;
+  business_category?: string;
+  ecommerce_config?: {
+    enabled?: boolean;
+    show_products_carousel?: boolean;
+    allow_instant_checkout?: boolean;
+    cod_enabled?: boolean;
+    bkash_enabled?: boolean;
+    delivery_charge_inside_dhaka?: number;
+    delivery_charge_outside_dhaka?: number;
+  };
+  branding_config?: {
+    bot_avatar_url?: string;
+    launcher_icon?: string;
+    auto_open_delay_sec?: number;
+    notification_sound_enabled?: boolean;
+  };
   is_active: boolean;
   created_at: string;
+}
+
+export interface Product {
+  id: string;
+  tenant_id: string;
+  title: string;
+  slug: string;
+  category: string;
+  sku?: string | null;
+  unit_price: number;
+  selling_price: number;
+  stock_quantity: number;
+  stock_status: 'in_stock' | 'out_of_stock' | 'pre_order' | string;
+  images: string[];
+  description?: string | null;
+  specifications: Record<string, any>;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProductCreateInput {
+  title: string;
+  category?: string;
+  sku?: string;
+  unit_price: number;
+  selling_price: number;
+  stock_quantity?: number;
+  stock_status?: string;
+  images?: string[];
+  description?: string;
+  specifications?: Record<string, any>;
+  is_active?: boolean;
+}
+
+export interface OrderItem {
+  product_id: string;
+  title: string;
+  unit_price: number;
+  quantity: number;
+  line_total: number;
+  selected_size?: string;
+  selected_color?: string;
+  image_url?: string;
+}
+
+export interface Order {
+  id: string;
+  order_number: string;
+  tenant_id: string;
+  website_id?: string | null;
+  conversation_id?: string | null;
+  customer_name: string;
+  customer_phone: string;
+  customer_email?: string | null;
+  delivery_address: string;
+  delivery_city: string;
+  delivery_charge: number;
+  items_json: OrderItem[];
+  subtotal_amount: number;
+  total_amount: number;
+  payment_method: 'cash_on_delivery' | 'bkash' | string;
+  payment_status: 'unpaid' | 'paid' | 'refunded' | string;
+  bkash_trx_id?: string | null;
+  order_status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | string;
+  sms_sent: boolean;
+  tracking_notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EcommerceSettings {
+  business_category: string;
+  cod_enabled: boolean;
+  bkash_enabled: boolean;
+  bkash_is_sandbox?: boolean;
+  bkash_base_url?: string;
+  bkash_app_key_masked?: string | null;
+  bkash_username_masked?: string | null;
+  delivery_charge_inside_dhaka: number;
+  delivery_charge_outside_dhaka: number;
+  sms_notifications_enabled: boolean;
+  sms_provider: string;
+  sms_sender_id_masked?: string | null;
+  sms_order_template?: string | null;
 }
 
 export interface Contact {

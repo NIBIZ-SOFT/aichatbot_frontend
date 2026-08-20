@@ -30,9 +30,11 @@ export default function LandingPage() {
     if (!document.getElementById(scriptId)) {
       const script = document.createElement("script");
       script.id = scriptId;
-      script.src = "http://127.0.0.1:8000/static/widget.js";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || "http://127.0.0.1:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+      script.src = `${baseUrl}/static/widget.js`;
       script.setAttribute("data-widget-key", "wgt_platform_live_support");
-      script.setAttribute("data-api-url", "http://127.0.0.1:8000/api/v1");
+      script.setAttribute("data-api-url", apiUrl);
       script.setAttribute("data-primary-color", currentTheme.primary_color || "#00C978");
       script.setAttribute("data-position", "bottom-right");
       script.async = true;

@@ -46,12 +46,15 @@ export default function WebsitesView() {
   }, []);
 
   const handleCopySnippet = (key: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || "http://127.0.0.1:8000";
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+    
     const snippet = `<!-- Enterprise AI Chatbot Widget -->
-<script src="http://127.0.0.1:8000/static/widget.js"></script>
+<script src="${baseUrl}/static/widget.js"></script>
 <script>
   EnterpriseChatWidget.init({
     widgetKey: "${key}",
-    apiUrl: "http://127.0.0.1:8000/api/v1"
+    apiUrl: "${apiUrl}"
   });
 </script>`;
     navigator.clipboard.writeText(snippet);
@@ -180,11 +183,11 @@ export default function WebsitesView() {
 
                 <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-indigo-300 overflow-x-auto">
                   <code>{`<!-- Enterprise AI Chatbot Widget -->
-<script src="http://127.0.0.1:8000/static/widget.js"></script>
+<script src="${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || "http://127.0.0.1:8000"}/static/widget.js"></script>
 <script>
   EnterpriseChatWidget.init({
     widgetKey: "${selectedSite.widget_key}",
-    apiUrl: "http://127.0.0.1:8000/api/v1"
+    apiUrl: "${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1"}"
   });
 </script>`}</code>
                 </div>

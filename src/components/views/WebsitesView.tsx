@@ -8,7 +8,7 @@ import {
   Sparkles, CreditCard, Truck, ShieldCheck, Tag, Eye
 } from "lucide-react";
 import { Website, Product } from "../../types";
-import { api } from "../../lib/api";
+import { api, API_BASE_URL, CDN_WIDGET_URL } from "../../lib/api";
 
 export default function WebsitesView() {
   const { showToast } = useToast();
@@ -85,11 +85,11 @@ export default function WebsitesView() {
 
   const handleCopySnippet = (key: string) => {
     const snippet = `<!-- Enterprise AI Commerce Chatbot Widget -->
-<script src="http://127.0.0.1:8000/static/widget.js"></script>
+<script src="${CDN_WIDGET_URL}"></script>
 <script>
   EnterpriseChatWidget.init({
     widgetKey: "${key}",
-    apiUrl: "http://127.0.0.1:8000/api/v1"
+    apiUrl: "${API_BASE_URL}"
   });
 </script>`;
     navigator.clipboard.writeText(snippet);
@@ -294,11 +294,11 @@ export default function WebsitesView() {
 
                     <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-indigo-300 overflow-x-auto">
                       <code>{`<!-- Enterprise AI Chatbot Widget -->
-<script src="http://127.0.0.1:8000/static/widget.js"></script>
+<script src="${CDN_WIDGET_URL}"></script>
 <script>
   EnterpriseChatWidget.init({
     widgetKey: "${selectedSite.widget_key}",
-    apiUrl: "http://127.0.0.1:8000/api/v1"
+    apiUrl: "${API_BASE_URL}"
   });
 </script>`}</code>
                     </div>

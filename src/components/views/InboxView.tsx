@@ -113,8 +113,9 @@ export default function InboxView() {
     function connectInboxWs() {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
-        const wsBase = apiUrl.replace("http://", "ws://").replace("https://", "wss://");
-        ws = new WebSocket(`${wsBase}/ws/inbox/${user?.tenant_id}`);
+        const wsBase = process.env.NEXT_PUBLIC_WS_URL || apiUrl.replace("http://", "ws://").replace("https://", "wss://") + "/ws";
+        const cleanWsBase = wsBase.endsWith("/ws") ? wsBase : `${wsBase}/ws`;
+        ws = new WebSocket(`${cleanWsBase}/inbox/${user?.tenant_id}`);
 
         ws.onopen = () => {
           setIsLiveConnected(true);

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "../../context/ThemeContext";
 import PricingModal from "../auth/PricingModal";
 import MarkdownMessage from "../common/MarkdownMessage";
-import { api } from "../../lib/api";
+import { api, API_BASE_URL, CDN_WIDGET_URL } from "../../lib/api";
 import {
   Layers, MessageSquare, Bot, Sparkles, CheckCircle2,
   ArrowRight, ShieldCheck, Zap, Globe, Cpu, ChevronRight,
@@ -30,9 +30,9 @@ export default function LandingPage() {
     if (!document.getElementById(scriptId)) {
       const script = document.createElement("script");
       script.id = scriptId;
-      script.src = "http://127.0.0.1:8000/static/widget.js";
+      script.src = CDN_WIDGET_URL;
       script.setAttribute("data-widget-key", "wgt_platform_live_support");
-      script.setAttribute("data-api-url", "http://127.0.0.1:8000/api/v1");
+      script.setAttribute("data-api-url", API_BASE_URL);
       script.setAttribute("data-primary-color", currentTheme.primary_color || "#00C978");
       script.setAttribute("data-position", "bottom-right");
       script.async = true;

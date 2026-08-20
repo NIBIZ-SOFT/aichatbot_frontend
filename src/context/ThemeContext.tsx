@@ -31,8 +31,8 @@ export const DEFAULT_THEME_PRESETS: ThemeConfig[] = [
     badge: "Linear & Stripe Style",
     platform_name: "Enterprise AIaaS",
     platform_tagline: "Autonomous Customer Communication & Sales Cloud",
-    logo_url: "",
-    favicon_url: "",
+    logo_url: "https://iili.io/CsuMe3l.png",
+    favicon_url: "https://iili.io/CsuMe3l.png",
     widget_avatar_url: "",
     footer_text: "© 2026 Enterprise AIaaS Platform • Multi-Tenant PostgreSQL 18 & Enterprise Neural AI",
     support_email: "support@enterprise.example",
@@ -50,8 +50,8 @@ export const DEFAULT_THEME_PRESETS: ThemeConfig[] = [
     badge: "Supabase & Wise Style",
     platform_name: "Padma Mart AI Live",
     platform_tagline: "24/7 AI Customer Support & Order Automation",
-    logo_url: "",
-    favicon_url: "",
+    logo_url: "https://iili.io/CsuMe3l.png",
+    favicon_url: "https://iili.io/CsuMe3l.png",
     widget_avatar_url: "",
     footer_text: "© 2026 Padma AIaaS Cloud • Multi-Tenant PostgreSQL 18 & Enterprise Neural AI",
     support_email: "support@padmadigital.example",
@@ -173,15 +173,27 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       document.title = `${theme.platform_name} • ${theme.platform_tagline || "Autonomous AI Support & Sales Cloud"}`;
     }
 
-    // Dynamic Favicon Update
-    if (theme.favicon_url && theme.favicon_url.trim()) {
-      let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
-      if (!link) {
-        link = document.createElement("link");
+    // Dynamic Favicon Update: Uses favicon_url if provided, otherwise automatically falls back to logo_url variable
+    const effectiveFavicon = (theme.favicon_url && theme.favicon_url.trim()) 
+      || (theme.logo_url && theme.logo_url.trim()) 
+      || "https://iili.io/CsuMe3l.png";
+
+    if (effectiveFavicon && typeof document !== "undefined") {
+      const iconSelectors = ["link[rel~='icon']", "link[rel='shortcut icon']", "link[rel='apple-touch-icon']"];
+      let updated = false;
+      iconSelectors.forEach(sel => {
+        const link = document.querySelector(sel) as HTMLLinkElement;
+        if (link) {
+          link.href = effectiveFavicon;
+          updated = true;
+        }
+      });
+      if (!updated) {
+        const link = document.createElement("link");
         link.rel = "icon";
-        document.getElementsByTagName("head")[0].appendChild(link);
+        link.href = effectiveFavicon;
+        document.head.appendChild(link);
       }
-      link.href = theme.favicon_url.trim();
     }
   };
 

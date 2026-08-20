@@ -235,7 +235,7 @@ export default function ThemeManagementTab() {
                 </div>
               )}
             </div>
-            <span className="text-[10px] text-slate-400">Instantly changes the favicon icon in the visitor's browser tab</span>
+            <span className="text-[10px] text-slate-400">Optional. If left blank, the Main Brand Logo URL will automatically be used as the browser tab favicon.</span>
           </div>
 
           {/* Public Support Email */}

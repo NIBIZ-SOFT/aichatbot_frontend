@@ -18,11 +18,11 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-slate-50 antialiased font-sans text-slate-800">
         <ThemeProvider>
-          <AuthProvider>
-            <ToastProvider>
+          <ToastProvider>
+            <AuthProvider>
               {children}
-            </ToastProvider>
-          </AuthProvider>
+            </AuthProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

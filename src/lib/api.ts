@@ -117,6 +117,12 @@ export async function apiFetch<T = any>(
             "Too many requests sent. Please wait a moment before trying again.",
             "warning"
           );
+        } else if (res.status === 400) {
+          emitToast(
+            "Authentication / Request Failed",
+            errorMessage || "Incorrect credentials or invalid request.",
+            "error"
+          );
         } else if (res.status >= 500) {
           emitToast(
             `🔥 Server Error (${res.status})`,

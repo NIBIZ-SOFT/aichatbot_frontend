@@ -74,6 +74,10 @@ jobs:
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
       - name: Build with Next.js
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://aichat-backend.npms.pro/api/v1' }}
+          NEXT_PUBLIC_WS_URL: ${{ vars.NEXT_PUBLIC_WS_URL || 'wss://aichat-backend.npms.pro/api/v1/ws' }}
+          NEXT_PUBLIC_CDN_WIDGET_URL: ${{ vars.NEXT_PUBLIC_CDN_WIDGET_URL || 'https://aichat-backend.npms.pro/static/widget.js' }}
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

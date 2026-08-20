@@ -1,4 +1,12 @@
+import { emitToast } from "../context/ToastContext";
+
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+
+export interface ApiFetchOptions extends RequestInit {
+  timeoutMs?: number;
+  skipToast?: boolean;
+  customToken?: string | null;
+}
 
 function getHeaders(customToken?: string | null): HeadersInit {
   let token = customToken;
@@ -14,22 +22,164 @@ function getHeaders(customToken?: string | null): HeadersInit {
   return headers;
 }
 
+/**
+ * Enterprise Unified API Request Engine.
+ * Features:
+ * - 15-second AbortController Timeout with human-readable error alerts.
+ * - Connection Refusal / Offline Detection (e.g. backend server down on 127.0.0.1:8000).
+ * - Automatic HTTP Status Code Classification (401 Session Expired, 403 Forbidden, 422 Validation, 429 Rate Limit, 500+ Server Error).
+ * - FastAPI Pydantic Validation Error Flattener.
+ * - Global Toast Dispatcher with smart deduplication.
+ */
+export async function apiFetch<T = any>(
+  endpointOrUrl: string,
+  options: ApiFetchOptions = {}
+): Promise<T> {
+  const {
+    timeoutMs = 15000,
+    skipToast = false,
+    customToken = null,
+    headers: customHeaders = {},
+    ...fetchInit
+  } = options;
+
+  const url = endpointOrUrl.startsWith("http")
+    ? endpointOrUrl
+    : `${API_BASE_URL}${endpointOrUrl.startsWith("/") ? "" : "/"}${endpointOrUrl}`;
+
+  const baseHeaders = getHeaders(customToken);
+  const headers = { ...baseHeaders, ...(customHeaders as Record<string, string>) };
+
+  const controller = new AbortController();
+  const timerId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      ...fetchInit,
+      headers,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timerId);
+
+    if (!res.ok) {
+      let errorMessage = `Request failed with status ${res.status}`;
+      let errorData: any = null;
+
+      try {
+        errorData = await res.json();
+        if (errorData) {
+          if (typeof errorData.detail === "string") {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail)) {
+            errorMessage = errorData.detail
+              .map((err: any) => `${err.loc?.slice(-1)[0] || "Field"}: ${err.msg}`)
+              .join("; ");
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        }
+      } catch {
+        // Non-JSON response
+      }
+
+      if (!skipToast) {
+        if (res.status === 401) {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("aiaas_token");
+          }
+          emitToast(
+            "🔒 Session Expired",
+            "Your login session has expired. Please sign in again.",
+            "warning"
+          );
+        } else if (res.status === 403) {
+          emitToast(
+            "⛔ Access Restricted",
+            errorMessage || "You do not have permission to perform this action.",
+            "error"
+          );
+        } else if (res.status === 404) {
+          emitToast(
+            "🔍 Resource Not Found",
+            errorMessage || "The requested item or endpoint was not found.",
+            "warning"
+          );
+        } else if (res.status === 422) {
+          emitToast(
+            "⚠️ Validation Error",
+            errorMessage || "Please check the submitted form fields.",
+            "warning"
+          );
+        } else if (res.status === 429) {
+          emitToast(
+            "⏳ Rate Limit Exceeded",
+            "Too many requests sent. Please wait a moment before trying again.",
+            "warning"
+          );
+        } else if (res.status >= 500) {
+          emitToast(
+            `🔥 Server Error (${res.status})`,
+            errorMessage || "An internal server error occurred. The platform team has been alerted.",
+            "error"
+          );
+        } else {
+          emitToast(
+            "Request Failed",
+            errorMessage,
+            "error"
+          );
+        }
+      }
+
+      const error = new Error(errorMessage);
+      (error as any).status = res.status;
+      (error as any).data = errorData;
+      throw error;
+    }
+
+    if (res.status === 204) {
+      return {} as T;
+    }
+
+    return await res.json();
+  } catch (err: any) {
+    clearTimeout(timerId);
+
+    // Timeout detection
+    if (err.name === "AbortError") {
+      const msg = `Server took longer than ${Math.round(timeoutMs / 1000)}s to respond. Please check your internet connection or backend server.`;
+      if (!skipToast) {
+        emitToast("⏱️ Connection Timeout", msg, "error");
+      }
+      throw new Error(msg);
+    }
+
+    // Network connection refused / offline detection
+    if (err instanceof TypeError && err.message.toLowerCase().includes("fetch")) {
+      const msg = "Unable to connect to the backend server (127.0.0.1:8000). Please ensure the backend is running.";
+      if (!skipToast) {
+        emitToast("🔌 Backend Offline / Connection Error", msg, "error");
+      }
+      throw new Error(msg);
+    }
+
+    throw err;
+  }
+}
+
 export const api = {
   // Auth
   async login(email: string, password: string = "DemoPass123!") {
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    return apiFetch("/auth/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    if (!res.ok) throw new Error("Login failed");
-    return res.json();
   },
 
   async register(fullName: string, email: string, tenantName: string, password: string = "DemoPass123!") {
-    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+    return apiFetch("/auth/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         full_name: fullName,
         email,
@@ -37,384 +187,238 @@ export const api = {
         password,
       }),
     });
-    if (!res.ok) throw new Error("Registration failed");
-    return res.json();
   },
 
   async getMe() {
-    const res = await fetch(`${API_BASE_URL}/auth/me`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch user profile");
-    return res.json();
+    return apiFetch("/auth/me");
   },
 
   // Dashboard Stats
   async getDashboardStats() {
-    const res = await fetch(`${API_BASE_URL}/dashboard/stats`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch dashboard stats");
-    return res.json();
+    return apiFetch("/dashboard/stats");
   },
 
   // Conversations & Inbox
   async getConversations(scope?: string) {
-    const url = scope && scope !== "all" 
-      ? `${API_BASE_URL}/inbox/conversations?scope=${scope}`
-      : `${API_BASE_URL}/inbox/conversations`;
-    const res = await fetch(url, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch conversations");
-    return res.json();
+    const endpoint = scope && scope !== "all" 
+      ? `/inbox/conversations?scope=${scope}`
+      : "/inbox/conversations";
+    return apiFetch(endpoint);
   },
 
   async getMessages(conversationId: string) {
-    const res = await fetch(`${API_BASE_URL}/inbox/conversations/${conversationId}/messages`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch messages");
-    return res.json();
+    return apiFetch(`/inbox/conversations/${conversationId}/messages`);
   },
 
   async sendReply(conversationId: string, content: string, isInternalNote: boolean = false) {
-    const res = await fetch(`${API_BASE_URL}/inbox/conversations/${conversationId}/reply`, {
+    return apiFetch(`/inbox/conversations/${conversationId}/reply`, {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify({ content, is_internal_note: isInternalNote }),
     });
-    if (!res.ok) throw new Error("Failed to send reply");
-    return res.json();
   },
 
   async assignAgent(conversationId: string, agentId?: string) {
-    const url = agentId 
-      ? `${API_BASE_URL}/inbox/conversations/${conversationId}/assign?agent_id=${agentId}`
-      : `${API_BASE_URL}/inbox/conversations/${conversationId}/assign`;
-    const res = await fetch(url, {
-      method: "PATCH",
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to assign agent");
-    return res.json();
+    const endpoint = agentId 
+      ? `/inbox/conversations/${conversationId}/assign?agent_id=${agentId}`
+      : `/inbox/conversations/${conversationId}/assign`;
+    return apiFetch(endpoint, { method: "PATCH" });
   },
 
   async updateDepartment(conversationId: string, department: string) {
-    const res = await fetch(`${API_BASE_URL}/inbox/conversations/${conversationId}/department?department=${encodeURIComponent(department)}`, {
+    return apiFetch(`/inbox/conversations/${conversationId}/department?department=${encodeURIComponent(department)}`, {
       method: "PATCH",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to update department");
-    return res.json();
   },
 
   async toggleAI(conversationId: string) {
-    const res = await fetch(`${API_BASE_URL}/inbox/conversations/${conversationId}/toggle-ai`, {
+    return apiFetch(`/inbox/conversations/${conversationId}/toggle-ai`, {
       method: "PATCH",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to toggle AI");
-    return res.json();
   },
 
   async updateConversationStatus(conversationId: string, status: string) {
-    const res = await fetch(`${API_BASE_URL}/inbox/conversations/${conversationId}/status?new_status=${status}`, {
+    return apiFetch(`/inbox/conversations/${conversationId}/status?new_status=${status}`, {
       method: "PATCH",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to update status");
-    return res.json();
   },
 
   async updateConversationPriority(conversationId: string, priority: string) {
-    const res = await fetch(`${API_BASE_URL}/inbox/conversations/${conversationId}/priority?new_priority=${priority}`, {
+    return apiFetch(`/inbox/conversations/${conversationId}/priority?new_priority=${priority}`, {
       method: "PATCH",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to update priority");
-    return res.json();
   },
 
   async addConversationTag(conversationId: string, tag: string) {
-    const res = await fetch(`${API_BASE_URL}/inbox/conversations/${conversationId}/tags?tag=${encodeURIComponent(tag)}`, {
+    return apiFetch(`/inbox/conversations/${conversationId}/tags?tag=${encodeURIComponent(tag)}`, {
       method: "POST",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to add tag");
-    return res.json();
   },
 
   // AI Assistants
   async getAssistants() {
-    const res = await fetch(`${API_BASE_URL}/assistants`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch assistants");
-    return res.json();
+    return apiFetch("/assistants");
   },
 
   async createAssistant(data: any) {
-    const res = await fetch(`${API_BASE_URL}/assistants`, {
+    return apiFetch("/assistants", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Failed to create assistant");
-    return res.json();
   },
 
   async updateAssistant(assistantId: string, data: any) {
-    const res = await fetch(`${API_BASE_URL}/assistants/${assistantId}`, {
+    return apiFetch(`/assistants/${assistantId}`, {
       method: "PATCH",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Failed to update assistant prompt/settings");
-    return res.json();
   },
 
   async toggleAssistant(assistantId: string) {
-    const res = await fetch(`${API_BASE_URL}/assistants/${assistantId}/toggle`, {
+    return apiFetch(`/assistants/${assistantId}/toggle`, {
       method: "PATCH",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to toggle assistant status");
-    return res.json();
   },
 
   // Knowledge Bases & RAG
   async getKnowledgeBases() {
-    const res = await fetch(`${API_BASE_URL}/knowledge`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch knowledge bases");
-    return res.json();
+    return apiFetch("/knowledge");
   },
 
   async createKnowledgeBase(data: any) {
-    const res = await fetch(`${API_BASE_URL}/knowledge/ingest-text`, {
+    return apiFetch("/knowledge/ingest-text", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Failed to ingest document");
-    return res.json();
   },
 
   async ingestKnowledgeFAQ(data: { title: string; category: string; faq_items: Array<{ question: string; answer: string }> }) {
-    const res = await fetch(`${API_BASE_URL}/knowledge/ingest-faq`, {
+    return apiFetch("/knowledge/ingest-faq", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Failed to ingest FAQ collection");
-    return res.json();
   },
 
   async searchKnowledgeSandbox(query: string, limit: number = 4) {
-    const res = await fetch(`${API_BASE_URL}/knowledge/search-sandbox`, {
+    return apiFetch("/knowledge/search-sandbox", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify({ query, limit }),
     });
-    if (!res.ok) throw new Error("Failed to run vector search sandbox");
-    return res.json();
   },
 
   async testAIChatSimulator(message: string, assistantId?: string) {
-    const res = await fetch(`${API_BASE_URL}/knowledge/test-chat`, {
+    return apiFetch("/knowledge/test-chat", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify({ message, assistant_id: assistantId }),
     });
-    if (!res.ok) throw new Error("Failed to simulate AI response");
-    return res.json();
   },
 
   async deleteKnowledgeBase(knowledgeId: string) {
-    const res = await fetch(`${API_BASE_URL}/knowledge/${knowledgeId}`, {
+    return apiFetch(`/knowledge/${knowledgeId}`, {
       method: "DELETE",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to delete knowledge document");
-    return res.json();
   },
 
   // Websites & Widgets
   async getWebsites() {
-    const res = await fetch(`${API_BASE_URL}/websites`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch websites");
-    return res.json();
+    return apiFetch("/websites");
   },
 
   async createWebsite(data: any) {
-    const res = await fetch(`${API_BASE_URL}/websites`, {
+    return apiFetch("/websites", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Failed to add website");
-    return res.json();
   },
 
   // Contacts
   async getContacts() {
-    const res = await fetch(`${API_BASE_URL}/contacts`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch contacts");
-    return res.json();
+    return apiFetch("/contacts");
   },
 
   async createContact(data: any) {
-    const res = await fetch(`${API_BASE_URL}/contacts`, {
+    return apiFetch("/contacts", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Failed to create contact");
-    return res.json();
   },
 
   // API Keys & Webhooks
   async getApiKeys() {
-    const res = await fetch(`${API_BASE_URL}/api-keys`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch API keys");
-    return res.json();
+    return apiFetch("/api-keys");
   },
 
   async createApiKey(name: string, scopes: string[] = ["chat:read", "chat:write"]) {
-    const res = await fetch(`${API_BASE_URL}/api-keys`, {
+    return apiFetch("/api-keys", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify({ name, scopes }),
     });
-    if (!res.ok) throw new Error("Failed to create API key");
-    return res.json();
   },
 
   async getWebhooks() {
-    const res = await fetch(`${API_BASE_URL}/webhooks`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch webhooks");
-    return res.json();
+    return apiFetch("/webhooks");
   },
 
   async createWebhook(url: string, events: string[] = ["conversation.created", "message.received"]) {
-    const res = await fetch(`${API_BASE_URL}/webhooks`, {
+    return apiFetch("/webhooks", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify({ url, events }),
     });
-    if (!res.ok) throw new Error("Failed to create webhook");
-    return res.json();
   },
 
   // Analytics & CSAT (Strict Multi-Tenant Isolated)
   async getAnalyticsOverview(timeRange: string = "7d") {
-    const res = await fetch(`${API_BASE_URL}/analytics/overview?time_range=${timeRange}`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch analytics overview");
-    return res.json();
+    return apiFetch(`/analytics/overview?time_range=${timeRange}`);
   },
 
   async submitCSATRating(conversationId: string, rating: number, feedback?: string) {
-    const res = await fetch(`${API_BASE_URL}/analytics/conversations/${conversationId}/csat`, {
+    return apiFetch(`/analytics/conversations/${conversationId}/csat`, {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify({ rating, feedback }),
     });
-    if (!res.ok) throw new Error("Failed to submit CSAT rating");
-    return res.json();
   },
 
   // Client Subscription & Billing Engine
   async getSubscriptionCurrent() {
-    const res = await fetch(`${API_BASE_URL}/subscription/current`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch subscription details");
-    return res.json();
+    return apiFetch("/subscription/current");
   },
 
   async changeSubscriptionPlan(tier: string, billingCycle: string = "monthly", paymentMethod: string = "bKash Direct Merchant") {
-    const res = await fetch(`${API_BASE_URL}/subscription/change-plan`, {
+    return apiFetch("/subscription/change-plan", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify({ tier, billing_cycle: billingCycle, payment_method: paymentMethod }),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update subscription plan");
-    }
-    return res.json();
   },
 
   async getSubscriptionInvoices() {
-    const res = await fetch(`${API_BASE_URL}/subscription/invoices`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch subscription invoices");
-    return res.json();
+    return apiFetch("/subscription/invoices");
   },
 
   // bKash Tokenized Checkout (Sandbox & Production)
   async createBkashPayment(tier: string, billingCycle: string = "monthly", phoneNumber: string = "01770618575", couponCode?: string) {
-    const res = await fetch(`${API_BASE_URL}/payment/bkash/create`, {
+    return apiFetch("/payment/bkash/create", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify({ tier, billing_cycle: billingCycle, phone_number: phoneNumber, coupon_code: couponCode || undefined }),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to initiate bKash payment session");
-    }
-    return res.json();
   },
 
   async executeBkashPayment(paymentId: string, tier: string, billingCycle: string = "monthly", couponCode?: string, payerEmail?: string) {
-    const res = await fetch(`${API_BASE_URL}/payment/bkash/execute`, {
+    return apiFetch("/payment/bkash/execute", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify({ payment_id: paymentId, tier, billing_cycle: billingCycle, coupon_code: couponCode || undefined, payer_email: payerEmail || undefined }),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to execute bKash payment");
-    }
-    return res.json();
   },
 
   async queryBkashPayment(paymentId: string) {
-    const res = await fetch(`${API_BASE_URL}/payment/bkash/query/${paymentId}`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to query bKash payment status");
-    return res.json();
+    return apiFetch(`/payment/bkash/query/${paymentId}`);
   },
 
   // Team (Strict Multi-Tenant Isolated with Seat Limits)
   async getTeamMembers() {
-    const res = await fetch(`${API_BASE_URL}/team/members`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch team members");
-    return res.json();
+    return apiFetch("/team/members");
   },
 
   async getTeamSeatsSummary() {
-    const res = await fetch(`${API_BASE_URL}/team/seats-summary`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch team seats summary");
-    return res.json();
+    return apiFetch("/team/seats-summary");
   },
 
   async createTeamMember(data: {
@@ -424,16 +428,10 @@ export const api = {
     role: string;
     department?: string;
   }) {
-    const res = await fetch(`${API_BASE_URL}/team/members`, {
+    return apiFetch("/team/members", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Failed to add team member");
-    }
-    return res.json();
   },
 
   async updateTeamMember(memberId: string, data: {
@@ -442,65 +440,38 @@ export const api = {
     department?: string;
     is_active?: boolean;
   }) {
-    const res = await fetch(`${API_BASE_URL}/team/members/${memberId}`, {
+    return apiFetch(`/team/members/${memberId}`, {
       method: "PATCH",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Failed to update team member");
-    }
-    return res.json();
   },
 
   async deleteTeamMember(memberId: string) {
-    const res = await fetch(`${API_BASE_URL}/team/members/${memberId}`, {
+    return apiFetch(`/team/members/${memberId}`, {
       method: "DELETE",
-      headers: getHeaders(),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Failed to delete team member");
-    }
-    return res.json();
   },
 
   // Settings
   async getTenantSettings() {
-    const res = await fetch(`${API_BASE_URL}/tenant/current`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch tenant settings");
-    return res.json();
+    return apiFetch("/tenant/current");
   },
 
   async updateTenantSettings(data: any) {
-    const res = await fetch(`${API_BASE_URL}/tenant/settings`, {
+    return apiFetch("/tenant/settings", {
       method: "PATCH",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Failed to update tenant settings");
-    return res.json();
   },
 
   // Usage & Quotas (Live PostgreSQL calculated)
   async getUsageSummary() {
-    const res = await fetch(`${API_BASE_URL}/usage/summary`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch live usage summary");
-    return res.json();
+    return apiFetch("/usage/summary");
   },
 
   // Platform Super Admin Control Plane APIs
   async getSuperAdminMetrics() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/metrics`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch Super Admin metrics");
-    return res.json();
+    return apiFetch("/superadmin/metrics");
   },
 
   async getSuperAdminTenants(search?: string, status?: string) {
@@ -508,251 +479,147 @@ export const api = {
     if (search) params.append("search", search);
     if (status) params.append("status", status);
     const query = params.toString() ? `?${params.toString()}` : "";
-    const res = await fetch(`${API_BASE_URL}/superadmin/tenants${query}`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch tenant list");
-    return res.json();
+    return apiFetch(`/superadmin/tenants${query}`);
   },
 
   async updateTenantStatus(tenantId: string, isActive: boolean, reason?: string, category?: string) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/tenants/${tenantId}/status`, {
+    return apiFetch(`/superadmin/tenants/${tenantId}/status`, {
       method: "PATCH",
-      headers: getHeaders(),
       body: JSON.stringify({ is_active: isActive, reason, category }),
     });
-    if (!res.ok) throw new Error("Failed to update tenant status");
-    return res.json();
   },
 
   async updateTenantPlan(tenantId: string, tier: string, tokenLimitOverride?: number, status?: string) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/tenants/${tenantId}/plan`, {
+    return apiFetch(`/superadmin/tenants/${tenantId}/plan`, {
       method: "PATCH",
-      headers: getHeaders(),
       body: JSON.stringify({ tier, token_limit_override: tokenLimitOverride, status }),
     });
-    if (!res.ok) throw new Error("Failed to update tenant plan");
-    return res.json();
   },
 
   async getTenantModules(tenantId: string) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/tenants/${tenantId}/modules`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch tenant modules");
-    return res.json();
+    return apiFetch(`/superadmin/tenants/${tenantId}/modules`);
   },
 
   async updateTenantModules(tenantId: string, modules: Record<string, boolean>) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/tenants/${tenantId}/modules`, {
+    return apiFetch(`/superadmin/tenants/${tenantId}/modules`, {
       method: "PATCH",
-      headers: getHeaders(),
       body: JSON.stringify({ modules }),
     });
-    if (!res.ok) throw new Error("Failed to update tenant module permissions");
-    return res.json();
   },
 
   async getSuperAdminAuditLogs() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/audit-logs`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch audit logs");
-    return res.json();
+    return apiFetch("/superadmin/audit-logs");
   },
 
   async getSuperAdminRevenue() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/revenue`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch revenue analytics");
-    return res.json();
+    return apiFetch("/superadmin/revenue");
   },
 
   async getSuperAdminInfrastructure() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/infrastructure`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch infrastructure status");
-    return res.json();
+    return apiFetch("/superadmin/infrastructure");
   },
 
   async getSuperAdminAISettings() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/infrastructure/settings`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch AI settings");
-    return res.json();
+    return apiFetch("/superadmin/infrastructure/settings");
   },
 
   async updateSuperAdminAISettings(payload: any) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/infrastructure/settings`, {
+    return apiFetch("/superadmin/infrastructure/settings", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(payload),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update AI settings");
-    }
-    return res.json();
   },
 
   async testSuperAdminAIPing() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/infrastructure/test-ai`, {
+    return apiFetch("/superadmin/infrastructure/test-ai", {
       method: "POST",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to test AI connectivity");
-    return res.json();
   },
 
   async deleteTenant(tenantId: string) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/tenants/${tenantId}`, {
+    return apiFetch(`/superadmin/tenants/${tenantId}`, {
       method: "DELETE",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to delete tenant");
-    return res.json();
   },
 
   // Platform Super Admin bKash PGW Management
   async getSuperAdminBkashSettings() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/bkash/settings`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch bKash PGW settings");
-    return res.json();
+    return apiFetch("/superadmin/bkash/settings");
   },
 
   async updateSuperAdminBkashSettings(payload: any) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/bkash/settings`, {
+    return apiFetch("/superadmin/bkash/settings", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(payload),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update bKash PGW settings");
-    }
-    return res.json();
   },
 
   async testSuperAdminBkashConnection() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/bkash/test-connection`, {
+    return apiFetch("/superadmin/bkash/test-connection", {
       method: "POST",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to test bKash PGW connection");
-    return res.json();
   },
 
   // Public Plans & Coupon Validation
   async getPublicPlans() {
-    const res = await fetch(`${API_BASE_URL}/plans/public`);
-    if (!res.ok) throw new Error("Failed to fetch pricing plans");
-    return res.json();
+    return apiFetch("/plans/public");
   },
 
   async validateCoupon(code: string, planCode: string, amountBdt: number) {
-    const res = await fetch(`${API_BASE_URL}/plans/validate-coupon`, {
+    return apiFetch("/plans/validate-coupon", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code, plan_code: planCode, amount_bdt: amountBdt }),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to validate coupon");
-    }
-    return res.json();
   },
 
   // Platform Super Admin Plans Management
   async getSuperAdminPlans() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/plans`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch superadmin plans");
-    return res.json();
+    return apiFetch("/superadmin/plans");
   },
 
   async createSuperAdminPlan(data: any) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/plans`, {
+    return apiFetch("/superadmin/plans", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to create pricing plan");
-    }
-    return res.json();
   },
 
   async updateSuperAdminPlan(planId: string, data: any) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/plans/${planId}`, {
+    return apiFetch(`/superadmin/plans/${planId}`, {
       method: "PUT",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update pricing plan");
-    }
-    return res.json();
   },
 
   async deleteSuperAdminPlan(planId: string) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/plans/${planId}`, {
+    return apiFetch(`/superadmin/plans/${planId}`, {
       method: "DELETE",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to delete pricing plan");
-    return res.json();
   },
 
   // Platform Super Admin Coupons Management
   async getSuperAdminCoupons() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/coupons`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch coupons");
-    return res.json();
+    return apiFetch("/superadmin/coupons");
   },
 
   async createSuperAdminCoupon(data: any) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/coupons`, {
+    return apiFetch("/superadmin/coupons", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to create coupon");
-    }
-    return res.json();
   },
 
   async updateSuperAdminCoupon(couponId: string, data: any) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/coupons/${couponId}`, {
+    return apiFetch(`/superadmin/coupons/${couponId}`, {
       method: "PUT",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update coupon");
-    }
-    return res.json();
   },
 
   async deleteSuperAdminCoupon(couponId: string) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/coupons/${couponId}`, {
+    return apiFetch(`/superadmin/coupons/${couponId}`, {
       method: "DELETE",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to delete coupon");
-    return res.json();
   },
 
   // Public Self-Serve Package Provisioning
@@ -764,114 +631,82 @@ export const api = {
     subscription_tier: string;
     billing_cycle?: string;
   }) {
-    const res = await fetch(`${API_BASE_URL}/auth/provision-tenant`, {
+    return apiFetch("/auth/provision-tenant", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Failed to provision tenant");
-    }
-    return res.json();
   },
 
   // Platform Branding & Theme Management
   async getPublicTheme() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/theme/public`);
-    if (!res.ok) throw new Error("Failed to fetch public theme");
-    return res.json();
+    return apiFetch("/superadmin/theme/public");
   },
 
   async getSuperAdminTheme() {
-    const res = await fetch(`${API_BASE_URL}/superadmin/theme`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch superadmin theme");
-    return res.json();
+    return apiFetch("/superadmin/theme");
   },
 
   async updateSuperAdminTheme(data: any) {
-    const res = await fetch(`${API_BASE_URL}/superadmin/theme`, {
+    return apiFetch("/superadmin/theme", {
       method: "PUT",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update platform theme");
-    }
-    return res.json();
   },
 
   async sendPublicDemoChat(message: string, chatHistory: any[] = []) {
-    const res = await fetch(`${API_BASE_URL}/public/demo-chat`, {
+    return apiFetch("/public/demo-chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message, chat_history: chatHistory }),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to get AI response");
-    }
-    return res.json();
   },
 
   async getTokenTelemetry(limit: number = 50) {
-    const res = await fetch(`${API_BASE_URL}/usage/token-telemetry?limit=${limit}`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch granular token telemetry");
-    return res.json();
+    return apiFetch(`/usage/token-telemetry?limit=${limit}`);
   },
 
   // ---------------- E-COMMERCE & CONVERSATIONAL COMMERCE ----------------
-  async getProducts(params?: { category?: string; search?: string; is_active?: boolean }) {
+  async getProducts(params?: { category?: string; search?: string; is_active?: boolean; sort_by?: string; sort_dir?: string }) {
     const q = new URLSearchParams();
     if (params?.category) q.set("category", params.category);
     if (params?.search) q.set("search", params.search);
     if (params?.is_active !== undefined) q.set("is_active", String(params.is_active));
+    if (params?.sort_by) q.set("sort_by", params.sort_by);
+    if (params?.sort_dir) q.set("sort_dir", params.sort_dir);
 
-    const res = await fetch(`${API_BASE_URL}/products?${q.toString()}`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch products");
-    return res.json();
+    return apiFetch(`/products?${q.toString()}`);
   },
 
   async createProduct(data: any) {
-    const res = await fetch(`${API_BASE_URL}/products`, {
+    return apiFetch("/products", {
       method: "POST",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to create product");
-    }
-    return res.json();
+  },
+
+  async generateProductTags(data: { title: string; category?: string; description?: string; specifications?: any }) {
+    return apiFetch("/products/generate-tags", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 
   async updateProduct(id: string, data: any) {
-    const res = await fetch(`${API_BASE_URL}/products/${id}`, {
+    return apiFetch(`/products/${id}`, {
       method: "PUT",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update product");
-    }
-    return res.json();
   },
 
   async deleteProduct(id: string) {
-    const res = await fetch(`${API_BASE_URL}/products/${id}`, {
+    return apiFetch(`/products/${id}`, {
       method: "DELETE",
-      headers: getHeaders(),
     });
-    if (!res.ok) throw new Error("Failed to delete product");
-    return res.json();
+  },
+
+  async setProductPriority(id: string, priority: number) {
+    return apiFetch(`/products/${id}/priority?priority=${priority}`, {
+      method: "PATCH",
+    });
   },
 
   async getOrders(params?: { status?: string; search?: string }) {
@@ -879,76 +714,54 @@ export const api = {
     if (params?.status) q.set("status", params.status);
     if (params?.search) q.set("search", params.search);
 
-    const res = await fetch(`${API_BASE_URL}/orders?${q.toString()}`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch orders");
-    return res.json();
+    return apiFetch(`/orders?${q.toString()}`);
   },
 
   async getOrder(id: string) {
-    const res = await fetch(`${API_BASE_URL}/orders/${id}`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch order details");
-    return res.json();
+    return apiFetch(`/orders/${id}`);
   },
 
   async updateOrderStatus(id: string, data: { order_status: string; payment_status?: string; tracking_notes?: string; send_sms_notification?: boolean }) {
-    const res = await fetch(`${API_BASE_URL}/orders/${id}/status`, {
+    return apiFetch(`/orders/${id}/status`, {
       method: "PATCH",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update order status");
-    }
-    return res.json();
+  },
+
+  async resendOrderSms(orderId: string) {
+    return apiFetch(`/orders/${orderId}/resend-sms`, {
+      method: "POST",
+    });
   },
 
   async getEcommerceSettings() {
-    const res = await fetch(`${API_BASE_URL}/tenant/ecommerce-settings`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error("Failed to fetch ecommerce settings");
-    return res.json();
+    return apiFetch("/tenant/ecommerce-settings");
   },
 
   async updateEcommerceSettings(data: any) {
-    const res = await fetch(`${API_BASE_URL}/tenant/ecommerce-settings`, {
+    return apiFetch("/tenant/ecommerce-settings", {
       method: "PUT",
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update ecommerce settings");
-    }
-    return res.json();
+  },
+
+  async testSmsGateway(data: { phone_number: string; message?: string }) {
+    return apiFetch("/tenant/ecommerce-settings/test-sms", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 
   async getPublicWidgetProducts(widgetKey: string, search?: string) {
     const q = new URLSearchParams({ widget_key: widgetKey });
     if (search) q.set("search", search);
-    const res = await fetch(`${API_BASE_URL}/public/widget/products?${q.toString()}`);
-    if (!res.ok) throw new Error("Failed to load widget products");
-    return res.json();
+    return apiFetch(`/public/widget/products?${q.toString()}`);
   },
 
   async submitPublicWidgetOrder(data: any) {
-    const res = await fetch(`${API_BASE_URL}/public/widget/orders/checkout`, {
+    return apiFetch("/public/widget/orders/checkout", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to place order");
-    }
-    return res.json();
   },
 };
-
-
-

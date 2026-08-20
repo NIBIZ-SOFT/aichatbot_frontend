@@ -130,7 +130,9 @@ export interface Product {
   images: string[];
   description?: string | null;
   specifications: Record<string, any>;
+  tags: string[];
   is_active: boolean;
+  priority: number;
   created_at: string;
   updated_at: string;
 }
@@ -146,7 +148,9 @@ export interface ProductCreateInput {
   images?: string[];
   description?: string;
   specifications?: Record<string, any>;
+  tags?: string[];
   is_active?: boolean;
+  priority?: number;
 }
 
 export interface OrderItem {
@@ -329,6 +333,7 @@ export interface TokenInteractionItem {
   token_breakdown: TokenBreakdown;
   rag_percentage: number;
   optimization_tip: string;
+  ui_component?: { type: string; data: any };
 }
 
 export interface TokenTelemetryResponse {

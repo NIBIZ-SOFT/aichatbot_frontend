@@ -51,8 +51,11 @@ export default function SettingsView() {
   const [smsEnabled, setSmsEnabled] = useState(true);
   const [smsProvider, setSmsProvider] = useState("smsmatrix");
   const [smsApiKey, setSmsApiKey] = useState("");
+  const [showSmsKey, setShowSmsKey] = useState(false);
   const [smsSenderId, setSmsSenderId] = useState("PadmaMart");
   const [smsTemplate, setSmsTemplate] = useState("Dear {{customer_name}}, your order #{{order_id}} for ৳{{total_amount}} has been placed at Padma Mart! Thank you for shopping with us.");
+  const [testPhone, setTestPhone] = useState("");
+  const [isSendingTestSms, setIsSendingTestSms] = useState(false);
 
   // Load existing tenant settings & ecommerce settings
   useEffect(() => {
@@ -91,6 +94,7 @@ export default function SettingsView() {
           setSmsEnabled(ecom.sms_notifications_enabled);
           setSmsProvider(ecom.sms_provider || "smsmatrix");
           setSmsSenderId(ecom.sms_sender_id_masked || "PadmaMart");
+          setSmsApiKey(ecom.sms_api_key_masked || "");
           if (ecom.sms_order_template) setSmsTemplate(ecom.sms_order_template);
         }
       } catch (err) {
@@ -172,14 +176,38 @@ export default function SettingsView() {
       if (bkashAppSecret) payload.bkash_app_secret = bkashAppSecret;
       if (bkashUsername) payload.bkash_username = bkashUsername;
       if (bkashPassword) payload.bkash_password = bkashPassword;
-      if (smsApiKey) payload.sms_api_key = smsApiKey;
+      if (smsApiKey && !smsApiKey.includes("...")) payload.sms_api_key = smsApiKey;
 
-      await api.updateEcommerceSettings(payload);
+      const updated = await api.updateEcommerceSettings(payload);
+      if (updated.sms_api_key_masked) setSmsApiKey(updated.sms_api_key_masked);
+      if (updated.bkash_app_key_masked) setBkashAppKey(updated.bkash_app_key_masked);
       showToast("Gateways Updated", "bKash credentials and SMS notification settings saved successfully!", "success");
     } catch (err: any) {
       showToast("Save Failed", err.message || "Failed to save gateways", "error");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSendTestSms = async () => {
+    if (!testPhone.trim()) {
+      showToast("Phone Required", "Please enter a valid mobile number (e.g. 017XXXXXXXX) to test SMS.", "error");
+      return;
+    }
+    setIsSendingTestSms(true);
+    try {
+      const res = await api.testSmsGateway({ phone_number: testPhone.trim() });
+      if (res.status === "sent") {
+        showToast("Test SMS Sent", `SMS delivered via SMSMatrix! Remaining Balance: ${res.remaining_balance || 'Active'}`, "success");
+      } else if (res.status === "delivered_mock") {
+        showToast("Test SMS Simulated", `Mock SMS logged successfully! Configure a live API Key to dispatch real SMS.`, "info");
+      } else {
+        showToast("SMS Failed", res.error || "Could not send SMS. Check your API key and balance.", "error");
+      }
+    } catch (err: any) {
+      showToast("Test SMS Error", err.message || "Failed to send test SMS", "error");
+    } finally {
+      setIsSendingTestSms(false);
     }
   };
 
@@ -563,18 +591,35 @@ export default function SettingsView() {
               </div>
 
               <div className="space-y-1">
-                <label className="block font-bold text-slate-300">API Key / Bearer Token</label>
-                <input
-                  type="password"
-                  value={smsApiKey}
-                  onChange={e => setSmsApiKey(e.target.value)}
-                  placeholder="Enter SMSMatrix API Key"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono text-xs"
-                />
+                <div className="flex items-center justify-between">
+                  <label className="block font-bold text-slate-300">API Key / Bearer Token</label>
+                  {smsApiKey && (
+                    <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Configured
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type={showSmsKey ? "text" : "password"}
+                    value={smsApiKey}
+                    onChange={e => setSmsApiKey(e.target.value)}
+                    placeholder="Enter SMSMatrix API Key"
+                    className="w-full pl-3.5 pr-10 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSmsKey(!showSmsKey)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1"
+                  >
+                    {showSmsKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
 
               {smsProvider === "smsmatrix" && (
-                <div className="sm:col-span-3 bg-emerald-950/20 border border-emerald-500/20 p-3 rounded-xl flex items-center justify-between text-[11px] text-emerald-300">
+                <div className="sm:col-span-3 bg-emerald-950/20 border border-emerald-500/20 p-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-emerald-300">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-emerald-400">⚡ SMSMatrix Endpoint:</span>
                     <code className="bg-slate-950 px-2 py-0.5 rounded text-slate-300 font-mono text-[10.5px]">https://smsmatrix.nibizhost.com/api/v1/sms/send</code>
@@ -582,6 +627,35 @@ export default function SettingsView() {
                   <span className="text-[10px] text-slate-400">Header: Authorization: Bearer &lt;API_KEY&gt;</span>
                 </div>
               )}
+
+              {/* Real-time SMS Test Dispatcher */}
+              <div className="sm:col-span-3 bg-slate-950 p-4 rounded-2xl border border-slate-800/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-emerald-400" />
+                    <span className="font-bold text-xs text-white">Live SMS Gateway Tester</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">Test live delivery to your phone</span>
+                </div>
+                <div className="flex flex-col sm:flex-row items-center gap-2">
+                  <input
+                    type="text"
+                    value={testPhone}
+                    onChange={e => setTestPhone(e.target.value)}
+                    placeholder="Enter phone number (e.g. 01770618575)"
+                    className="flex-1 w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendTestSms}
+                    disabled={isSendingTestSms || !smsEnabled}
+                    className="w-full sm:w-auto px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{isSendingTestSms ? "Dispatching..." : "Send Test SMS"}</span>
+                  </button>
+                </div>
+              </div>
 
               <div className="space-y-1 sm:col-span-3">
                 <label className="block font-bold text-slate-300">Order Confirmation SMS Template</label>

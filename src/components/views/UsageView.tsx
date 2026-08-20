@@ -621,6 +621,14 @@ export default function UsageView() {
                           <div className="text-[10.5px] text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
                             <span>{item.visitor_name}</span> • <span>{new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
+                          {item.ui_component && (
+                            <div className="mt-1 flex items-center gap-1">
+                              <span className="text-[9.5px] font-mono px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md border border-purple-200 font-bold inline-flex items-center gap-1">
+                                <Sparkles className="w-2.5 h-2.5" />
+                                {item.ui_component.type}
+                              </span>
+                            </div>
+                          )}
                         </td>
 
                         {/* System Prompt Tokens */}
@@ -854,6 +862,39 @@ export default function UsageView() {
                     {selectedInteraction.ai_response}
                   </div>
                 </div>
+
+                {/* 4. Interactive Generative UI Component & Zero-Token Engine */}
+                {selectedInteraction.ui_component && (
+                  <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-200 space-y-2.5">
+                    <div className="flex justify-between items-center font-bold text-purple-950">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-purple-600" />
+                        <span>4. Interactive Generative UI Component</span>
+                      </div>
+                      <span className="font-mono text-[10.5px] px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full font-bold uppercase border border-purple-200">
+                        {selectedInteraction.ui_component.type}
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-white rounded-xl border border-purple-100 text-[11px] text-slate-700 space-y-1.5">
+                      <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                        <Zap className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Direct PostgreSQL Engine: 0 Extra AI Generation Tokens Consumed!</span>
+                      </div>
+                      <div className="text-slate-600 text-[11px] font-medium pt-0.5">
+                        {selectedInteraction.ui_component.type === "product_card" && (
+                          <span>Spotlight Product: <strong>{selectedInteraction.ui_component.data?.product?.title}</strong> (৳{selectedInteraction.ui_component.data?.product?.selling_price?.toLocaleString()} BDT | Qty: {selectedInteraction.ui_component.data?.product?.initial_quantity})</span>
+                        )}
+                        {selectedInteraction.ui_component.type === "product_carousel" && (
+                          <span>Catalog Carousel: <strong>{selectedInteraction.ui_component.data?.products?.length || 0} products</strong> rendered directly into scrollable multi-card carousel.</span>
+                        )}
+                        {selectedInteraction.ui_component.type === "order_tracking_card" && (
+                          <span>Live Order: <strong>{selectedInteraction.ui_component.data?.order?.order_number}</strong> (Status: {selectedInteraction.ui_component.data?.order?.order_status?.toUpperCase()} | ৳{selectedInteraction.ui_component.data?.order?.total_amount?.toLocaleString()} BDT)</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               </div>
 

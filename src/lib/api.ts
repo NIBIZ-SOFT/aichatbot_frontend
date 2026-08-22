@@ -486,6 +486,27 @@ export const api = {
     });
   },
 
+  // In-App Real-Time Notifications
+  async getNotifications() {
+    return apiFetch("/notifications", { skipToast: true });
+  },
+
+  async markNotificationRead(id: string) {
+    return apiFetch(`/notifications/${id}/read`, { method: "PUT", skipToast: true });
+  },
+
+  async markAllNotificationsRead() {
+    return apiFetch("/notifications/read-all", { method: "PUT", skipToast: true });
+  },
+
+  async deleteNotification(id: string) {
+    return apiFetch(`/notifications/${id}`, { method: "DELETE", skipToast: true });
+  },
+
+  async clearAllNotifications() {
+    return apiFetch("/notifications/clear-all", { method: "DELETE", skipToast: true });
+  },
+
   // Usage & Quotas (Live PostgreSQL calculated)
   async getUsageSummary() {
     return apiFetch("/usage/summary");

@@ -9,7 +9,7 @@ export default function DiagnosticsPage() {
   const [isModalOpen, setIsModalOpen] = useState(true);
 
   return (
-    <AppShell activeNav="diagnostics">
+    <AppShell activeNav="diagnostics" requiredRole="super_admin">
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <div className="bg-slate-900 text-white p-8 rounded-3xl border border-slate-800 shadow-xl space-y-3">
           <div className="flex items-center gap-2">

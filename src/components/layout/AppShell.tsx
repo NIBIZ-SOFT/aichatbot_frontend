@@ -83,7 +83,7 @@ export default function AppShell({ children, navKey, activeNav, requiredRoles, r
     if (requiredRole && role !== requiredRole) return false;
     if (requiredRoles && requiredRoles.length > 0 && (!role || !requiredRoles.includes(role))) return false;
     if (isSuperAdmin) return true;
-    if (nav === "superadmin" || nav === "tenants" || nav === "revenue" || nav === "infrastructure" || nav === "audit") {
+    if (nav === "superadmin" || nav === "tenants" || nav === "revenue" || nav === "infrastructure" || nav === "audit" || nav === "diagnostics") {
       return isSuperAdmin;
     }
     if (isModuleDisabled) return false;

@@ -417,31 +417,33 @@ export default function Sidebar({ activeNav, onSelectNav, mobileOpen, onCloseMob
       </div>
 
       <div>
-        {/* Real-time System Connection Status Pill */}
-        <div className="px-3 pb-2">
-          <button
-            type="button"
-            onClick={() => setShowDiagnosticsModal(true)}
-            className="w-full py-1.5 px-3 rounded-xl border text-[11px] font-medium flex items-center justify-between transition-all hover:opacity-90 cursor-pointer shadow-xs"
-            style={{
-              backgroundColor: currentTheme.dark_card,
-              borderColor: currentTheme.dark_border,
-              color: "#94a3b8"
-            }}
-            title="Click to check connection health between Backend, Database & AI APIs"
-          >
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        {/* Real-time System Connection Status Pill - Only visible to Platform Super Admin */}
+        {isSuperAdmin && (
+          <div className="px-3 pb-2">
+            <button
+              type="button"
+              onClick={() => setShowDiagnosticsModal(true)}
+              className="w-full py-1.5 px-3 rounded-xl border text-[11px] font-medium flex items-center justify-between transition-all hover:opacity-90 cursor-pointer shadow-xs"
+              style={{
+                backgroundColor: currentTheme.dark_card,
+                borderColor: currentTheme.dark_border,
+                color: "#94a3b8"
+              }}
+              title="Click to check connection health between Backend, Database & AI APIs"
+            >
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-[10.5px] font-semibold text-slate-300">System Health</span>
+              </div>
+              <span className="text-[9.5px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-800/40 font-bold">
+                Diagnostics
               </span>
-              <span className="text-[10.5px] font-semibold text-slate-300">System Health</span>
-            </div>
-            <span className="text-[9.5px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-800/40 font-bold">
-              Diagnostics
-            </span>
-          </button>
-        </div>
+            </button>
+          </div>
+        )}
 
         {/* User Footer Profile */}
         <div
@@ -481,11 +483,13 @@ export default function Sidebar({ activeNav, onSelectNav, mobileOpen, onCloseMob
         </div>
       </div>
 
-      {/* System Connection Diagnostics Modal */}
-      <SystemDiagnosticsModal
-        isOpen={showDiagnosticsModal}
-        onClose={() => setShowDiagnosticsModal(false)}
-      />
+      {/* System Connection Diagnostics Modal - Super Admin Only */}
+      {isSuperAdmin && (
+        <SystemDiagnosticsModal
+          isOpen={showDiagnosticsModal}
+          onClose={() => setShowDiagnosticsModal(false)}
+        />
+      )}
     </div>
   );
 

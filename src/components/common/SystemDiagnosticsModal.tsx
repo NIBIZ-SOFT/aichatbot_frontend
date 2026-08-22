@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { api, API_BASE_URL } from "../../lib/api";
 import { useToast } from "../../context/ToastContext";
+import { useAuth } from "../../context/AuthContext";
 
 interface SystemDiagnosticsModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface SystemDiagnosticsModalProps {
 }
 
 export default function SystemDiagnosticsModal({ isOpen, onClose }: SystemDiagnosticsModalProps) {
+  const { user } = useAuth();
   const { showToast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -89,7 +91,7 @@ export default function SystemDiagnosticsModal({ isOpen, onClose }: SystemDiagno
     showToast("Command Copied", "Pasted command to clipboard.", "info");
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || user?.role !== "super_admin") return null;
 
   const score = diagnostics?.health_score_percent ?? 100;
   const isHealthy = diagnostics?.overall_status === "healthy";

@@ -93,63 +93,71 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
   // bKash Checkout State
   const [isBkashModalOpen, setIsBkashModalOpen] = useState(false);
 
-  // Fetch dynamic plans from database
+  // Fetch dynamic plans and pricing config from database
   useEffect(() => {
     if (isOpen) {
-      api.getPublicPlans()
-        .then((dbPlans: any[]) => {
-          if (dbPlans && dbPlans.length > 0) {
-            const paid = dbPlans.filter(p => p.monthly_price_bdt > 0 && p.is_active !== false);
-            if (paid.length > 0) {
-              const formatted = paid.map(p => ({
-                id: p.code,
-                code: p.code,
-                name: p.name,
-                monthlyPrice: p.monthly_price_bdt,
-                annualPrice: p.annual_price_bdt || Math.round(p.monthly_price_bdt * 0.85),
-                price: `৳${p.monthly_price_bdt.toLocaleString()}`,
-                period: "/ month",
-                popular: p.is_popular,
-                badge_text: p.badge_text,
-                tokens: `${(p.monthly_token_limit / 1000).toLocaleString()}k AI Tokens`,
-                seats: `${p.max_agents} Support Seats`,
-                widgets: `${p.max_websites} Website Widgets`,
-                desc: p.description,
-                features: p.features
-              }));
-              const paygPlan = {
-                id: "payg",
-                code: "payg",
-                name: "⚡ Pay-As-You-Go Wallet",
-                monthlyPrice: 1000,
-                annualPrice: 1000,
-                price: "৳1,000 Initial Top-Up",
-                period: "prepaid credit",
-                popular: false,
-                badge_text: "ZERO CONTRACT",
-                tokens: "Pay ৳1.50 per 10k Tokens",
-                seats: "5 Support Seats",
-                widgets: "2 Website Widgets",
-                desc: "No recurring subscription. Pure usage-based billing with instant bKash recharge.",
-                features: [
-                  "No monthly recurring fees",
-                  "৳1.50 per 10,000 tokens",
-                  "Instant bKash Recharge",
-                  "Full Autonomous AI & RAG",
-                  "Credits never expire"
-                ]
-              };
-              setPlans([...formatted, paygPlan]);
-              const targetTier = initialSelectedTier || selectedTier;
-              if (formatted.some(p => p.id === targetTier) || targetTier === "payg") {
-                setSelectedTier(targetTier);
-              } else {
-                setSelectedTier(formatted[0].id);
-              }
+      Promise.all([
+        api.getPublicPlans().catch(() => []),
+        api.getPublicPricingConfig().catch(() => null)
+      ]).then(([dbPlans, pricingCfg]: [any[], any]) => {
+        if (dbPlans && Array.isArray(dbPlans) && dbPlans.length > 0) {
+          const paid = dbPlans.filter(p => p.monthly_price_bdt > 0 && p.is_active !== false);
+          if (paid.length > 0) {
+            const formatted = paid.map(p => ({
+              id: p.code,
+              code: p.code,
+              name: p.name,
+              monthlyPrice: p.monthly_price_bdt,
+              annualPrice: p.annual_price_bdt || Math.round(p.monthly_price_bdt * 0.85),
+              price: `৳${p.monthly_price_bdt.toLocaleString()}`,
+              period: "/ month",
+              popular: p.is_popular,
+              badge_text: p.badge_text,
+              tokens: `${(p.monthly_token_limit / 1000).toLocaleString()}k AI Tokens`,
+              seats: `${p.max_agents} Support Seats`,
+              widgets: `${p.max_websites} Website Widgets`,
+              desc: p.description,
+              features: p.features
+            }));
+
+            const isPaygActive = pricingCfg?.pay_as_you_go_enabled !== false;
+            const tokenRate10k = pricingCfg?.default_per_10k_tokens_rate_bdt || 1.50;
+            const minTopup = pricingCfg?.min_wallet_topup_bdt || 1000;
+
+            const paygPlan = isPaygActive ? {
+              id: "payg",
+              code: "payg",
+              name: "⚡ Pay-As-You-Go Wallet",
+              monthlyPrice: minTopup,
+              annualPrice: minTopup,
+              price: `৳${minTopup.toLocaleString()} Initial Top-Up`,
+              period: "prepaid credit",
+              popular: false,
+              badge_text: "ZERO CONTRACT",
+              tokens: `Pay ৳${tokenRate10k.toFixed(2)} per 10k Tokens`,
+              seats: "5 Support Seats",
+              widgets: "2 Website Widgets",
+              desc: "No recurring subscription. Pure usage-based billing with instant bKash recharge.",
+              features: [
+                "No monthly recurring fees",
+                `৳${tokenRate10k.toFixed(2)} per 10,000 tokens`,
+                "Instant bKash Recharge",
+                "Full Autonomous AI & RAG",
+                "Credits never expire"
+              ]
+            } : null;
+
+            const allPlans = paygPlan ? [...formatted, paygPlan] : formatted;
+            setPlans(allPlans);
+            const targetTier = initialSelectedTier || selectedTier;
+            if (allPlans.some(p => p.id === targetTier)) {
+              setSelectedTier(targetTier);
+            } else {
+              setSelectedTier(allPlans[0].id);
             }
           }
-        })
-        .catch(() => {});
+        }
+      });
     }
   }, [isOpen, initialSelectedTier]);
 

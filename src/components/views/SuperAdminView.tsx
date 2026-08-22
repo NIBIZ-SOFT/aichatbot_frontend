@@ -176,6 +176,30 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   const [isTestingAI, setIsTestingAI] = useState(false);
   const [aiTestResult, setAiTestResult] = useState<any | null>(null);
 
+  // Dynamic AI Token & Pricing Engine State
+  const [pricingEngineConfig, setPricingEngineConfig] = useState({
+    default_per_10k_tokens_rate_bdt: 1.50,
+    pay_as_you_go_enabled: true,
+    custom_slider_builder_enabled: true,
+    min_wallet_topup_bdt: 100.0,
+    base_custom_platform_fee_bdt: 1990.0,
+    per_extra_agent_bdt: 750.0,
+    per_extra_website_bdt: 1200.0,
+  });
+  const [isSavingPricingEngine, setIsSavingPricingEngine] = useState(false);
+
+  const handleSavePricingEngine = async () => {
+    setIsSavingPricingEngine(true);
+    try {
+      await api.updateSuperAdminPricingEngine(pricingEngineConfig);
+      showToast("Pricing Engine Updated", "Pay-As-You-Go visibility & AI token rates saved successfully!", "success");
+    } catch (err: any) {
+      showToast("Update Failed", err.message || "Failed to update pricing engine", "error");
+    } finally {
+      setIsSavingPricingEngine(false);
+    }
+  };
+
   // Plan Edit Modal State
   const [editingTenant, setEditingTenant] = useState<TenantItem | null>(null);
   const [selectedTier, setSelectedTier] = useState<string>("enterprise");
@@ -247,7 +271,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [m, tList, rev, infra, logs, bkashCfg, plans, coupons, aiCfg] = await Promise.all([
+      const [m, tList, rev, infra, logs, bkashCfg, plans, coupons, aiCfg, pricingCfg] = await Promise.all([
         api.getSuperAdminMetrics(),
         api.getSuperAdminTenants(),
         api.getSuperAdminRevenue(),
@@ -256,7 +280,8 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
         api.getSuperAdminBkashSettings().catch(() => null),
         api.getSuperAdminPlans().catch(() => []),
         api.getSuperAdminCoupons().catch(() => []),
-        api.getSuperAdminAISettings().catch(() => null)
+        api.getSuperAdminAISettings().catch(() => null),
+        api.getSuperAdminPricingEngine().catch(() => null)
       ]);
       setMetrics(m);
       setTenants(tList);
@@ -267,6 +292,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       if (plans) setPlansList(plans);
       if (coupons) setCouponsList(coupons);
       if (aiCfg) setAiSettings(aiCfg);
+      if (pricingCfg) setPricingEngineConfig(prev => ({ ...prev, ...pricingCfg }));
     } catch (err) {
       console.error("Super Admin data load error:", err);
       showToast("Error loading Super Admin control plane", "Ensure you are logged in as super_admin.", "error");
@@ -1398,6 +1424,144 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
             >
               <Plus className="w-4 h-4" /> Create New Package / Offer
             </button>
+          </div>
+
+          {/* ⚡ PAY-AS-YOU-GO & DYNAMIC AI TOKEN ENGINE CONTROL CARD */}
+          <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-7 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden space-y-5">
+            <div className="absolute right-0 top-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800 pb-4 relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <Zap className="w-5 h-5 fill-amber-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-black text-white">
+                      Pay-As-You-Go & AI Token Engine Master Controls
+                    </h3>
+                    <span className="text-[10px] font-bold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-800/80 uppercase">
+                      Live Public Controls
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Toggle PAYG customer onboarding on landing page, set unit token price, and customize minimum wallet top-ups.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSavePricingEngine}
+                disabled={isSavingPricingEngine}
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
+              >
+                {isSavingPricingEngine ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>Save Engine Settings</span>
+              </button>
+            </div>
+
+            {/* Grid Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
+              
+              {/* 1. PAYG Master Switch */}
+              <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> Pay-As-You-Go Switch
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={pricingEngineConfig.pay_as_you_go_enabled}
+                        onChange={(e) => setPricingEngineConfig({ ...pricingEngineConfig, pay_as_you_go_enabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                  </div>
+                  <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
+                    {pricingEngineConfig.pay_as_you_go_enabled 
+                      ? "🟢 Visible on Landing Page & Registration modal"
+                      : "🔴 Hidden from public site (existing users unaffected)"}
+                  </p>
+                </div>
+                <div className="text-[10px] font-mono text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-lg">
+                  Status: <strong className={pricingEngineConfig.pay_as_you_go_enabled ? "text-emerald-400" : "text-rose-400"}>{pricingEngineConfig.pay_as_you_go_enabled ? "ACTIVE (SHOW)" : "DISABLED (HIDE)"}</strong>
+                </div>
+              </div>
+
+              {/* 2. Interactive Slider Builder */}
+              <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-200">
+                      Slider Custom Builder
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={pricingEngineConfig.custom_slider_builder_enabled}
+                        onChange={(e) => setPricingEngineConfig({ ...pricingEngineConfig, custom_slider_builder_enabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                    </label>
+                  </div>
+                  <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
+                    Show/hide interactive resource slider on public pricing page.
+                  </p>
+                </div>
+                <div className="text-[10px] font-mono text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-lg">
+                  Builder: <strong className={pricingEngineConfig.custom_slider_builder_enabled ? "text-indigo-400" : "text-slate-400"}>{pricingEngineConfig.custom_slider_builder_enabled ? "ENABLED" : "OFF"}</strong>
+                </div>
+              </div>
+
+              {/* 3. Token Meter Unit Rate */}
+              <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 space-y-2">
+                <label className="text-xs font-bold text-slate-200 block">
+                  Default Rate / 10k Tokens (৳ BDT)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono font-bold text-xs">৳</span>
+                  <input
+                    type="number"
+                    step="0.05"
+                    min="0.10"
+                    max="50.00"
+                    value={pricingEngineConfig.default_per_10k_tokens_rate_bdt}
+                    onChange={(e) => setPricingEngineConfig({ ...pricingEngineConfig, default_per_10k_tokens_rate_bdt: parseFloat(e.target.value) || 1.50 })}
+                    className="w-full pl-7 pr-3 py-2 bg-slate-900/90 border border-slate-700 rounded-xl text-xs font-mono font-bold text-emerald-400 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                  />
+                </div>
+                <div className="text-[10px] text-slate-400 font-mono pt-0.5">
+                  ≈ ৳{(pricingEngineConfig.default_per_10k_tokens_rate_bdt / 10).toFixed(3)}/1k • ৳{(pricingEngineConfig.default_per_10k_tokens_rate_bdt * 100).toFixed(0)}/1M
+                </div>
+              </div>
+
+              {/* 4. Minimum Wallet Top-Up */}
+              <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 space-y-2">
+                <label className="text-xs font-bold text-slate-200 block">
+                  Minimum Wallet Top-Up (৳ BDT)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono font-bold text-xs">৳</span>
+                  <input
+                    type="number"
+                    step="50"
+                    min="50"
+                    value={pricingEngineConfig.min_wallet_topup_bdt}
+                    onChange={(e) => setPricingEngineConfig({ ...pricingEngineConfig, min_wallet_topup_bdt: parseFloat(e.target.value) || 100 })}
+                    className="w-full pl-7 pr-3 py-2 bg-slate-900/90 border border-slate-700 rounded-xl text-xs font-mono font-bold text-white focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                  />
+                </div>
+                <div className="text-[10px] text-slate-400 font-mono pt-0.5">
+                  Protects payment gateway fee margin
+                </div>
+              </div>
+
+            </div>
           </div>
 
           {/* Pricing Plans Grid */}

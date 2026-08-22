@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -13,6 +13,8 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { UserRole } from "../../types";
+
+import SystemDiagnosticsModal from "./SystemDiagnosticsModal";
 
 interface SidebarProps {
   activeNav?: string;
@@ -37,6 +39,7 @@ export default function Sidebar({ activeNav, onSelectNav }: SidebarProps) {
   const { user, logout } = useAuth();
   const { currentTheme } = useTheme();
   const pathname = usePathname() || "";
+  const [showDiagnosticsModal, setShowDiagnosticsModal] = useState(false);
   const role = user?.role;
   const dept = user?.department?.toLowerCase() || "";
   const enabledModules = user?.enabled_modules || {};
@@ -403,6 +406,32 @@ export default function Sidebar({ activeNav, onSelectNav }: SidebarProps) {
         </div>
       </div>
 
+      {/* Real-time System Connection Status Pill */}
+      <div className="px-3 pb-2">
+        <button
+          type="button"
+          onClick={() => setShowDiagnosticsModal(true)}
+          className="w-full py-1.5 px-3 rounded-xl border text-[11px] font-medium flex items-center justify-between transition-all hover:opacity-90 cursor-pointer shadow-xs"
+          style={{
+            backgroundColor: currentTheme.dark_card,
+            borderColor: currentTheme.dark_border,
+            color: "#94a3b8"
+          }}
+          title="Click to check connection health between Backend, Database & AI APIs"
+        >
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10.5px] font-semibold text-slate-300">System Health</span>
+          </div>
+          <span className="text-[9.5px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-800/40 font-bold">
+            Diagnostics
+          </span>
+        </button>
+      </div>
+
       {/* User Footer Profile */}
       <div
         className="p-3 border-t transition-colors"
@@ -439,6 +468,12 @@ export default function Sidebar({ activeNav, onSelectNav }: SidebarProps) {
           </button>
         </div>
       </div>
+
+      {/* System Connection Diagnostics Modal */}
+      <SystemDiagnosticsModal
+        isOpen={showDiagnosticsModal}
+        onClose={() => setShowDiagnosticsModal(false)}
+      />
 
     </aside>
   );

@@ -124,10 +124,16 @@ export async function apiFetch<T = any>(
             errorMessage || "Incorrect credentials or invalid request.",
             "error"
           );
+        } else if (res.status === 503 || (errorMessage && errorMessage.toLowerCase().includes("database"))) {
+          emitToast(
+            "🗄️ Database Connection Error (503)",
+            errorMessage || "PostgreSQL database is unreachable. Verify PostgreSQL service and DATABASE_URL in backend/.env.",
+            "error"
+          );
         } else if (res.status >= 500) {
           emitToast(
-            `🔥 Server Error (${res.status})`,
-            errorMessage || "An internal server error occurred. The platform team has been alerted.",
+            `🔥 Backend Server Error (${res.status})`,
+            errorMessage || "An internal server error occurred. Check backend terminal logs for details.",
             "error"
           );
         } else {
@@ -163,10 +169,10 @@ export async function apiFetch<T = any>(
     }
 
     // Network connection refused / offline detection
-    if (err instanceof TypeError && err.message.toLowerCase().includes("fetch")) {
-      const msg = "Unable to connect to the backend server (127.0.0.1:8000). Please ensure the backend is running.";
+    if (err instanceof TypeError && (err.message.toLowerCase().includes("fetch") || err.message.toLowerCase().includes("network"))) {
+      const msg = `Unable to connect to the backend server (${API_BASE_URL}). Please ensure the FastAPI backend is running.`;
       if (!skipToast) {
-        emitToast("🔌 Backend Offline / Connection Error", msg, "error");
+        emitToast("🔌 Connection Error (Backend Offline)", msg, "error");
       }
       throw new Error(msg);
     }
@@ -176,6 +182,15 @@ export async function apiFetch<T = any>(
 }
 
 export const api = {
+  // System Health & Connection Diagnostics
+  async getSystemDiagnostics() {
+    return apiFetch("/health/diagnostics", { skipToast: true });
+  },
+
+  async pingDatabase() {
+    return apiFetch("/health/ping-db", { method: "POST" });
+  },
+
   // Auth
   async login(email: string, password: string = "DemoPass123!") {
     return apiFetch("/auth/login", {

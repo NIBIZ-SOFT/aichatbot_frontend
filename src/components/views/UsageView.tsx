@@ -589,11 +589,12 @@ export default function UsageView() {
 
             {/* Data Table */}
             <div className="overflow-x-auto pt-2">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs min-w-[750px]">
                 <thead>
                   <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
                     <th className="pb-3 px-3">Customer Question</th>
-                    <th className="pb-3 px-3 text-center">System / Rules</th>
+                    <th className="pb-3 px-3 text-center">System Rules</th>
+                    <th className="pb-3 px-3 text-center">Tools / Schemas</th>
                     <th className="pb-3 px-3 text-center">RAG Knowledge</th>
                     <th className="pb-3 px-3 text-center">Output</th>
                     <th className="pb-3 px-3 text-right">Total Tokens</th>
@@ -604,80 +605,94 @@ export default function UsageView() {
                 <tbody className="divide-y divide-slate-100">
                   {filteredInteractions.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
+                      <td colSpan={8} className="py-8 text-center text-slate-400 text-xs">
                         No customer interactions found matching your search.
                       </td>
                     </tr>
                   ) : (
-                    filteredInteractions.map((item, idx) => (
-                      <tr 
-                        key={idx}
-                        className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
-                        onClick={() => setSelectedInteraction(item)}
-                      >
-                        {/* Customer Question */}
-                        <td className="py-3 px-3 max-w-xs">
-                          <div className="font-bold text-slate-900 truncate">
-                            {item.customer_query}
-                          </div>
-                          <div className="text-[10.5px] text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
-                            <span>{item.visitor_name}</span> • <span>{new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                          </div>
-                          {item.ui_component && (
-                            <div className="mt-1 flex items-center gap-1">
-                              <span className="text-[9.5px] font-mono px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md border border-purple-200 font-bold inline-flex items-center gap-1">
-                                <Sparkles className="w-2.5 h-2.5" />
-                                {item.ui_component.type}
-                              </span>
+                    filteredInteractions.map((item, idx) => {
+                      const tb = item.token_breakdown;
+                      const toolsTokens = tb.tools_schema_tokens !== undefined 
+                        ? tb.tools_schema_tokens 
+                        : Math.max(0, tb.total_tokens - (tb.system_prompt_tokens + tb.rag_context_tokens + tb.chat_history_tokens + tb.user_query_tokens + tb.completion_tokens));
+
+                      return (
+                        <tr 
+                          key={idx}
+                          className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                          onClick={() => setSelectedInteraction(item)}
+                        >
+                          {/* Customer Question */}
+                          <td className="py-3 px-3 max-w-xs">
+                            <div className="font-bold text-slate-900 truncate">
+                              {item.customer_query}
                             </div>
-                          )}
-                        </td>
+                            <div className="text-[10.5px] text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
+                              <span>{item.visitor_name}</span> • <span>{new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            {item.ui_component && (
+                              <div className="mt-1 flex items-center gap-1">
+                                <span className="text-[9.5px] font-mono px-2 py-0.5 bg-purple-50 text-purple-700 rounded-md border border-purple-200 font-bold inline-flex items-center gap-1">
+                                  <Sparkles className="w-2.5 h-2.5" />
+                                  {item.ui_component.type}
+                                </span>
+                              </div>
+                            )}
+                          </td>
 
-                        {/* System Prompt Tokens */}
-                        <td className="py-3 px-3 text-center font-mono">
-                          <span className="px-2 py-0.5 bg-violet-50 text-violet-700 rounded-lg border border-violet-100 font-bold text-[11px]">
-                            {item.token_breakdown.system_prompt_tokens}
-                          </span>
-                        </td>
+                          {/* System Prompt Tokens */}
+                          <td className="py-3 px-3 text-center font-mono">
+                            <span className="px-2 py-0.5 bg-violet-50 text-violet-700 rounded-lg border border-violet-100 font-bold text-[11px]">
+                              {tb.system_prompt_tokens}
+                            </span>
+                          </td>
 
-                        {/* RAG Knowledge Tokens */}
-                        <td className="py-3 px-3 text-center font-mono">
-                          <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 font-bold text-[11px]" title={`${item.sources_cited?.length || 0} chunks retrieved`}>
-                            {item.token_breakdown.rag_context_tokens} <span className="text-[9px] text-indigo-400 font-normal">({item.sources_cited?.length || 0} docs)</span>
-                          </span>
-                        </td>
+                          {/* Tools & Schemas Tokens */}
+                          <td className="py-3 px-3 text-center font-mono">
+                            <span className="px-2 py-0.5 bg-fuchsia-50 text-fuchsia-700 rounded-lg border border-fuchsia-100 font-bold text-[11px]" title="Function calling schemas for search, order & catalog">
+                              {toolsTokens}
+                            </span>
+                          </td>
 
-                        {/* Output Tokens */}
-                        <td className="py-3 px-3 text-center font-mono">
-                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100 font-bold text-[11px]">
-                            {item.token_breakdown.completion_tokens}
-                          </span>
-                        </td>
+                          {/* RAG Knowledge Tokens */}
+                          <td className="py-3 px-3 text-center font-mono">
+                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100 font-bold text-[11px]" title={`${item.sources_cited?.length || 0} chunks retrieved`}>
+                              {tb.rag_context_tokens} <span className="text-[9px] text-indigo-400 font-normal">({item.sources_cited?.length || 0} docs)</span>
+                            </span>
+                          </td>
 
-                        {/* Total Tokens */}
-                        <td className="py-3 px-3 text-right font-mono font-black text-slate-900">
-                          {item.token_breakdown.total_tokens.toLocaleString()}
-                        </td>
+                          {/* Output Tokens */}
+                          <td className="py-3 px-3 text-center font-mono">
+                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-100 font-bold text-[11px]">
+                              {tb.completion_tokens}
+                            </span>
+                          </td>
 
-                        {/* Cost BDT */}
-                        <td className="py-3 px-3 text-right font-mono font-bold text-emerald-700">
-                          ৳{item.token_breakdown.cost_bdt.toFixed(4)}
-                        </td>
+                          {/* Total Tokens */}
+                          <td className="py-3 px-3 text-right font-mono font-black text-slate-900">
+                            {tb.total_tokens.toLocaleString()}
+                          </td>
 
-                        {/* Inspect Button */}
-                        <td className="py-3 px-3 text-center">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedInteraction(item);
-                            }}
-                            className="px-2.5 py-1 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-indigo-600 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 mx-auto shadow-xs"
-                          >
-                            <Eye className="w-3 h-3" /> Inspect
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                          {/* Cost BDT */}
+                          <td className="py-3 px-3 text-right font-mono font-bold text-emerald-700">
+                            ৳{tb.cost_bdt.toFixed(4)}
+                          </td>
+
+                          {/* Inspect Button */}
+                          <td className="py-3 px-3 text-center">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedInteraction(item);
+                              }}
+                              className="px-2.5 py-1 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-indigo-600 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 mx-auto shadow-xs"
+                            >
+                              <Eye className="w-3 h-3" /> Inspect
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -718,189 +733,315 @@ export default function UsageView() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
-              
-              {/* Token Breakdown Meter Bar */}
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-900 text-sm">
-                    Total: {selectedInteraction.token_breakdown.total_tokens.toLocaleString()} Tokens
-                  </span>
-                  <span className="font-mono font-bold text-emerald-700 text-sm">
-                    ৳{selectedInteraction.token_breakdown.cost_bdt.toFixed(4)} BDT ($0.000{Math.round(selectedInteraction.token_breakdown.cost_usd * 100000)})
-                  </span>
-                </div>
+            {(() => {
+              const tb = selectedInteraction.token_breakdown;
+              const totalTokens = tb.total_tokens || 1;
+              const sysTokens = tb.system_prompt_tokens || 0;
+              const ragTokens = tb.rag_context_tokens || 0;
+              const histTokens = tb.chat_history_tokens || 0;
+              const queryTokens = tb.user_query_tokens || 0;
+              const compTokens = tb.completion_tokens || 0;
+              // Compute tools_schema_tokens if not directly provided
+              const toolsTokens = tb.tools_schema_tokens !== undefined 
+                ? tb.tools_schema_tokens 
+                : Math.max(0, totalTokens - (sysTokens + ragTokens + histTokens + queryTokens + compTokens));
 
-                <div className="w-full bg-slate-200 h-4 rounded-full overflow-hidden flex shadow-inner">
-                  <div 
-                    style={{ width: `${(selectedInteraction.token_breakdown.rag_context_tokens / selectedInteraction.token_breakdown.total_tokens) * 100}%` }}
-                    className="bg-indigo-600 h-full"
-                    title={`RAG Knowledge: ${selectedInteraction.token_breakdown.rag_context_tokens} tokens`}
-                  ></div>
-                  <div 
-                    style={{ width: `${(selectedInteraction.token_breakdown.system_prompt_tokens / selectedInteraction.token_breakdown.total_tokens) * 100}%` }}
-                    className="bg-violet-500 h-full"
-                    title={`System Prompt: ${selectedInteraction.token_breakdown.system_prompt_tokens} tokens`}
-                  ></div>
-                  <div 
-                    style={{ width: `${(selectedInteraction.token_breakdown.completion_tokens / selectedInteraction.token_breakdown.total_tokens) * 100}%` }}
-                    className="bg-emerald-500 h-full"
-                    title={`AI Output: ${selectedInteraction.token_breakdown.completion_tokens} tokens`}
-                  ></div>
-                  <div 
-                    style={{ width: `${(selectedInteraction.token_breakdown.chat_history_tokens / selectedInteraction.token_breakdown.total_tokens) * 100}%` }}
-                    className="bg-amber-400 h-full"
-                    title={`Chat History: ${selectedInteraction.token_breakdown.chat_history_tokens} tokens`}
-                  ></div>
-                </div>
+              const sysPct = ((sysTokens / totalTokens) * 100).toFixed(1);
+              const toolsPct = ((toolsTokens / totalTokens) * 100).toFixed(1);
+              const ragPct = ((ragTokens / totalTokens) * 100).toFixed(1);
+              const histPct = ((histTokens / totalTokens) * 100).toFixed(1);
+              const queryPct = ((queryTokens / totalTokens) * 100).toFixed(1);
+              const compPct = ((compTokens / totalTokens) * 100).toFixed(1);
 
-                {/* 4 Cards Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono">
-                  <div className="p-2.5 bg-indigo-50 rounded-xl border border-indigo-100">
-                    <div className="text-[10px] text-indigo-700 font-sans font-bold">📚 RAG Chunks</div>
-                    <div className="text-base font-extrabold text-indigo-900 mt-0.5">
-                      {selectedInteraction.token_breakdown.rag_context_tokens}
-                    </div>
-                    <div className="text-[9.5px] text-indigo-500 font-sans">
-                      {((selectedInteraction.token_breakdown.rag_context_tokens / selectedInteraction.token_breakdown.total_tokens) * 100).toFixed(1)}% of total
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 bg-violet-50 rounded-xl border border-violet-100">
-                    <div className="text-[10px] text-violet-700 font-sans font-bold">⚙️ System & Rules</div>
-                    <div className="text-base font-extrabold text-violet-900 mt-0.5">
-                      {selectedInteraction.token_breakdown.system_prompt_tokens}
-                    </div>
-                    <div className="text-[9.5px] text-violet-500 font-sans">
-                      {((selectedInteraction.token_breakdown.system_prompt_tokens / selectedInteraction.token_breakdown.total_tokens) * 100).toFixed(1)}% of total
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-100">
-                    <div className="text-[10px] text-amber-700 font-sans font-bold">💬 Chat Memory</div>
-                    <div className="text-base font-extrabold text-amber-900 mt-0.5">
-                      {selectedInteraction.token_breakdown.chat_history_tokens}
-                    </div>
-                    <div className="text-[9.5px] text-amber-500 font-sans">
-                      {((selectedInteraction.token_breakdown.chat_history_tokens / selectedInteraction.token_breakdown.total_tokens) * 100).toFixed(1)}% of total
-                    </div>
-                  </div>
-
-                  <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100">
-                    <div className="text-[10px] text-emerald-700 font-sans font-bold">🤖 Output Reply</div>
-                    <div className="text-base font-extrabold text-emerald-900 mt-0.5">
-                      {selectedInteraction.token_breakdown.completion_tokens}
-                    </div>
-                    <div className="text-[9.5px] text-emerald-500 font-sans">
-                      {((selectedInteraction.token_breakdown.completion_tokens / selectedInteraction.token_breakdown.total_tokens) * 100).toFixed(1)}% of total
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Optimization Recommendation Advice */}
-              <div className="p-3.5 bg-indigo-50/70 rounded-2xl border border-indigo-200 flex items-start gap-2.5">
-                <Lightbulb className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-                <div className="text-xs text-indigo-900">
-                  <strong>Analysis & Optimization Advice:</strong> {selectedInteraction.optimization_tip}
-                </div>
-              </div>
-
-              {/* Section Accordions / Full Content Display */}
-              <div className="space-y-4">
-                
-                {/* 1. Customer Query */}
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                  <div className="flex justify-between items-center mb-1.5 font-bold text-slate-700">
-                    <span>1. Customer Query Input</span>
-                    <span className="font-mono text-slate-500 font-normal">~{selectedInteraction.token_breakdown.user_query_tokens} tokens</span>
-                  </div>
-                  <p className="text-slate-900 font-medium whitespace-pre-wrap bg-white p-3 rounded-xl border border-slate-100">
-                    {selectedInteraction.customer_query}
-                  </p>
-                </div>
-
-                {/* 2. Retrieved RAG Knowledge Chunks */}
-                <div className="p-4 bg-indigo-50/40 rounded-2xl border border-indigo-100">
-                  <div className="flex justify-between items-center mb-1.5 font-bold text-indigo-900">
-                    <span>2. Retrieved RAG Vector Knowledge Context ({selectedInteraction.sources_cited?.length || 0} Chunks)</span>
-                    <span className="font-mono text-indigo-600 font-normal">{selectedInteraction.token_breakdown.rag_context_tokens} tokens</span>
-                  </div>
+              return (
+                <div className="p-4 sm:p-6 overflow-y-auto space-y-5 flex-1 text-xs custom-scrollbar-dark">
                   
-                  {selectedInteraction.sources_cited && selectedInteraction.sources_cited.length > 0 ? (
-                    <div className="space-y-2 mt-2">
-                      {selectedInteraction.sources_cited.map((s, sIdx) => (
-                        <div key={sIdx} className="p-3 bg-white rounded-xl border border-indigo-100 space-y-1">
-                          <div className="flex justify-between items-center">
-                            <span className="font-bold text-indigo-950">{s.source || s.title || `Knowledge Chunk #${sIdx + 1}`}</span>
-                            {s.similarity && (
-                              <span className="font-mono text-[10.5px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-bold">
-                                Match: {(s.similarity * 100).toFixed(0)}%
-                              </span>
+                  {/* Token Breakdown Meter Bar & Math Equation */}
+                  <div className="p-4 sm:p-5 bg-slate-900 text-white rounded-2xl border border-slate-800 space-y-4 shadow-xl">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-1 border-b border-slate-800">
+                      <div>
+                        <span className="font-extrabold text-white text-base tracking-tight">
+                          Total: {totalTokens.toLocaleString()} Tokens
+                        </span>
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          Metered at official Google Gemini / OpenAI SDK token rate
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-mono font-black text-emerald-400 text-base">
+                          ৳{tb.cost_bdt.toFixed(4)} BDT
+                        </span>
+                        <div className="text-[10.5px] font-mono text-slate-400">
+                          (${tb.cost_usd.toFixed(6)} USD)
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Proportional Segmented Progress Bar */}
+                    <div className="w-full bg-slate-800 h-5 rounded-full overflow-hidden flex shadow-inner border border-slate-700">
+                      {sysTokens > 0 && (
+                        <div 
+                          style={{ width: `${(sysTokens / totalTokens) * 100}%` }}
+                          className="bg-violet-500 h-full transition-all"
+                          title={`System Rules: ${sysTokens} tokens (${sysPct}%)`}
+                        />
+                      )}
+                      {toolsTokens > 0 && (
+                        <div 
+                          style={{ width: `${(toolsTokens / totalTokens) * 100}%` }}
+                          className="bg-fuchsia-600 h-full transition-all"
+                          title={`Tool & Catalog Schemas: ${toolsTokens} tokens (${toolsPct}%)`}
+                        />
+                      )}
+                      {ragTokens > 0 && (
+                        <div 
+                          style={{ width: `${(ragTokens / totalTokens) * 100}%` }}
+                          className="bg-indigo-600 h-full transition-all"
+                          title={`RAG Knowledge: ${ragTokens} tokens (${ragPct}%)`}
+                        />
+                      )}
+                      {histTokens > 0 && (
+                        <div 
+                          style={{ width: `${(histTokens / totalTokens) * 100}%` }}
+                          className="bg-amber-400 h-full transition-all"
+                          title={`Chat Memory: ${histTokens} tokens (${histPct}%)`}
+                        />
+                      )}
+                      {queryTokens > 0 && (
+                        <div 
+                          style={{ width: `${(queryTokens / totalTokens) * 100}%` }}
+                          className="bg-sky-400 h-full transition-all"
+                          title={`Customer Query: ${queryTokens} tokens (${queryPct}%)`}
+                        />
+                      )}
+                      {compTokens > 0 && (
+                        <div 
+                          style={{ width: `${(compTokens / totalTokens) * 100}%` }}
+                          className="bg-emerald-500 h-full transition-all"
+                          title={`AI Text Output: ${compTokens} tokens (${compPct}%)`}
+                        />
+                      )}
+                    </div>
+
+                    {/* Exact Mathematical Formula Breakdown Box */}
+                    <div className="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-[11px] font-mono leading-relaxed space-y-1">
+                      <div className="text-[10px] text-slate-400 font-sans uppercase font-bold tracking-wider flex items-center justify-between">
+                        <span>Transparent Token Math Calculation:</span>
+                        <span className="text-emerald-400 font-bold bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/60">
+                          100% Calculated
+                        </span>
+                      </div>
+                      <div className="text-slate-300 break-words pt-1">
+                        <span className="text-violet-400 font-bold">{sysTokens}</span> <span className="text-slate-500">(System)</span> +{" "}
+                        <span className="text-fuchsia-400 font-bold">{toolsTokens}</span> <span className="text-slate-500">(Tools & Schemas)</span> +{" "}
+                        <span className="text-indigo-400 font-bold">{ragTokens}</span> <span className="text-slate-500">(RAG)</span> +{" "}
+                        <span className="text-amber-400 font-bold">{histTokens}</span> <span className="text-slate-500">(Memory)</span> +{" "}
+                        <span className="text-sky-400 font-bold">{queryTokens}</span> <span className="text-slate-500">(Query)</span> +{" "}
+                        <span className="text-emerald-400 font-bold">{compTokens}</span> <span className="text-slate-500">(Output)</span> ={" "}
+                        <span className="text-white font-black">{totalTokens.toLocaleString()} Total Tokens</span>
+                      </div>
+                    </div>
+
+                    {/* 6 Metric Breakdown Cards Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-1 font-mono">
+                      <div className="p-2.5 bg-slate-950/80 rounded-xl border border-violet-900/50">
+                        <div className="text-[10px] text-violet-400 font-sans font-bold truncate">⚙️ System Rules</div>
+                        <div className="text-sm sm:text-base font-black text-violet-200 mt-0.5">
+                          {sysTokens.toLocaleString()}
+                        </div>
+                        <div className="text-[9.5px] text-violet-400/80 font-sans">{sysPct}% of total</div>
+                      </div>
+
+                      <div className="p-2.5 bg-slate-950/80 rounded-xl border border-fuchsia-900/50">
+                        <div className="text-[10px] text-fuchsia-400 font-sans font-bold truncate">🛠️ Tool Schemas</div>
+                        <div className="text-sm sm:text-base font-black text-fuchsia-200 mt-0.5">
+                          {toolsTokens.toLocaleString()}
+                        </div>
+                        <div className="text-[9.5px] text-fuchsia-400/80 font-sans">{toolsPct}% of total</div>
+                      </div>
+
+                      <div className="p-2.5 bg-slate-950/80 rounded-xl border border-indigo-900/50">
+                        <div className="text-[10px] text-indigo-400 font-sans font-bold truncate">📚 RAG Chunks</div>
+                        <div className="text-sm sm:text-base font-black text-indigo-200 mt-0.5">
+                          {ragTokens.toLocaleString()}
+                        </div>
+                        <div className="text-[9.5px] text-indigo-400/80 font-sans">{ragPct}% of total</div>
+                      </div>
+
+                      <div className="p-2.5 bg-slate-950/80 rounded-xl border border-amber-900/50">
+                        <div className="text-[10px] text-amber-400 font-sans font-bold truncate">💬 Chat Memory</div>
+                        <div className="text-sm sm:text-base font-black text-amber-200 mt-0.5">
+                          {histTokens.toLocaleString()}
+                        </div>
+                        <div className="text-[9.5px] text-amber-400/80 font-sans">{histPct}% of total</div>
+                      </div>
+
+                      <div className="p-2.5 bg-slate-950/80 rounded-xl border border-sky-900/50">
+                        <div className="text-[10px] text-sky-400 font-sans font-bold truncate">👤 Customer Query</div>
+                        <div className="text-sm sm:text-base font-black text-sky-200 mt-0.5">
+                          {queryTokens.toLocaleString()}
+                        </div>
+                        <div className="text-[9.5px] text-sky-400/80 font-sans">{queryPct}% of total</div>
+                      </div>
+
+                      <div className="p-2.5 bg-slate-950/80 rounded-xl border border-emerald-900/50">
+                        <div className="text-[10px] text-emerald-400 font-sans font-bold truncate">🤖 AI Text Output</div>
+                        <div className="text-sm sm:text-base font-black text-emerald-200 mt-0.5">
+                          {compTokens.toLocaleString()}
+                        </div>
+                        <div className="text-[9.5px] text-emerald-400/80 font-sans">{compPct}% of total</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Optimization Recommendation Advice */}
+                  <div className="p-3.5 bg-indigo-50/70 rounded-2xl border border-indigo-200 flex items-start gap-2.5">
+                    <Lightbulb className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                    <div className="text-xs text-indigo-900">
+                      <strong>Analysis & Optimization Advice:</strong> {selectedInteraction.optimization_tip}
+                    </div>
+                  </div>
+
+                  {/* Section List / Full Anatomical Breakdown Display */}
+                  <div className="space-y-4">
+                    
+                    {/* 1. Customer Query */}
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                      <div className="flex justify-between items-center mb-1.5 font-bold text-slate-700">
+                        <span className="flex items-center gap-1.5 font-bold text-slate-800">
+                          <span className="h-2 w-2 rounded-full bg-sky-500"></span>
+                          1. Customer Query Input
+                        </span>
+                        <span className="font-mono text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200 font-bold">~{queryTokens} tokens</span>
+                      </div>
+                      <p className="text-slate-900 font-medium whitespace-pre-wrap bg-white p-3 rounded-xl border border-slate-100">
+                        {selectedInteraction.customer_query}
+                      </p>
+                    </div>
+
+                    {/* 2. System Guardrails & Prompt Instructions */}
+                    <div className="p-4 bg-violet-50/50 rounded-2xl border border-violet-100 space-y-1.5">
+                      <div className="flex justify-between items-center font-bold text-violet-950">
+                        <span className="flex items-center gap-1.5 font-bold">
+                          <span className="h-2 w-2 rounded-full bg-violet-500"></span>
+                          2. System Instructions & Persona Guardrails
+                        </span>
+                        <span className="font-mono text-violet-700 bg-violet-100 px-2 py-0.5 rounded-md border border-violet-200 font-bold">{sysTokens} tokens</span>
+                      </div>
+                      <p className="text-slate-600 text-[11px] bg-white p-3 rounded-xl border border-violet-100 leading-relaxed">
+                        Contains core enterprise system persona instructions, language enforcement (Bangla/Banglish/English), sentiment analysis guardrails, and tenant catalog rules.
+                      </p>
+                    </div>
+
+                    {/* 3. AI Tools & Function Schemas */}
+                    {toolsTokens > 0 && (
+                      <div className="p-4 bg-fuchsia-50/50 rounded-2xl border border-fuchsia-100 space-y-1.5">
+                        <div className="flex justify-between items-center font-bold text-fuchsia-950">
+                          <span className="flex items-center gap-1.5 font-bold">
+                            <span className="h-2 w-2 rounded-full bg-fuchsia-500"></span>
+                            3. AI Tools & Function Calling Schemas (OpenAI SDK Tools)
+                          </span>
+                          <span className="font-mono text-fuchsia-700 bg-fuchsia-100 px-2 py-0.5 rounded-md border border-fuchsia-200 font-bold">{toolsTokens} tokens</span>
+                        </div>
+                        <p className="text-slate-600 text-[11px] bg-white p-3 rounded-xl border border-fuchsia-100 leading-relaxed">
+                          Includes OpenAPI JSON schemas for <code>search_products</code>, <code>create_order</code>, <code>track_order</code>, and <code>calculate_discount</code> definitions sent to the LLM model to enable autonomous live checkout.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* 4. Retrieved RAG Knowledge Chunks */}
+                    <div className="p-4 bg-indigo-50/40 rounded-2xl border border-indigo-100 space-y-1.5">
+                      <div className="flex justify-between items-center font-bold text-indigo-900">
+                        <span className="flex items-center gap-1.5 font-bold">
+                          <span className="h-2 w-2 rounded-full bg-indigo-500"></span>
+                          4. Retrieved RAG Vector Knowledge Context ({selectedInteraction.sources_cited?.length || 0} Chunks)
+                        </span>
+                        <span className="font-mono text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-md border border-indigo-200 font-bold">{ragTokens} tokens</span>
+                      </div>
+                      
+                      {selectedInteraction.sources_cited && selectedInteraction.sources_cited.length > 0 ? (
+                        <div className="space-y-2 mt-2">
+                          {selectedInteraction.sources_cited.map((s, sIdx) => (
+                            <div key={sIdx} className="p-3 bg-white rounded-xl border border-indigo-100 space-y-1">
+                              <div className="flex justify-between items-center">
+                                <span className="font-bold text-indigo-950">{s.source || s.title || `Knowledge Chunk #${sIdx + 1}`}</span>
+                                {s.similarity && (
+                                  <span className="font-mono text-[10.5px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-bold">
+                                    Match: {(s.similarity * 100).toFixed(0)}%
+                                  </span>
+                                )}
+                              </div>
+                              {s.content && (
+                                <p className="text-slate-600 text-[11.5px] line-clamp-3 font-mono leading-relaxed">
+                                  {s.content}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-slate-400 italic bg-white p-3 rounded-xl border border-slate-100">
+                          No external RAG chunks required for this general query.
+                        </p>
+                      )}
+                    </div>
+
+                    {/* 5. AI Generated Output & Generative Action */}
+                    <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-100 space-y-1.5">
+                      <div className="flex justify-between items-center font-bold text-emerald-900">
+                        <span className="flex items-center gap-1.5 font-bold">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                          5. AI Generated Output Reply (Gemini)
+                        </span>
+                        <span className="font-mono text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200 font-bold">
+                          {compTokens} tokens {compTokens === 0 ? "(Zero Text — Action Call)" : ""}
+                        </span>
+                      </div>
+                      <div className="bg-white p-3 rounded-xl border border-emerald-100 text-slate-900 leading-relaxed whitespace-pre-wrap">
+                        {selectedInteraction.ai_response || (
+                          <span className="text-slate-400 italic">No text output generated (Direct interactive UI component rendered).</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 6. Interactive Generative UI Component */}
+                    {selectedInteraction.ui_component && (
+                      <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-200 space-y-2.5">
+                        <div className="flex justify-between items-center font-bold text-purple-950">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-purple-600" />
+                            <span>6. Interactive Generative UI Component</span>
+                          </div>
+                          <span className="font-mono text-[10.5px] px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full font-bold uppercase border border-purple-200">
+                            {selectedInteraction.ui_component.type}
+                          </span>
+                        </div>
+
+                        <div className="p-3 bg-white rounded-xl border border-purple-100 text-[11px] text-slate-700 space-y-1.5">
+                          <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                            <Zap className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Direct PostgreSQL Engine: 0 Extra AI Generation Tokens Consumed!</span>
+                          </div>
+                          <div className="text-slate-600 text-[11px] font-medium pt-0.5">
+                            {selectedInteraction.ui_component.type === "product_card" && (
+                              <span>Spotlight Product: <strong>{selectedInteraction.ui_component.data?.product?.title}</strong> (৳{selectedInteraction.ui_component.data?.product?.selling_price?.toLocaleString()} BDT | Qty: {selectedInteraction.ui_component.data?.product?.initial_quantity})</span>
+                            )}
+                            {selectedInteraction.ui_component.type === "product_carousel" && (
+                              <span>Catalog Carousel: <strong>{selectedInteraction.ui_component.data?.products?.length || 0} products</strong> rendered directly into scrollable multi-card carousel.</span>
+                            )}
+                            {selectedInteraction.ui_component.type === "order_tracking_card" && (
+                              <span>Live Order: <strong>{selectedInteraction.ui_component.data?.order?.order_number}</strong> (Status: {selectedInteraction.ui_component.data?.order?.order_status?.toUpperCase()} | ৳{selectedInteraction.ui_component.data?.order?.total_amount?.toLocaleString()} BDT)</span>
                             )}
                           </div>
-                          {s.content && (
-                            <p className="text-slate-600 text-[11.5px] line-clamp-3 font-mono leading-relaxed">
-                              {s.content}
-                            </p>
-                          )}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-slate-400 italic bg-white p-3 rounded-xl border border-slate-100">
-                      No external RAG chunks required for this general query.
-                    </p>
-                  )}
+                      </div>
+                    )}
+
+                  </div>
+
                 </div>
-
-                {/* 3. AI Generated Output */}
-                <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-100">
-                  <div className="flex justify-between items-center mb-1.5 font-bold text-emerald-900">
-                    <span>3. AI Generated Response (Gemini)</span>
-                    <span className="font-mono text-emerald-700 font-normal">{selectedInteraction.token_breakdown.completion_tokens} tokens</span>
-                  </div>
-                  <div className="bg-white p-3 rounded-xl border border-emerald-100 text-slate-900 leading-relaxed whitespace-pre-wrap">
-                    {selectedInteraction.ai_response}
-                  </div>
-                </div>
-
-                {/* 4. Interactive Generative UI Component & Zero-Token Engine */}
-                {selectedInteraction.ui_component && (
-                  <div className="p-4 bg-purple-50/50 rounded-2xl border border-purple-200 space-y-2.5">
-                    <div className="flex justify-between items-center font-bold text-purple-950">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-purple-600" />
-                        <span>4. Interactive Generative UI Component</span>
-                      </div>
-                      <span className="font-mono text-[10.5px] px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full font-bold uppercase border border-purple-200">
-                        {selectedInteraction.ui_component.type}
-                      </span>
-                    </div>
-
-                    <div className="p-3 bg-white rounded-xl border border-purple-100 text-[11px] text-slate-700 space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
-                        <Zap className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Direct PostgreSQL Engine: 0 Extra AI Generation Tokens Consumed!</span>
-                      </div>
-                      <div className="text-slate-600 text-[11px] font-medium pt-0.5">
-                        {selectedInteraction.ui_component.type === "product_card" && (
-                          <span>Spotlight Product: <strong>{selectedInteraction.ui_component.data?.product?.title}</strong> (৳{selectedInteraction.ui_component.data?.product?.selling_price?.toLocaleString()} BDT | Qty: {selectedInteraction.ui_component.data?.product?.initial_quantity})</span>
-                        )}
-                        {selectedInteraction.ui_component.type === "product_carousel" && (
-                          <span>Catalog Carousel: <strong>{selectedInteraction.ui_component.data?.products?.length || 0} products</strong> rendered directly into scrollable multi-card carousel.</span>
-                        )}
-                        {selectedInteraction.ui_component.type === "order_tracking_card" && (
-                          <span>Live Order: <strong>{selectedInteraction.ui_component.data?.order?.order_number}</strong> (Status: {selectedInteraction.ui_component.data?.order?.order_status?.toUpperCase()} | ৳{selectedInteraction.ui_component.data?.order?.total_amount?.toLocaleString()} BDT)</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-
-            </div>
+              );
+            })()}
 
             {/* Modal Footer */}
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">

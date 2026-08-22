@@ -313,6 +313,7 @@ export interface TokenBreakdown {
   rag_context_tokens: number;
   chat_history_tokens: number;
   user_query_tokens: number;
+  tools_schema_tokens?: number;
   prompt_tokens: number;
   completion_tokens: number;
   total_tokens: number;

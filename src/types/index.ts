@@ -227,6 +227,8 @@ export interface Message {
   completion_tokens?: number;
   latency_ms?: number | null;
   sources_cited?: any[];
+  metadata_json?: Record<string, any>;
+  ui_component?: Record<string, any>;
   created_at: string;
 }
 

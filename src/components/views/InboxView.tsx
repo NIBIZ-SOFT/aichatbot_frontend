@@ -12,6 +12,7 @@ import { Conversation, Message, ConversationStatus, ConversationPriority, User a
 import { api } from "../../lib/api";
 import { notificationSound } from "../../lib/notificationSound";
 import MarkdownMessage from "../common/MarkdownMessage";
+import GenerativeUIPreview from "../chat/GenerativeUIPreview";
 
 export default function InboxView() {
   const { user } = useAuth();
@@ -173,7 +174,9 @@ export default function InboxView() {
                     sender_name: data.sender_name || "Customer",
                     content: data.content,
                     created_at: data.created_at || new Date().toISOString(),
-                    is_internal_note: false
+                    is_internal_note: false,
+                    metadata_json: data.metadata_json || (data.ui_component ? { ui_component: data.ui_component } : {}),
+                    ui_component: data.ui_component || data.metadata_json?.ui_component
                   };
                   return [...prev, newM];
                 });
@@ -776,6 +779,15 @@ export default function InboxView() {
                         content={m.content}
                         isDark={m.sender_type === "ai" || m.sender_type === "agent"}
                       />
+
+                      {/* Generative UI Component Preview (Product Card, Carousel, Order Stepper) */}
+                      {(m.metadata_json?.ui_component || m.ui_component) && (
+                        <GenerativeUIPreview
+                          uiComponent={m.metadata_json?.ui_component || m.ui_component}
+                          isDark={m.sender_type === "ai" || m.sender_type === "agent"}
+                        />
+                      )}
+
                       {/* WhatsApp / Telegram Style Date & Time Indicator */}
                       <div className={`flex items-center justify-end gap-1.5 text-[9.5px] mt-2 pt-1 border-t ${
                         m.sender_type === "visitor" ? "border-slate-100 text-slate-400" : "border-white/10 text-white/70"

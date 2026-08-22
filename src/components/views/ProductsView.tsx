@@ -248,7 +248,7 @@ export default function ProductsView() {
 
       {/* Top Header Banner */}
       <div
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden transition-all"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden transition-all"
         style={{
           backgroundColor: currentTheme.dark_card,
           borderColor: currentTheme.dark_border,
@@ -256,7 +256,7 @@ export default function ProductsView() {
         }}
       >
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <span
               className="text-[10px] font-extrabold px-3 py-1 rounded-full border uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
               style={{
@@ -275,12 +275,12 @@ export default function ProductsView() {
               <Trophy className="w-3 h-3" /> Smart Priority Ordering
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
             <div
-              className="p-2.5 rounded-2xl flex items-center justify-center text-white shadow-lg"
+              className="p-2 sm:p-2.5 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0"
               style={{ backgroundColor: currentTheme.primary_color }}
             >
-              <ShoppingBag className="w-6 h-6" />
+              <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <span>E-Commerce Product Catalog</span>
           </h1>
@@ -290,7 +290,7 @@ export default function ProductsView() {
         </div>
         <button
           onClick={handleOpenAddModal}
-          className="relative z-10 px-5 py-3 rounded-2xl text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer"
+          className="relative z-10 w-full sm:w-auto px-5 py-3 rounded-2xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer shrink-0"
           style={{
             backgroundColor: currentTheme.primary_color,
             boxShadow: `0 10px 25px -5px ${currentTheme.primary_color}50`
@@ -306,7 +306,7 @@ export default function ProductsView() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: "Total Catalog Items", value: totalProducts, icon: <Package className="w-4 h-4 text-slate-500" />, sub: "Synchronized with AI Knowledge", color: "text-white" },
           { label: "Active & In Stock", value: inStockCount, icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" />, sub: "Ready for instant in-chat orders", color: "text-emerald-400" },
@@ -315,15 +315,15 @@ export default function ProductsView() {
         ].map((kpi, i) => (
           <div
             key={i}
-            className="p-5 rounded-2xl border transition-all"
+            className="p-4 sm:p-5 rounded-2xl border transition-all"
             style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
           >
             <div className="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
-              <span>{kpi.label}</span>
+              <span className="truncate">{kpi.label}</span>
               {kpi.icon}
             </div>
-            <div className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
-            <div className="text-[11px] text-slate-500 mt-1 font-medium">{kpi.sub}</div>
+            <div className={`text-xl sm:text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
+            <div className="text-[10.5px] text-slate-500 mt-1 font-medium truncate">{kpi.sub}</div>
           </div>
         ))}
       </div>
@@ -348,14 +348,14 @@ export default function ProductsView() {
           </div>
 
           {/* Category Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 flex-wrap">
+          <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1.5 md:pb-0 custom-scrollbar-horizontal flex-nowrap sm:flex-wrap">
             {categories.map(cat => {
               const isSelected = selectedCategory === cat;
               return (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all capitalize whitespace-nowrap cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all capitalize whitespace-nowrap cursor-pointer shrink-0 ${
                     isSelected ? "text-white shadow-md" : "text-slate-400 hover:text-white bg-slate-950/50 hover:bg-slate-900"
                   }`}
                   style={isSelected ? { backgroundColor: currentTheme.primary_color } : {}}

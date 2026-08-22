@@ -226,9 +226,9 @@ export default function SettingsView() {
     <div className="space-y-6 max-w-5xl mx-auto pb-12 font-sans antialiased">
 
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-800 shadow-xl">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-[10px] font-extrabold text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-500/20 uppercase tracking-wide">
               Store Profile & Gateways
             </span>
@@ -236,9 +236,9 @@ export default function SettingsView() {
               Active Enterprise
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-2 flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-indigo-500" />
-            Organization Business Settings
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-1 flex items-center gap-2">
+            <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500 shrink-0" />
+            <span>Organization Business Settings</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
             Setup your business category, bKash Merchant Payment Gateway, and Automated SMS triggers.
@@ -247,10 +247,10 @@ export default function SettingsView() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-800 bg-slate-900/50 rounded-2xl p-1.5 gap-2">
+      <div className="flex border-b border-slate-800 bg-slate-900/50 rounded-2xl p-1.5 gap-1.5 sm:gap-2 overflow-x-auto custom-scrollbar-horizontal flex-nowrap">
         <button
           onClick={() => setActiveTab("profile")}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${activeTab === "profile"
+          className={`flex-1 min-w-[170px] py-2.5 px-3 sm:px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 ${activeTab === "profile"
               ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
               : "text-slate-400 hover:text-white"
             }`}
@@ -260,7 +260,7 @@ export default function SettingsView() {
         </button>
         <button
           onClick={() => setActiveTab("payment_sms")}
-          className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${activeTab === "payment_sms"
+          className={`flex-1 min-w-[170px] py-2.5 px-3 sm:px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0 ${activeTab === "payment_sms"
               ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
               : "text-slate-400 hover:text-white"
             }`}

@@ -12,13 +12,14 @@ import {
   ArrowRight, ShieldCheck, Zap, Globe, Cpu, ChevronRight,
   TrendingUp, Users, Smartphone, FileText, Lock, Headphones,
   Star, DollarSign, Calculator, HelpCircle, ChevronDown, ChevronUp,
-  Play, Send, RefreshCw, Eye, Award, Check, Maximize2, Minimize2, X
+  Play, Send, RefreshCw, Eye, Award, Check, Maximize2, Minimize2, X, Menu
 } from "lucide-react";
 
 export default function LandingPage() {
   const router = useRouter();
   const { currentTheme } = useTheme();
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [selectedPlanTier, setSelectedPlanTier] = useState<string>("growth");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual" | "custom">("monthly");
@@ -164,7 +165,16 @@ export default function LandingPage() {
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      // Clean up script tag and any widget DOM elements when navigating away / logging in
+      const scriptEl = document.getElementById(scriptId);
+      if (scriptEl) scriptEl.remove();
+
+      const widgetHosts = document.querySelectorAll("#aiaas-widget-host, #enterprise-ai-widget-root, [id^='aiaas-'], [id^='enterprise-ai-widget']");
+      widgetHosts.forEach(el => el.remove());
+    };
   }, [currentTheme.primary_color]);
 
   // Interactive Live Chat Simulator State connected to live AI backend
@@ -277,25 +287,25 @@ export default function LandingPage() {
           borderColor: currentTheme.dark_border
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Logo & Platform Name */}
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group min-w-0">
             {currentTheme.logo_url ? (
-              <img src={currentTheme.logo_url} alt="Logo" className="h-9 w-auto max-w-[120px] object-contain rounded-xl shadow-md transition-transform group-hover:scale-105" />
+              <img src={currentTheme.logo_url} alt="Logo" className="h-8 sm:h-9 w-auto max-w-[100px] sm:max-w-[120px] object-contain rounded-xl shadow-md transition-transform group-hover:scale-105 shrink-0" />
             ) : (
               <div
-                className="h-9 w-9 rounded-xl flex items-center justify-center font-bold text-white shadow-md transition-transform group-hover:scale-105 shrink-0"
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center font-bold text-white shadow-md transition-transform group-hover:scale-105 shrink-0"
                 style={{ backgroundColor: currentTheme.primary_color }}
               >
-                <Layers className="w-5 h-5 text-white" />
+                <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
             )}
-            <div>
-              <div className="font-extrabold text-white text-base tracking-tight flex items-center gap-1.5">
-                <span>{currentTheme.platform_name || "Enterprise AIaaS"}</span>
+            <div className="min-w-0">
+              <div className="font-extrabold text-white text-sm sm:text-base tracking-tight flex items-center gap-1.5 truncate">
+                <span className="truncate">{currentTheme.platform_name || "Enterprise AIaaS"}</span>
                 <span
-                  className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide border text-white"
+                  className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold uppercase tracking-wide border text-white shrink-0"
                   style={{
                     backgroundColor: `${currentTheme.primary_color}33`,
                     borderColor: currentTheme.primary_color
@@ -304,14 +314,14 @@ export default function LandingPage() {
                   Live
                 </span>
               </div>
-              <div className="text-[11px] text-slate-400 font-medium">
+              <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate hidden sm:block">
                 {currentTheme.platform_tagline || "Autonomous Customer Support & Sales Cloud"}
               </div>
             </div>
           </Link>
 
-          {/* Center Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-300">
+          {/* Center Navigation Links (Desktop) */}
+          <nav className="hidden md:flex items-center gap-5 lg:gap-6 text-xs font-semibold text-slate-300">
             <a href="#features" className="hover:text-white transition-colors">Features</a>
             <a href="#multichannel" className="hover:text-white transition-colors">Channels</a>
             <a href="#live-demo" className="hover:text-white transition-colors">Live Sandbox</a>
@@ -320,25 +330,111 @@ export default function LandingPage() {
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </nav>
 
-          {/* Right Action Buttons */}
-          <div className="flex items-center gap-3">
+          {/* Right Action Buttons & Mobile Hamburger Button */}
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <Link
               href="/login"
-              className="px-4 py-2 text-xs font-bold text-slate-200 hover:text-white rounded-xl transition-colors border border-transparent hover:border-slate-700"
+              className="px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold text-slate-200 hover:text-white rounded-xl transition-colors border border-transparent hover:border-slate-700 whitespace-nowrap"
             >
               Sign In
             </Link>
 
             <button
               onClick={() => setShowPricingModal(true)}
-              className="px-4 py-2 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:opacity-95 active:scale-95"
+              className="hidden sm:flex px-3 sm:px-4 py-1.5 sm:py-2 text-white text-xs font-bold rounded-xl shadow-md transition-all items-center gap-1.5 cursor-pointer hover:opacity-95 active:scale-95 whitespace-nowrap"
               style={{ backgroundColor: currentTheme.primary_color }}
             >
               <span>Get Started</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
+
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-xl transition-all md:hidden cursor-pointer shrink-0 border border-slate-700/60"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-slate-200" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer / Dropdown */}
+        {mobileMenuOpen && (
+          <div
+            className="md:hidden border-t px-4 pt-3 pb-6 space-y-3 animate-in slide-in-from-top-2 duration-200 shadow-2xl backdrop-blur-xl"
+            style={{
+              backgroundColor: currentTheme.dark_surface,
+              borderColor: currentTheme.dark_border
+            }}
+          >
+            <nav className="flex flex-col space-y-1 text-sm font-semibold text-slate-300">
+              <a
+                href="#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between"
+              >
+                <span>Features</span>
+                <ChevronRight className="w-4 h-4 opacity-50" />
+              </a>
+              <a
+                href="#multichannel"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between"
+              >
+                <span>Channels</span>
+                <ChevronRight className="w-4 h-4 opacity-50" />
+              </a>
+              <a
+                href="#live-demo"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between"
+              >
+                <span>Live AI Sandbox</span>
+                <ChevronRight className="w-4 h-4 opacity-50" />
+              </a>
+              <a
+                href="#calculator"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between"
+              >
+                <span>ROI Calculator</span>
+                <ChevronRight className="w-4 h-4 opacity-50" />
+              </a>
+              <a
+                href="#pricing"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between"
+              >
+                <span>Pricing (৳ BDT)</span>
+                <ChevronRight className="w-4 h-4 opacity-50" />
+              </a>
+              <a
+                href="#faq"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-xl hover:bg-slate-800 hover:text-white transition-colors flex items-center justify-between"
+              >
+                <span>FAQ</span>
+                <ChevronRight className="w-4 h-4 opacity-50" />
+              </a>
+            </nav>
+
+            <div className="pt-2 border-t border-slate-800 flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setShowPricingModal(true);
+                }}
+                className="w-full py-3 px-4 text-white text-xs font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-98"
+                style={{ backgroundColor: currentTheme.primary_color }}
+              >
+                <span>Get Started Free</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* ========================================================================= */}
@@ -424,28 +520,39 @@ export default function LandingPage() {
           </div>
 
           {/* INTERACTIVE HERO PRODUCT SIMULATION PREVIEW */}
-          <div id="live-demo" className={`pt-8 scroll-mt-24 transition-all ${isFullscreen ? "fixed inset-0 z-50 p-3 sm:p-6 bg-slate-950/95 backdrop-blur-2xl flex flex-col justify-center items-center overflow-hidden animate-in fade-in" : "max-w-5xl mx-auto"}`}>
+          <div id="live-demo" className={`pt-6 sm:pt-8 scroll-mt-24 transition-all ${isFullscreen ? "fixed inset-0 z-50 p-2 sm:p-6 bg-slate-950/95 backdrop-blur-2xl flex flex-col justify-center items-center overflow-y-auto animate-in fade-in" : "max-w-5xl mx-auto w-full"}`}>
             <div
-              className={`rounded-3xl border p-4 sm:p-6 shadow-2xl backdrop-blur-xl text-left transition-all ${isFullscreen ? "w-full max-w-6xl h-[90vh] flex flex-col justify-between" : "w-full"}`}
+              className={`rounded-2xl sm:rounded-3xl border p-3.5 sm:p-6 shadow-2xl backdrop-blur-xl text-left transition-all ${isFullscreen ? "w-full max-w-6xl min-h-[85vh] sm:h-[90vh] flex flex-col justify-between" : "w-full"}`}
               style={{
                 backgroundColor: currentTheme.dark_card,
                 borderColor: currentTheme.dark_border
               }}
             >
               {/* Mock Window Top Bar */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full bg-rose-500/80 inline-block"></span>
-                  <span className="h-3 w-3 rounded-full bg-amber-500/80 inline-block"></span>
-                  <span className="h-3 w-3 rounded-full bg-emerald-500/80 inline-block"></span>
-                  <span className="text-slate-400 font-mono font-medium ml-2 text-[11px] truncate">
-                    https://yourwebsite.com • Live AI Sandbox {isFullscreen && "(Fullscreen Mode)"}
-                  </span>
+              <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-800 text-xs gap-2 min-w-0">
+                {/* Left: Window Traffic Dots & Browser URL Pill */}
+                <div className="flex items-center gap-2 min-w-0 flex-1 max-w-[60%] sm:max-w-[70%]">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-rose-500/80 inline-block"></span>
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-amber-500/80 inline-block"></span>
+                    <span className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-emerald-500/80 inline-block"></span>
+                  </div>
+                  <div className="bg-slate-900/90 border border-slate-800 px-2 sm:px-3 py-1 rounded-lg flex items-center gap-1.5 min-w-0 truncate shadow-xs">
+                    <Globe className="w-3 h-3 text-slate-500 shrink-0" />
+                    <span className="text-slate-300 font-mono font-medium text-[10px] sm:text-[11px] truncate">
+                      https://yourwebsite.com
+                    </span>
+                    <span className="hidden md:inline text-slate-500 font-mono text-[10px] shrink-0">
+                      • Live AI Sandbox {isFullscreen && "(Fullscreen)"}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] bg-emerald-950/80 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-800 font-bold flex items-center gap-1 shadow-xs">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    AI Assistant LIVE
+
+                {/* Right: Live Status Badge & Fullscreen Toggle */}
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  <span className="text-[9.5px] sm:text-[10px] bg-emerald-950/80 text-emerald-400 px-2 sm:px-2.5 py-1 rounded-full border border-emerald-800 font-bold flex items-center gap-1 shadow-xs whitespace-nowrap">
+                    <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>AI <span className="hidden sm:inline">Assistant</span> LIVE</span>
                   </span>
 
                   {/* Fullscreen Expand / Collapse Toggle Button */}
@@ -453,17 +560,17 @@ export default function LandingPage() {
                     type="button"
                     onClick={() => setIsFullscreen(!isFullscreen)}
                     title={isFullscreen ? "Exit Fullscreen (Esc)" : "Expand to Fullscreen"}
-                    className="p-1.5 px-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl border border-slate-700 hover:border-slate-600 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-xs"
+                    className="p-1 sm:p-1.5 px-2 sm:px-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl border border-slate-700 hover:border-slate-600 transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5 text-xs font-semibold shadow-xs shrink-0"
                   >
                     {isFullscreen ? (
                       <>
                         <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="text-amber-300 text-[11px]">Minimize</span>
+                        <span className="text-amber-300 text-[10px] sm:text-[11px] hidden xs:inline sm:inline">Minimize</span>
                       </>
                     ) : (
                       <>
                         <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
-                        <span className="text-cyan-300 text-[11px]">Full Screen</span>
+                        <span className="text-cyan-300 text-[10px] sm:text-[11px] hidden xs:inline sm:inline">Full Screen</span>
                       </>
                     )}
                   </button>
@@ -633,15 +740,15 @@ export default function LandingPage() {
                   </div>
 
                   {/* Deploy to Website CTA */}
-                  <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs shrink-0">
+                  <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl flex flex-col xs:flex-row sm:flex-row items-start xs:items-center sm:items-center justify-between text-xs shrink-0 gap-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-                      <span className="text-slate-300 font-medium">Autonomous AI Active</span>
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
+                      <span className="text-slate-300 font-medium text-xs">Autonomous AI Engine Active</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => router.push("/pricing")}
-                      className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md transition-all"
+                      className="w-full xs:w-auto px-4 py-2 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-md transition-all shrink-0"
                     >
                       <span>Deploy to Website</span>
                       <ArrowRight className="w-3.5 h-3.5" />

@@ -744,12 +744,12 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
     <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans antialiased">
 
       {/* Top Command Center Header */}
-      <div className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden">
+      <div className="bg-slate-900 text-white p-5 sm:p-8 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 w-96 h-96 bg-gradient-to-bl from-indigo-600/20 via-purple-600/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10.5px] font-extrabold text-amber-400 bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-800/80 uppercase tracking-wide flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" /> Root Master Controller
               </span>
@@ -765,10 +765,10 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={loadData}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl border border-slate-700 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+              className="w-full sm:w-auto px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm shrink-0"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Refresh Metrics
             </button>

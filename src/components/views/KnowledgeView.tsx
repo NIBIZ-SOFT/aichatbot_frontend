@@ -478,12 +478,12 @@ export default function KnowledgeView() {
   };
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto pb-8">
       
       {/* Studio Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100 flex items-center gap-1">
               <Sparkles className="w-3 h-3 text-indigo-600" /> Unified AI Brain Studio
             </span>
@@ -491,9 +491,9 @@ export default function KnowledgeView() {
               pgvector RAG + Neural AI
             </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <BookOpen className="w-6 h-6 text-indigo-600" />
-            AI Brain & Knowledge Studio
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 shrink-0" />
+            <span>AI Brain & Knowledge Studio</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Train your AI with products and policies, customize bot tone and handover rules, and simulate live conversations.
@@ -503,7 +503,7 @@ export default function KnowledgeView() {
         {studioTab === "knowledge" && (
           <button
             onClick={() => setShowIngestModal(true)}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 flex items-center gap-2 transition-all cursor-pointer shrink-0"
+            className="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" /> Add Knowledge Document
           </button>
@@ -511,11 +511,11 @@ export default function KnowledgeView() {
       </div>
 
       {/* 4 Main Studio Tabs */}
-      <div className="flex border-b border-slate-200 gap-2 overflow-x-auto custom-scrollbar pb-0.5">
+      <div className="flex border-b border-slate-200 gap-1.5 sm:gap-2 overflow-x-auto custom-scrollbar-horizontal pb-1 flex-nowrap">
         <button
           type="button"
           onClick={() => setStudioTab("knowledge")}
-          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`pb-3 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             studioTab === "knowledge"
               ? "border-indigo-600 text-indigo-600"
               : "border-transparent text-slate-500 hover:text-slate-900"
@@ -527,7 +527,7 @@ export default function KnowledgeView() {
         <button
           type="button"
           onClick={() => setStudioTab("personality")}
-          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`pb-3 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             studioTab === "personality"
               ? "border-indigo-600 text-indigo-600"
               : "border-transparent text-slate-500 hover:text-slate-900"
@@ -539,25 +539,25 @@ export default function KnowledgeView() {
         <button
           type="button"
           onClick={() => setStudioTab("guardrails")}
-          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`pb-3 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             studioTab === "guardrails"
               ? "border-indigo-600 text-indigo-600"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
-          <Shield className="w-4 h-4 text-emerald-600" /> 3. 🛡️ AI Guardrails & Business Rules
+          <Shield className="w-4 h-4 text-emerald-600" /> 3. 🛡️ Guardrails & Rules
         </button>
 
         <button
           type="button"
           onClick={() => setStudioTab("simulator")}
-          className={`pb-3.5 px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+          className={`pb-3 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             studioTab === "simulator"
               ? "border-indigo-600 text-indigo-600"
               : "border-transparent text-slate-500 hover:text-slate-900"
           }`}
         >
-          <Zap className="w-4 h-4 text-amber-500" /> 4. Live AI Simulator & Playground
+          <Zap className="w-4 h-4 text-amber-500" /> 4. Live Simulator
         </button>
       </div>
 

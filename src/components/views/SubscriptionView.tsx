@@ -476,10 +476,10 @@ export default function SubscriptionView() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setIsTopupModalOpen(true)}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
               >
                 <Zap className="w-3.5 h-3.5 fill-white" />
                 <span>Recharge with bKash</span>
@@ -487,7 +487,7 @@ export default function SubscriptionView() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-xs">
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
               <div className="text-slate-500 font-medium">Total Top-Ups</div>
               <div className="text-base font-bold text-slate-900 font-mono mt-0.5">
@@ -513,7 +513,7 @@ export default function SubscriptionView() {
             <div className="pt-2">
               <div className="text-xs font-bold text-slate-700 mb-2">Recent Wallet Activity</div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full text-left text-xs border-collapse min-w-[500px]">
                   <thead>
                     <tr className="border-b border-slate-100 text-[11px] text-slate-400 font-mono">
                       <th className="py-2">Type</th>

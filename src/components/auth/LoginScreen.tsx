@@ -69,37 +69,37 @@ export default function LoginScreen() {
       
       {/* Top Header */}
       <header
-        className="px-6 sm:px-10 py-4 flex items-center justify-between border-b backdrop-blur-md sticky top-0 z-30 transition-colors"
+        className="px-4 sm:px-10 py-3.5 sm:py-4 flex items-center justify-between border-b backdrop-blur-md sticky top-0 z-30 transition-colors gap-2 sm:gap-4"
         style={{
           backgroundColor: `${currentTheme.dark_surface}E6`,
           borderColor: currentTheme.dark_border
         }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           {currentTheme.logo_url ? (
-            <img src={currentTheme.logo_url} alt="Logo" className="h-9 w-auto max-w-[120px] object-contain rounded-xl shadow-sm" />
+            <img src={currentTheme.logo_url} alt="Logo" className="h-8 sm:h-9 w-auto max-w-[100px] sm:max-w-[120px] object-contain rounded-xl shadow-sm shrink-0" />
           ) : (
             <div
-              className="h-9 w-9 rounded-xl flex items-center justify-center font-bold text-white shadow-sm transition-colors shrink-0"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center font-bold text-white shadow-sm transition-colors shrink-0"
               style={{ backgroundColor: currentTheme.primary_color }}
             >
               <Layers className="w-4 h-4 text-white" />
             </div>
           )}
-          <div>
-            <div className="font-bold text-white text-sm sm:text-base tracking-tight">
+          <div className="min-w-0">
+            <div className="font-bold text-white text-sm sm:text-base tracking-tight truncate">
               {currentTheme.platform_name || "AIaaS Enterprise Platform"}
             </div>
-            <div className="text-[11px] text-slate-400 font-normal">
+            <div className="text-[10px] sm:text-[11px] text-slate-400 font-normal truncate hidden sm:block">
               {currentTheme.platform_tagline || "Customer Communication & Autonomous AI Support"}
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={() => setShowPricingModal(true)}
-            className="px-4 py-2 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
             style={{ backgroundColor: currentTheme.primary_color }}
           >
             <span>Buy Plan / Sign Up</span>
@@ -124,11 +124,11 @@ export default function LoginScreen() {
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} />
 
       {/* Main Authentication Centerpiece */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 max-w-5xl mx-auto w-full my-auto">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 max-w-5xl mx-auto w-full my-auto">
         
         {/* Core Login Card */}
         <div
-          className="w-full max-w-md border rounded-2xl p-7 sm:p-8 shadow-2xl relative overflow-hidden transition-colors"
+          className="w-full max-w-md border rounded-2xl p-5 sm:p-8 shadow-2xl relative overflow-hidden transition-colors"
           style={{
             backgroundColor: currentTheme.dark_card,
             borderColor: currentTheme.dark_border

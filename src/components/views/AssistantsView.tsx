@@ -159,13 +159,13 @@ export default function AssistantsView() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto pb-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#0F1713] tracking-tight flex items-center gap-2.5">
-            <Bot className="w-5 h-5 text-[#008750]" />
-            AI Assistant Engine Studio
+            <Bot className="w-5 h-5 text-[#008750] shrink-0" />
+            <span>AI Assistant Engine Studio</span>
           </h1>
           <p className="text-xs sm:text-sm text-[#4F7863] mt-1">
             Configure dynamic system prompts, variable placeholders, safety guardrails, and pause/resume AI models.
@@ -173,7 +173,7 @@ export default function AssistantsView() {
         </div>
         <button
           onClick={handleOpenCreate}
-          className="px-4 py-2 bg-[#00C978] hover:bg-[#00B36B] text-[#080D0A] text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+          className="w-full sm:w-auto px-4 py-2.5 bg-[#00C978] hover:bg-[#00B36B] text-[#080D0A] text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" /> Create New Assistant
         </button>
@@ -185,7 +185,7 @@ export default function AssistantsView() {
           Loading assistants from PostgreSQL...
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {assistants.map(a => (
             <div
               key={a.id}

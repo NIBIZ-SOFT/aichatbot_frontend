@@ -174,23 +174,23 @@ export default function WebsitesView() {
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto pb-8">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 p-6 rounded-2xl border border-indigo-500/20 backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 p-5 sm:p-6 rounded-2xl border border-indigo-500/20 backdrop-blur-xl">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
               <Globe className="w-5 h-5" />
             </span>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Connected CDN Storefronts & Widgets</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Connected CDN Storefronts & Widgets</h1>
           </div>
-          <p className="text-sm text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-400">
             Configure dynamic business categories, customize in-chat product carousels, and embed AI commerce on any website.
           </p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium text-xs rounded-xl shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium text-xs rounded-xl shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Add Website CDN</span>
@@ -203,13 +203,13 @@ export default function WebsitesView() {
           <span>Loading CDN storefronts from PostgreSQL...</span>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           
           {/* Left 2 Cols: Connected Websites List, Customizer & Snippet */}
           <div className="lg:col-span-2 space-y-6">
             
             {/* Website Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {websites.map(w => (
                 <div
                   key={w.id}
@@ -223,7 +223,7 @@ export default function WebsitesView() {
                       }
                     ]);
                   }}
-                  className={`p-5 rounded-2xl border cursor-pointer transition-all ${
+                  className={`p-4 sm:p-5 rounded-2xl border cursor-pointer transition-all ${
                     selectedSite?.id === w.id
                       ? "bg-slate-900 border-indigo-500 shadow-lg ring-1 ring-indigo-500/50"
                       : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
@@ -235,7 +235,7 @@ export default function WebsitesView() {
                       {w.business_category === "ecommerce" ? "E-Commerce" : "SaaS"}
                     </span>
                   </div>
-                  <h4 className="font-bold text-sm text-white">{w.name}</h4>
+                  <h4 className="font-bold text-sm text-white truncate">{w.name}</h4>
                   <p className="text-xs text-indigo-400 font-medium mb-3 truncate">{w.domain}</p>
                   <div className="text-[10px] text-slate-400 bg-slate-950 p-2 rounded-lg border border-slate-800 font-mono truncate">
                     {w.widget_key}
@@ -247,10 +247,10 @@ export default function WebsitesView() {
             {/* Tab Controls for Selected Website: Embed Code vs Widget Customizer */}
             {selectedSite && (
               <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-                <div className="flex border-b border-slate-800 bg-slate-950/60 px-6 pt-3">
+                <div className="flex border-b border-slate-800 bg-slate-950/60 px-4 sm:px-6 pt-3 overflow-x-auto custom-scrollbar-horizontal flex-nowrap">
                   <button
                     onClick={() => setActiveTab("embed")}
-                    className={`pb-3 px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+                    className={`pb-3 px-3 sm:px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
                       activeTab === "embed"
                         ? "border-indigo-500 text-indigo-400"
                         : "border-transparent text-slate-400 hover:text-slate-200"
@@ -261,31 +261,31 @@ export default function WebsitesView() {
                   </button>
                   <button
                     onClick={() => setActiveTab("customizer")}
-                    className={`pb-3 px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors ${
+                    className={`pb-3 px-3 sm:px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
                       activeTab === "customizer"
                         ? "border-indigo-500 text-indigo-400"
                         : "border-transparent text-slate-400 hover:text-slate-200"
                     }`}
                   >
                     <Sliders className="w-4 h-4" />
-                    <span>E-Commerce Widget Customizer</span>
+                    <span>E-Commerce Customizer</span>
                   </button>
                 </div>
 
                 {activeTab === "embed" ? (
-                  <div className="p-6 space-y-4">
-                    <div className="flex justify-between items-center">
+                  <div className="p-4 sm:p-6 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <h3 className="font-bold text-sm text-white flex items-center gap-2">
                           <Code2 className="w-4 h-4 text-indigo-400" /> Embed Installation Snippet
                         </h3>
                         <p className="text-xs text-slate-400 mt-0.5">
-                          Paste this 1-line script into <strong className="text-white">{selectedSite.domain}</strong> before the closing &lt;/body&gt; tag.
+                          Paste this 1-line script into <strong className="text-white">{selectedSite.domain}</strong> before &lt;/body&gt;.
                         </p>
                       </div>
                       <button
                         onClick={() => handleCopySnippet(selectedSite.widget_key)}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/30 flex items-center gap-1.5 transition-all"
+                        className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
                       >
                         <Copy className="w-3.5 h-3.5" />
                         <span>Copy Code</span>

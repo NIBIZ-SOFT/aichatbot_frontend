@@ -188,11 +188,11 @@ export default function TeamView() {
   const capacityPercent = Math.min(100, Math.round((summary.total_members / summary.max_seats) * 100));
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto pb-8">
       {/* Header with Title & Add Member CTA */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100 flex items-center gap-1">
               <Lock className="w-3 h-3 text-indigo-600" /> Multi-Tenant Scoped
             </span>
@@ -200,35 +200,36 @@ export default function TeamView() {
               Max 4 Seats Rule Active
             </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Users className="w-6 h-6 text-indigo-600" />
-            Team Members & Role-Based Access Control
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 shrink-0" />
+            <span>Team Members & RBAC</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Manage your organization's staff, assign support/sales roles, and customize permissions stored in PostgreSQL 18.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
           <button
             onClick={fetchTeam}
             disabled={isLoading}
-            className="p-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+            className="p-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl transition-all cursor-pointer shrink-0"
             title="Refresh Team Data"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
+
           <button
             onClick={() => setShowInviteModal(true)}
             disabled={summary.is_limit_reached}
-            className={`px-4 py-2.5 text-xs font-bold rounded-xl shadow-md flex items-center gap-2 transition-all ${
+            className={`flex-1 sm:flex-none px-4 py-2.5 text-xs font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer ${
               summary.is_limit_reached
                 ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
-                : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20"
+                : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/25"
             }`}
           >
             <Plus className="w-4 h-4" />
-            {summary.is_limit_reached ? "Seat Limit Reached (4/4)" : "Add Team Member"}
+            <span>{summary.is_limit_reached ? "Seat Limit Reached (4/4)" : "Add Team Member"}</span>
           </button>
         </div>
       </div>

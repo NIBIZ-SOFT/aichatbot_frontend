@@ -72,11 +72,11 @@ export default function ContactsView() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Users className="w-5 h-5 text-blue-600" />
-            CRM Contacts & Leads
+            <Users className="w-5 h-5 text-blue-600 shrink-0" />
+            <span>CRM Contacts & Leads</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Centralized contact directory with automatic AI lead capture synchronized with PostgreSQL.
@@ -84,15 +84,15 @@ export default function ContactsView() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-xl shadow-sm flex items-center gap-2 transition-colors cursor-pointer"
+          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-xl shadow-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" /> Add New Contact
         </button>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <div className="relative w-72">
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+          <div className="relative w-full sm:w-72">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -108,53 +108,55 @@ export default function ContactsView() {
         {isLoading ? (
           <div className="p-12 text-center text-xs text-slate-400">Loading contacts from PostgreSQL...</div>
         ) : (
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-              <tr>
-                <th className="p-3.5 px-6">Name</th>
-                <th className="p-3.5">Company</th>
-                <th className="p-3.5">Contact Info</th>
-                <th className="p-3.5">Tags</th>
-                <th className="p-3.5 px-6 text-right">Added</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
-              {filteredContacts.map(c => (
-                <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="p-3.5 px-6 font-semibold text-slate-900 flex items-center gap-2.5">
-                    <div className="h-7 w-7 rounded-full bg-blue-50 text-blue-700 font-semibold flex items-center justify-center text-xs">
-                      {(c.name || "C").split(" ").map(n => n[0]).join("")}
-                    </div>
-                    {c.name}
-                  </td>
-                  <td className="p-3.5 text-slate-600">{c.company || "—"}</td>
-                  <td className="p-3.5 space-y-0.5">
-                    {c.email && <div className="text-slate-800 font-medium">{c.email}</div>}
-                    {c.phone && <div className="text-slate-500 text-[11px]">{c.phone}</div>}
-                  </td>
-                  <td className="p-3.5">
-                    <div className="flex gap-1 flex-wrap">
-                      {c.tags?.map((t, idx) => (
-                        <span key={idx} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200/60">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="p-3.5 px-6 text-right text-slate-400 font-mono text-[11px]">
-                    {c.created_at ? new Date(c.created_at).toLocaleDateString() : "Live"}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs min-w-[550px]">
+              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                <tr>
+                  <th className="p-3.5 px-6">Name</th>
+                  <th className="p-3.5">Company</th>
+                  <th className="p-3.5">Contact Info</th>
+                  <th className="p-3.5">Tags</th>
+                  <th className="p-3.5 px-6 text-right">Added</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700">
+                {filteredContacts.map(c => (
+                  <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="p-3.5 px-6 font-semibold text-slate-900 flex items-center gap-2.5">
+                      <div className="h-7 w-7 rounded-full bg-blue-50 text-blue-700 font-semibold flex items-center justify-center text-xs shrink-0">
+                        {(c.name || "C").split(" ").map(n => n[0]).join("")}
+                      </div>
+                      <span className="truncate">{c.name}</span>
+                    </td>
+                    <td className="p-3.5 text-slate-600">{c.company || "—"}</td>
+                    <td className="p-3.5 space-y-0.5">
+                      {c.email && <div className="text-slate-800 font-medium">{c.email}</div>}
+                      {c.phone && <div className="text-slate-500 text-[11px]">{c.phone}</div>}
+                    </td>
+                    <td className="p-3.5">
+                      <div className="flex gap-1 flex-wrap">
+                        {c.tags?.map((t, idx) => (
+                          <span key={idx} className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-medium border border-slate-200/60">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-3.5 px-6 text-right text-slate-400 font-mono text-[11px]">
+                      {c.created_at ? new Date(c.created_at).toLocaleDateString() : "Live"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
       {/* Add Contact Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto animate-in fade-in">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <h3 className="font-bold text-base text-slate-900">Add New CRM Contact</h3>
               <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg">

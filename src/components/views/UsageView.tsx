@@ -128,12 +128,12 @@ export default function UsageView() {
   });
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 max-w-6xl mx-auto pb-8">
       
       {/* Top Header & Tab Navigation */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100 flex items-center gap-1">
               <Sparkles className="w-3 h-3 text-indigo-600" /> Official Tokenizer Metered
             </span>
@@ -141,21 +141,21 @@ export default function UsageView() {
               Real-Time BDT (৳) Analytics
             </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Cpu className="w-6 h-6 text-indigo-600" />
-            AI Token Telemetry, Usage & Cost Meter
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Cpu className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 shrink-0" />
+            <span>AI Token Telemetry, Usage & Cost Meter</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
             Granular token cost breakdown per inquiry, RAG context telemetry, and cost reduction analytics.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           {/* Segmented View Switcher */}
-          <div className="p-1 bg-slate-100 rounded-2xl flex items-center border border-slate-200 text-xs font-bold">
+          <div className="p-1 bg-slate-100 rounded-2xl flex items-center border border-slate-200 text-xs font-bold w-full sm:w-auto">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === "overview"
                   ? "bg-white text-indigo-700 shadow-sm font-extrabold"
                   : "text-slate-600 hover:text-slate-900"
@@ -165,13 +165,13 @@ export default function UsageView() {
             </button>
             <button
               onClick={() => setActiveTab("telemetry")}
-              className={`px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`flex-1 sm:flex-none justify-center px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                 activeTab === "telemetry"
                   ? "bg-indigo-600 text-white shadow-sm font-extrabold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <Layers className="w-3.5 h-3.5" /> 🔬 Token Debugger
+              <Layers className="w-3.5 h-3.5" /> 🔬 Debugger
             </button>
           </div>
 
@@ -181,7 +181,7 @@ export default function UsageView() {
               fetchUsage(); 
               fetchTelemetry(); 
             }}
-            className="p-2 bg-white border border-slate-200 text-slate-700 rounded-2xl shadow-sm hover:border-indigo-300 transition-all cursor-pointer"
+            className="p-2.5 bg-white border border-slate-200 text-slate-700 rounded-2xl shadow-sm hover:border-indigo-300 transition-all cursor-pointer shrink-0"
             title="Recalculate Token Meter"
           >
             <RefreshCw className="w-4 h-4 text-indigo-600" />

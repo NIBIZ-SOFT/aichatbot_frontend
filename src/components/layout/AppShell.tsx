@@ -20,6 +20,18 @@ interface AppShellProps {
 export default function AppShell({ children, navKey, activeNav, requiredRoles, requiredRole }: AppShellProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
+
+  // Ensure public landing page CDN chat widget is stripped from authenticated workspace
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      const scriptEl = document.getElementById("platform-superadmin-chat-widget");
+      if (scriptEl) scriptEl.remove();
+
+      const widgetHosts = document.querySelectorAll("#aiaas-widget-host, #enterprise-ai-widget-root, [id^='aiaas-'], [id^='enterprise-ai-widget']");
+      widgetHosts.forEach(el => el.remove());
+    }
+  }, [isAuthenticated]);
 
   const currentNav = activeNav || navKey;
 
@@ -93,16 +105,23 @@ export default function AppShell({ children, navKey, activeNav, requiredRoles, r
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-100 font-sans antialiased">
-      {/* Sidebar Navigation with URL support */}
-      <Sidebar activeNav={derivedNavKey} />
+      {/* Sidebar Navigation with Mobile Drawer Support */}
+      <Sidebar
+        activeNav={derivedNavKey}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
+      />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Header */}
-        <Header activeNav={derivedNavKey} />
+        {/* Top Header with Hamburger Toggle */}
+        <Header
+          activeNav={derivedNavKey}
+          onToggleMobileNav={() => setMobileSidebarOpen(prev => !prev)}
+        />
 
         {/* Route Body */}
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-slate-100/90">
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 lg:p-8 bg-slate-100/90">
           {!hasAccess ? (
             <div className="max-w-md mx-auto mt-16 p-8 bg-white rounded-3xl border border-slate-200 shadow-xl text-center space-y-4">
               <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-200">

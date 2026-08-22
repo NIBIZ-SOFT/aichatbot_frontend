@@ -6,7 +6,7 @@ import { useToast } from "../../context/ToastContext";
 import {
   Search, Send, Pause, Play, CheckCircle2, UserCheck, Shield,
   Tag, Plus, X, AlertTriangle, MessageSquare, Phone, Mail, Globe, Sparkles, Filter, RefreshCw,
-  Lock, ArrowRightLeft, UserPlus, Eye, Volume2, VolumeX, Bell, Music, Radio
+  Lock, ArrowRightLeft, UserPlus, Eye, Volume2, VolumeX, Bell, Music, Radio, ArrowLeft
 } from "lucide-react";
 import { Conversation, Message, ConversationStatus, ConversationPriority, User as TeamUser } from "../../types";
 import { api } from "../../lib/api";
@@ -23,6 +23,7 @@ export default function InboxView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMessagesLoading, setIsMessagesLoading] = useState(false);
+  const [mobileActiveView, setMobileActiveView] = useState<"list" | "chat">("list");
 
   // Sound & Notification Preferences
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -397,15 +398,15 @@ export default function InboxView() {
   const assignedMember = teamMembers.find(m => m.id === activeConv.assigned_agent_id);
 
   return (
-    <div className="flex h-[calc(100vh-140px)] rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
+    <div className="flex h-[calc(100vh-90px)] sm:h-[calc(100vh-140px)] rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm">
       
       {/* LEFT COLUMN: Role-based Filters & Conversation Queue */}
-      <div className="w-80 border-r border-slate-200 flex flex-col bg-slate-50/50">
+      <div className={`w-full lg:w-80 border-r border-slate-200 flex flex-col bg-slate-50/50 ${mobileActiveView === 'chat' ? 'hidden lg:flex' : 'flex'}`}>
         
         {/* User Account / Role Badge & Notification Controls */}
         <div className="p-3 border-b border-slate-200 bg-white flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="relative">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="relative shrink-0">
               <div className="w-7 h-7 rounded-lg bg-blue-600 text-white font-semibold flex items-center justify-center text-xs uppercase shadow-xs">
                 {user?.full_name?.charAt(0) || "U"}
               </div>
@@ -416,12 +417,12 @@ export default function InboxView() {
                 title={isLiveConnected ? "Live WebSocket Stream Connected" : "Connecting..."}
               />
             </div>
-            <div>
-              <div className="text-xs font-semibold text-slate-900 leading-tight">{user?.full_name}</div>
-              <div className="text-[10px] text-slate-500 capitalize">{user?.role?.replace("_", " ")} • {user?.department || "Support"}</div>
+            <div className="min-w-0">
+              <div className="text-xs font-semibold text-slate-900 leading-tight truncate">{user?.full_name}</div>
+              <div className="text-[10px] text-slate-500 capitalize truncate">{user?.role?.replace("_", " ")} • {user?.department || "Support"}</div>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             {/* Sound Mute / Unmute Toggle */}
             <button
               onClick={toggleSound}
@@ -546,6 +547,7 @@ export default function InboxView() {
                   key={conv.id}
                   onClick={() => {
                     setSelectedId(conv.id);
+                    setMobileActiveView("chat");
                     if (conv.unread_count) {
                       setConversations(prev => prev.map(c => c.id === conv.id ? { ...c, unread_count: 0 } : c));
                     }
@@ -612,47 +614,60 @@ export default function InboxView() {
       </div>
 
       {/* CENTER & RIGHT: Active Conversation Thread & Sidebar */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className={`flex-1 flex flex-col bg-white min-w-0 ${mobileActiveView === 'list' ? 'hidden lg:flex' : 'flex'}`}>
         
-        {/* Top Control Bar: Agent Assignment, Department, AI Controller */}
-        <div className="p-3.5 px-6 border-b border-slate-200 flex items-center justify-between bg-white z-10">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-sm text-slate-900">{activeConv.visitor_name}</h3>
-              <span className="text-xs text-slate-400 font-normal">({activeConv.visitor_company || "Direct Storefront"})</span>
-              
-              {/* Department Selector */}
-              <select
-                disabled={isViewer}
-                value={activeConv.department || "Support"}
-                onChange={e => handleChangeDepartment(e.target.value)}
-                className="text-[11px] font-semibold bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-lg outline-none cursor-pointer hover:border-slate-300"
-              >
-                <option value="Support">Support</option>
-                <option value="Sales">Sales</option>
-                <option value="Technical">Technical</option>
-                <option value="Billing">Billing</option>
-              </select>
-            </div>
+        {/* Top Control Bar: Back button, Agent Assignment, Department, AI Controller */}
+        <div className="p-3 sm:p-3.5 px-4 sm:px-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between bg-white z-10 gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {/* Mobile Back to Queue Button */}
+            <button
+              type="button"
+              onClick={() => setMobileActiveView("list")}
+              className="p-1.5 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg lg:hidden shrink-0 flex items-center gap-1 font-bold text-xs"
+              title="Back to queue"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Queue</span>
+            </button>
 
-            {/* Sub-status and Assigned Agent */}
-            <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-1">
-              <span>Assigned: <strong className="text-slate-800 font-semibold">{assignedMember?.full_name || (activeConv.assigned_agent_id === user?.id ? "Me (" + user?.full_name + ")" : "Unassigned Queue")}</strong></span>
-              <span>•</span>
-              <span>Sentiment: <strong className={Number(activeConv.last_sentiment_score) > 0 ? "text-emerald-600" : "text-slate-600"}>{Number(activeConv.last_sentiment_score) > 0 ? `Positive (+${activeConv.last_sentiment_score})` : `Neutral (${activeConv.last_sentiment_score ?? 0.0})`}</strong></span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-sm text-slate-900 truncate">{activeConv.visitor_name}</h3>
+                <span className="text-xs text-slate-400 font-normal truncate">({activeConv.visitor_company || "Direct Storefront"})</span>
+                
+                {/* Department Selector */}
+                <select
+                  disabled={isViewer}
+                  value={activeConv.department || "Support"}
+                  onChange={e => handleChangeDepartment(e.target.value)}
+                  className="text-[11px] font-semibold bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-lg outline-none cursor-pointer hover:border-slate-300"
+                >
+                  <option value="Support">Support</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Technical">Technical</option>
+                  <option value="Billing">Billing</option>
+                </select>
+              </div>
+
+              {/* Sub-status and Assigned Agent */}
+              <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-1 truncate">
+                <span className="truncate">Assigned: <strong className="text-slate-800 font-semibold">{assignedMember?.full_name || (activeConv.assigned_agent_id === user?.id ? "Me (" + user?.full_name + ")" : "Unassigned Queue")}</strong></span>
+                <span>•</span>
+                <span className="shrink-0">Sentiment: <strong className={Number(activeConv.last_sentiment_score) > 0 ? "text-emerald-600" : "text-slate-600"}>{Number(activeConv.last_sentiment_score) > 0 ? `Positive (+${activeConv.last_sentiment_score})` : `Neutral (${activeConv.last_sentiment_score ?? 0.0})`}</strong></span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             {/* Quick Claim / Assign Dropdown */}
             {!isViewer && (
               <>
                 {activeConv.assigned_agent_id !== user?.id ? (
                   <button
                     onClick={handleClaimTicket}
-                    className="px-3 py-1.5 text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <UserPlus className="w-3.5 h-3.5" /> Claim Ticket
+                    <UserPlus className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Claim</span> Ticket
                   </button>
                 ) : null}
 
@@ -660,9 +675,9 @@ export default function InboxView() {
                   <select
                     value={activeConv.assigned_agent_id || ""}
                     onChange={e => handleAssignAgent(e.target.value)}
-                    className="text-xs bg-white border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg outline-none cursor-pointer hover:border-slate-300 shadow-xs"
+                    className="text-xs bg-white border border-slate-200 text-slate-700 px-2 sm:px-2.5 py-1.5 rounded-lg outline-none cursor-pointer hover:border-slate-300 shadow-xs max-w-[130px] truncate"
                   >
-                    <option value="">Assign Agent...</option>
+                    <option value="">Assign...</option>
                     {teamMembers.map(m => (
                       <option key={m.id} value={m.id}>
                         {m.full_name} ({m.department || m.role})
@@ -677,14 +692,14 @@ export default function InboxView() {
             {!isViewer && (
               <button
                 onClick={toggleAI}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
                   !activeConv.ai_paused
                     ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200"
                     : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200"
                 }`}
               >
                 {!activeConv.ai_paused ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-                {!activeConv.ai_paused ? "Pause AI" : "Resume AI"}
+                <span>{!activeConv.ai_paused ? "Pause" : "Resume"}</span>
               </button>
             )}
 
@@ -692,7 +707,7 @@ export default function InboxView() {
             {!isViewer && (
               <button
                 onClick={handleResolveTicket}
-                className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                   activeConv.status === "resolved"
                     ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300"
                     : "bg-blue-600 hover:bg-blue-500 text-white"

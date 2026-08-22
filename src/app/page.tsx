@@ -24,6 +24,7 @@ import SuperAdminView from "../components/views/SuperAdminView";
 
 export default function MainPage() {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [activeNav, setActiveNav] = useState<string>(
     user?.role === "super_admin" ? "superadmin" : "dashboard"
   );
@@ -33,6 +34,17 @@ export default function MainPage() {
       setActiveNav("superadmin");
     }
   }, [user?.role]);
+
+  // Strip public landing page CDN chat widget when logged into workspace
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      const scriptEl = document.getElementById("platform-superadmin-chat-widget");
+      if (scriptEl) scriptEl.remove();
+
+      const widgetHosts = document.querySelectorAll("#aiaas-widget-host, #enterprise-ai-widget-root, [id^='aiaas-'], [id^='enterprise-ai-widget']");
+      widgetHosts.forEach(el => el.remove());
+    }
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return (
@@ -80,16 +92,27 @@ export default function MainPage() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-100 font-sans antialiased">
       {/* Sidebar Navigation */}
-      <Sidebar activeNav={activeNav} onSelectNav={setActiveNav} />
+      <Sidebar
+        activeNav={activeNav}
+        onSelectNav={(nav) => {
+          setActiveNav(nav);
+          setMobileSidebarOpen(false);
+        }}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
+      />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
         {/* Top Header */}
-        <Header activeNav={activeNav} />
+        <Header
+          activeNav={activeNav}
+          onToggleMobileNav={() => setMobileSidebarOpen(prev => !prev)}
+        />
 
         {/* View Body */}
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8 bg-slate-100/90">
+        <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 lg:p-8 bg-slate-100/90">
           {!hasAccess ? (
             <div className="max-w-md mx-auto mt-16 p-8 bg-white rounded-3xl border border-slate-200 shadow-xl text-center space-y-4">
               <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-200">

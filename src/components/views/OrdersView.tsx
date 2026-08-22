@@ -125,7 +125,7 @@ export default function OrdersView() {
     <div className="space-y-6 max-w-7xl mx-auto pb-12 font-sans antialiased">
       {/* Top Header Banner themed dynamically */}
       <div 
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden transition-all"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden transition-all"
         style={{
           backgroundColor: currentTheme.dark_card,
           borderColor: currentTheme.dark_border,
@@ -133,7 +133,7 @@ export default function OrdersView() {
         }}
       >
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <span 
               className="text-[10px] font-extrabold px-3 py-1 rounded-full border uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
               style={{
@@ -150,12 +150,12 @@ export default function OrdersView() {
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
             <div 
-              className="p-2.5 rounded-2xl flex items-center justify-center text-white shadow-lg"
+              className="p-2 sm:p-2.5 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0"
               style={{ backgroundColor: currentTheme.primary_color }}
             >
-              <Package className="w-6 h-6" />
+              <Package className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <span>E-Commerce Orders & Fulfillment</span>
           </h1>
@@ -167,7 +167,7 @@ export default function OrdersView() {
 
         <button
           onClick={fetchOrders}
-          className="relative z-10 px-4 py-2.5 rounded-2xl bg-slate-950 hover:bg-slate-900 border text-slate-300 hover:text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+          className="relative z-10 w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-slate-950 hover:bg-slate-900 border text-slate-300 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm shrink-0"
           style={{ borderColor: currentTheme.dark_border }}
         >
           <RefreshCw className="w-3.5 h-3.5" />
@@ -182,62 +182,62 @@ export default function OrdersView() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div 
-          className="p-5 rounded-2xl border transition-all"
+          className="p-4 sm:p-5 rounded-2xl border transition-all"
           style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
         >
           <div className="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
-            <span>Total Gross Revenue</span>
+            <span className="truncate">Total Revenue</span>
             <DollarSign className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-emerald-400">
-            ৳{totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-xs font-bold text-slate-400">BDT</span>
+          <div className="text-xl sm:text-2xl font-black text-emerald-400">
+            ৳{totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 0 })} <span className="text-[10px] font-bold text-slate-400">BDT</span>
           </div>
-          <div className="text-[11px] text-slate-500 mt-1 font-medium">
+          <div className="text-[10.5px] text-slate-500 mt-1 font-medium truncate">
             Excludes cancelled orders
           </div>
         </div>
 
         <div 
-          className="p-5 rounded-2xl border transition-all"
+          className="p-4 sm:p-5 rounded-2xl border transition-all"
           style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
         >
           <div className="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
-            <span>New Pending Orders</span>
+            <span className="truncate">Pending Orders</span>
             <Clock className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-black text-amber-400">{pendingCount}</div>
-          <div className="text-[11px] text-slate-500 mt-1 font-medium">
-            Awaiting merchant verification
+          <div className="text-xl sm:text-2xl font-black text-amber-400">{pendingCount}</div>
+          <div className="text-[10.5px] text-slate-500 mt-1 font-medium truncate">
+            Awaiting verification
           </div>
         </div>
 
         <div 
-          className="p-5 rounded-2xl border transition-all"
+          className="p-4 sm:p-5 rounded-2xl border transition-all"
           style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
         >
           <div className="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
-            <span>In Courier Dispatch</span>
+            <span className="truncate">In Courier Dispatch</span>
             <Truck className="w-4 h-4 text-cyan-400" />
           </div>
-          <div className="text-2xl font-black text-cyan-400">{shippedCount}</div>
-          <div className="text-[11px] text-slate-500 mt-1 font-medium">
-            Dispatched with live SMS tracking
+          <div className="text-xl sm:text-2xl font-black text-cyan-400">{shippedCount}</div>
+          <div className="text-[10.5px] text-slate-500 mt-1 font-medium truncate">
+            Dispatched with live tracking
           </div>
         </div>
 
         <div 
-          className="p-5 rounded-2xl border transition-all"
+          className="p-4 sm:p-5 rounded-2xl border transition-all"
           style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
         >
           <div className="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
-            <span>Delivered & Settled</span>
+            <span className="truncate">Delivered & Settled</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-white">{deliveredCount}</div>
-          <div className="text-[11px] text-slate-500 mt-1 font-medium">
-            Successfully completed deliveries
+          <div className="text-xl sm:text-2xl font-black text-white">{deliveredCount}</div>
+          <div className="text-[10.5px] text-slate-500 mt-1 font-medium truncate">
+            Successfully completed
           </div>
         </div>
       </div>
@@ -261,14 +261,14 @@ export default function OrdersView() {
         </form>
 
         {/* Status Filter Buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1.5 md:pb-0 custom-scrollbar-horizontal flex-nowrap sm:flex-wrap">
           {statuses.map(s => {
             const isSelected = selectedStatus === s.id;
             return (
               <button
                 key={s.id}
                 onClick={() => setSelectedStatus(s.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${
                   isSelected
                     ? "text-white shadow-md"
                     : "text-slate-400 hover:text-white bg-slate-950/50 hover:bg-slate-900"
@@ -310,7 +310,7 @@ export default function OrdersView() {
           style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
         >
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[750px]">
               <thead className="bg-slate-950/60 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800/80">
                 <tr>
                   <th className="px-5 py-4">Order Number</th>

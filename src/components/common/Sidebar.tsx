@@ -19,6 +19,8 @@ import SystemDiagnosticsModal from "./SystemDiagnosticsModal";
 interface SidebarProps {
   activeNav?: string;
   onSelectNav?: (nav: string) => void;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
 interface NavItem {
@@ -35,7 +37,7 @@ interface NavGroup {
   items: NavItem[];
 }
 
-export default function Sidebar({ activeNav, onSelectNav }: SidebarProps) {
+export default function Sidebar({ activeNav, onSelectNav, mobileOpen, onCloseMobile }: SidebarProps) {
   const { user, logout } = useAuth();
   const { currentTheme } = useTheme();
   const pathname = usePathname() || "";
@@ -311,39 +313,44 @@ export default function Sidebar({ activeNav, onSelectNav }: SidebarProps) {
     ? "Master Platform" 
     : (currentTheme.platform_tagline || "AI Customer Support");
 
-  return (
-    <aside
-      className="w-64 flex flex-col justify-between shrink-0 select-none border-r transition-colors"
-      style={{
-        backgroundColor: currentTheme.dark_surface,
-        borderColor: currentTheme.dark_border,
-        color: "#9EADA5"
-      }}
-    >
-      
+  const renderSidebarContent = (isMobile: boolean = false) => (
+    <div className="flex flex-col justify-between h-full">
       {/* Brand Header */}
       <div>
         <div
-          className="h-16 px-4 flex items-center gap-3 border-b transition-colors"
+          className="h-16 px-4 flex items-center justify-between border-b transition-colors"
           style={{
             backgroundColor: currentTheme.dark_surface,
             borderColor: currentTheme.dark_border
           }}
         >
-          {currentTheme.logo_url ? (
-            <img src={currentTheme.logo_url} alt="Logo" className="h-9 w-auto max-w-[60px] object-contain rounded-xl shrink-0" />
-          ) : (
-            <div
-              className="h-9 w-9 rounded-xl flex items-center justify-center font-bold text-white shadow-sm shrink-0 transition-colors"
-              style={{ backgroundColor: currentTheme.primary_color }}
-            >
-              <Layers className="w-4 h-4 text-white" />
+          <div className="flex items-center gap-3 min-w-0">
+            {currentTheme.logo_url ? (
+              <img src={currentTheme.logo_url} alt="Logo" className="h-9 w-auto max-w-[60px] object-contain rounded-xl shrink-0" />
+            ) : (
+              <div
+                className="h-9 w-9 rounded-xl flex items-center justify-center font-bold text-white shadow-sm shrink-0 transition-colors"
+                style={{ backgroundColor: currentTheme.primary_color }}
+              >
+                <Layers className="w-4 h-4 text-white" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <div className="font-bold text-sm text-white tracking-tight truncate">{brandTitle}</div>
+              <div className="text-[11px] text-slate-400 font-medium truncate">{brandSub}</div>
             </div>
-          )}
-          <div className="min-w-0">
-            <div className="font-bold text-sm text-white tracking-tight truncate">{brandTitle}</div>
-            <div className="text-[11px] text-slate-400 font-medium truncate">{brandSub}</div>
           </div>
+
+          {/* Close button on Mobile */}
+          {isMobile && (
+            <button
+              onClick={onCloseMobile}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              title="Close Menu"
+            >
+              <LogOut className="w-4 h-4 rotate-180" />
+            </button>
+          )}
         </div>
 
         {/* User Role Card */}
@@ -355,7 +362,7 @@ export default function Sidebar({ activeNav, onSelectNav }: SidebarProps) {
         </div>
 
         {/* Dynamic Navigation Groups */}
-        <div className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-210px)] custom-scrollbar-dark">
+        <div className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-230px)] custom-scrollbar-dark">
           {visibleNavGroups.map((group, idx) => (
             <div key={idx}>
               <div className="px-2 mb-1.5 text-[10px] font-semibold text-slate-500 tracking-wider uppercase">
@@ -372,7 +379,10 @@ export default function Sidebar({ activeNav, onSelectNav }: SidebarProps) {
                     <Link
                       key={item.id}
                       href={item.route}
-                      onClick={() => onSelectNav && onSelectNav(item.id)}
+                      onClick={() => {
+                        if (onSelectNav) onSelectNav(item.id);
+                        if (isMobile && onCloseMobile) onCloseMobile();
+                      }}
                       className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
                         isActive
                           ? "text-white font-bold shadow-xs"
@@ -406,66 +416,68 @@ export default function Sidebar({ activeNav, onSelectNav }: SidebarProps) {
         </div>
       </div>
 
-      {/* Real-time System Connection Status Pill */}
-      <div className="px-3 pb-2">
-        <button
-          type="button"
-          onClick={() => setShowDiagnosticsModal(true)}
-          className="w-full py-1.5 px-3 rounded-xl border text-[11px] font-medium flex items-center justify-between transition-all hover:opacity-90 cursor-pointer shadow-xs"
-          style={{
-            backgroundColor: currentTheme.dark_card,
-            borderColor: currentTheme.dark_border,
-            color: "#94a3b8"
-          }}
-          title="Click to check connection health between Backend, Database & AI APIs"
-        >
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+      <div>
+        {/* Real-time System Connection Status Pill */}
+        <div className="px-3 pb-2">
+          <button
+            type="button"
+            onClick={() => setShowDiagnosticsModal(true)}
+            className="w-full py-1.5 px-3 rounded-xl border text-[11px] font-medium flex items-center justify-between transition-all hover:opacity-90 cursor-pointer shadow-xs"
+            style={{
+              backgroundColor: currentTheme.dark_card,
+              borderColor: currentTheme.dark_border,
+              color: "#94a3b8"
+            }}
+            title="Click to check connection health between Backend, Database & AI APIs"
+          >
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[10.5px] font-semibold text-slate-300">System Health</span>
+            </div>
+            <span className="text-[9.5px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-800/40 font-bold">
+              Diagnostics
             </span>
-            <span className="text-[10.5px] font-semibold text-slate-300">System Health</span>
-          </div>
-          <span className="text-[9.5px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-800/40 font-bold">
-            Diagnostics
-          </span>
-        </button>
-      </div>
+          </button>
+        </div>
 
-      {/* User Footer Profile */}
-      <div
-        className="p-3 border-t transition-colors"
-        style={{
-          backgroundColor: currentTheme.dark_surface,
-          borderColor: currentTheme.dark_border
-        }}
-      >
+        {/* User Footer Profile */}
         <div
-          className="flex items-center justify-between p-2 rounded-xl border transition-colors"
+          className="p-3 border-t transition-colors"
           style={{
-            backgroundColor: currentTheme.dark_card,
+            backgroundColor: currentTheme.dark_surface,
             borderColor: currentTheme.dark_border
           }}
         >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 transition-colors"
-              style={{ backgroundColor: currentTheme.primary_color }}
-            >
-              {user?.full_name ? user.full_name.charAt(0).toUpperCase() : "U"}
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs font-semibold text-white truncate">{user?.full_name || "User"}</div>
-              <div className="text-[10px] text-slate-400 font-mono truncate">{user?.email}</div>
-            </div>
-          </div>
-          <button
-            onClick={logout}
-            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-950/20 rounded-lg transition-colors cursor-pointer"
-            title="Sign Out"
+          <div
+            className="flex items-center justify-between p-2 rounded-xl border transition-colors"
+            style={{
+              backgroundColor: currentTheme.dark_card,
+              borderColor: currentTheme.dark_border
+            }}
           >
-            <LogOut className="w-3.5 h-3.5" />
-          </button>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                className="h-7 w-7 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 transition-colors"
+                style={{ backgroundColor: currentTheme.primary_color }}
+              >
+                {user?.full_name ? user.full_name.charAt(0).toUpperCase() : "U"}
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-white truncate">{user?.full_name || "User"}</div>
+                <div className="text-[10px] text-slate-400 font-mono truncate">{user?.email}</div>
+              </div>
+            </div>
+            <button
+              onClick={logout}
+              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-950/20 rounded-lg transition-colors cursor-pointer"
+              title="Sign Out"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -474,7 +486,42 @@ export default function Sidebar({ activeNav, onSelectNav }: SidebarProps) {
         isOpen={showDiagnosticsModal}
         onClose={() => setShowDiagnosticsModal(false)}
       />
+    </div>
+  );
 
-    </aside>
+  return (
+    <>
+      {/* 1. Desktop Persistent Sidebar */}
+      <aside
+        className="w-64 hidden lg:flex flex-col justify-between shrink-0 select-none border-r transition-colors"
+        style={{
+          backgroundColor: currentTheme.dark_surface,
+          borderColor: currentTheme.dark_border,
+          color: "#9EADA5"
+        }}
+      >
+        {renderSidebarContent(false)}
+      </aside>
+
+      {/* 2. Mobile Drawer Navigation with Animated Backdrop */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
+            onClick={onCloseMobile}
+          />
+          <aside
+            className="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] flex flex-col justify-between select-none border-r shadow-2xl transition-transform duration-300 animate-in slide-in-from-left"
+            style={{
+              backgroundColor: currentTheme.dark_surface,
+              borderColor: currentTheme.dark_border,
+              color: "#9EADA5"
+            }}
+          >
+            {renderSidebarContent(true)}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

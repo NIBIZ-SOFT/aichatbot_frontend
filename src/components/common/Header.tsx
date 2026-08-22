@@ -7,16 +7,17 @@ import { useTheme } from "../../context/ThemeContext";
 import { useToast } from "../../context/ToastContext";
 import {
   Search, Bell, Check, CheckCheck, Trash2, ExternalLink,
-  ShoppingBag, MessageSquare, Zap, Cpu, Activity, Clock, X
+  ShoppingBag, MessageSquare, Zap, Cpu, Activity, Clock, X, Menu
 } from "lucide-react";
 import { api } from "../../lib/api";
 
 interface HeaderProps {
   onOpenNotifications?: () => void;
   activeNav: string;
+  onToggleMobileNav?: () => void;
 }
 
-export default function Header({ onOpenNotifications, activeNav }: HeaderProps) {
+export default function Header({ onOpenNotifications, activeNav, onToggleMobileNav }: HeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { currentTheme } = useTheme();
@@ -127,22 +128,33 @@ export default function Header({ onOpenNotifications, activeNav }: HeaderProps) 
   });
 
   return (
-    <header className="h-16 bg-white border-b border-[#E1E8E4] px-6 flex items-center justify-between shrink-0 relative z-30 font-sans">
+    <header className="h-16 bg-white border-b border-[#E1E8E4] px-4 sm:px-6 flex items-center justify-between shrink-0 relative z-30 font-sans gap-3">
       
-      {/* Left: Global Search Bar */}
-      <div className="flex items-center gap-4 flex-1 max-w-md">
-        <div className="relative w-full">
+      {/* Left: Mobile Toggle & Global Search Bar */}
+      <div className="flex items-center gap-2 sm:gap-4 flex-1 max-w-md min-w-0">
+        {onToggleMobileNav && (
+          <button
+            type="button"
+            onClick={onToggleMobileNav}
+            className="p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all lg:hidden cursor-pointer shrink-0"
+            title="Open Navigation Menu"
+          >
+            <Menu className="w-5 h-5 text-slate-700" />
+          </button>
+        )}
+
+        <div className="relative w-full min-w-0">
           <Search className="w-4 h-4 text-[#759B87] absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search conversations, orders, customers..."
-            className="w-full pl-9 pr-4 py-1.5 text-xs bg-[#F4F7F5] hover:bg-[#EBF2EE] border border-[#CBD7D0] rounded-xl outline-hidden focus:bg-white focus:border-[#00C978] focus:ring-1 focus:ring-[#00C978] transition-all text-[#0F1713] placeholder:text-[#759B87]"
+            placeholder="Search conversations, orders..."
+            className="w-full pl-9 pr-3 sm:pr-4 py-1.5 text-xs bg-[#F4F7F5] hover:bg-[#EBF2EE] border border-[#CBD7D0] rounded-xl outline-hidden focus:bg-white focus:border-[#00C978] focus:ring-1 focus:ring-[#00C978] transition-all text-[#0F1713] placeholder:text-[#759B87] truncate"
           />
         </div>
       </div>
 
       {/* Right: Notifications & User Menu */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         
         {/* Real-Time Notifications Popover */}
         <div className="relative">
@@ -163,7 +175,7 @@ export default function Header({ onOpenNotifications, activeNav }: HeaderProps) 
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 mt-2 w-84 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 p-0 z-50 animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
+            <div className="fixed sm:absolute inset-x-2 sm:inset-x-auto right-2 sm:right-0 top-18 sm:top-auto sm:mt-2 w-auto sm:w-96 max-w-[calc(100vw-1rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 p-0 z-50 animate-in fade-in zoom-in-95 duration-150 overflow-hidden">
               
               {/* Header */}
               <div className="p-3.5 bg-slate-900 text-white flex items-center justify-between">

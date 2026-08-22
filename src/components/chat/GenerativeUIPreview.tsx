@@ -526,6 +526,89 @@ function OrderSuccessCardView({ data, isDark }: { data: any; isDark?: boolean })
 }
 
 // -------------------------------------------------------------
+// 6. bKash Verified Payment Receipt Card (Formal Digital Invoice)
+// -------------------------------------------------------------
+function BkashConfirmedReceiptCardView({ data, isDark }: { data: any; isDark?: boolean }) {
+  if (!data) return null;
+
+  return (
+    <div
+      className={`rounded-2xl border p-4 mt-2.5 transition-all shadow-md space-y-3 max-w-sm ${
+        isDark
+          ? "bg-slate-900/95 border-pink-900/50 text-white"
+          : "bg-gradient-to-b from-pink-50/70 to-white border-pink-200 text-slate-900"
+      }`}
+    >
+      {/* Header with bKash Brand Badge & Verified Stamp */}
+      <div className="flex items-center justify-between pb-2 border-b border-pink-200/60 dark:border-pink-900/50">
+        <div className="flex items-center gap-1.5">
+          <div className="w-5 h-5 rounded-md bg-[#E2136E] text-white flex items-center justify-center font-bold text-[10px] shadow-xs">
+            b
+          </div>
+          <span className="font-bold text-xs text-pink-700 dark:text-pink-300">
+            Payment Receipt
+          </span>
+        </div>
+        <span className="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase tracking-wider flex items-center gap-1">
+          <CheckCircle2 className="w-3 h-3" />
+          <span>PAID & SETTLED</span>
+        </span>
+      </div>
+
+      {/* Itemized Receipt Table */}
+      <div className="space-y-1.5 text-xs">
+        <div className="flex justify-between items-center py-0.5">
+          <span className="text-slate-500 dark:text-slate-400 text-[11px]">Order Number:</span>
+          <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded text-[11px]">
+            {data.order_number}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center py-0.5">
+          <span className="text-slate-500 dark:text-slate-400 text-[11px]">bKash TrxID:</span>
+          <span className="font-mono font-bold text-[#E2136E] bg-pink-50 dark:bg-pink-950/60 px-1.5 py-0.5 rounded text-[11px]">
+            {data.bkash_trx_id || data.trx_id || "TRX-VERIFIED"}
+          </span>
+        </div>
+
+        {data.items_summary && (
+          <div className="py-1 border-t border-dashed border-slate-200 dark:border-slate-800">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Purchased Items:</span>
+            <div className="text-[11.5px] font-medium text-slate-800 dark:text-slate-200 mt-0.5">
+              {data.items_summary}
+            </div>
+          </div>
+        )}
+
+        {data.delivery_address && (
+          <div className="py-1 border-t border-dashed border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-1">
+            <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
+            <span className="truncate">{data.delivery_address}</span>
+          </div>
+        )}
+
+        {/* Total Paid Highlight */}
+        <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
+          <span className="text-slate-500 dark:text-slate-400 font-semibold">Total Paid:</span>
+          <span className="font-mono font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
+            ৳{(data.total_amount || 0).toLocaleString()} BDT
+          </span>
+        </div>
+      </div>
+
+      {/* Footer Dispatch Notification */}
+      <div className="pt-2 border-t border-pink-200/60 dark:border-pink-900/50 flex items-center justify-between text-[10px] text-pink-800 dark:text-pink-300">
+        <span className="flex items-center gap-1">
+          <MessageSquare className="w-3 h-3 text-[#E2136E]" />
+          <span>Automated SMS Dispatched</span>
+        </span>
+        <span className="font-bold text-emerald-600 dark:text-emerald-400">⚡ In Dispatch Queue</span>
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
 // Main Generative UI Entry Point (Open-Closed SOLID Principle)
 // -------------------------------------------------------------
 export default function GenerativeUIPreview({ uiComponent, isDark }: GenerativeUIPreviewProps) {
@@ -541,6 +624,9 @@ export default function GenerativeUIPreview({ uiComponent, isDark }: GenerativeU
     case "bkash_payment_card":
     case "bkash_pending_card":
       return <BkashPaymentCardView data={uiComponent.data} isDark={isDark} />;
+    case "bkash_confirmed_card":
+    case "payment_receipt_card":
+      return <BkashConfirmedReceiptCardView data={uiComponent.data} isDark={isDark} />;
     case "order_success_card":
     case "order_confirmed_card":
       return <OrderSuccessCardView data={uiComponent.data} isDark={isDark} />;

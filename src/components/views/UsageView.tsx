@@ -466,7 +466,9 @@ export default function UsageView() {
               <div className="text-2xl font-black text-amber-900 font-mono">
                 ৳{telemetry?.kpi.estimated_cost_bdt_1k_chats.toFixed(2) || "33.30"} BDT
               </div>
-              <p className="text-[11px] text-amber-700">Ultra cost-efficient Gemini Flash</p>
+              <p className="text-[11px] text-amber-700">
+                Contract Rate: <strong>৳{telemetry?.kpi.contracted_token_rate_bdt_per_10k || "1.50"}</strong>/10k tokens {telemetry?.kpi.is_custom_contract_rate ? "★ VIP Deal" : ""}
+              </p>
             </div>
           </div>
 

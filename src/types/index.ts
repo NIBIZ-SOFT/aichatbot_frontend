@@ -343,6 +343,8 @@ export interface TokenTelemetryResponse {
     avg_prompt_tokens: number;
     avg_rag_tokens: number;
     avg_output_tokens: number;
+    contracted_token_rate_bdt_per_10k?: number;
+    is_custom_contract_rate?: boolean;
     avg_cost_bdt_per_chat: number;
     estimated_cost_bdt_1k_chats: number;
   };

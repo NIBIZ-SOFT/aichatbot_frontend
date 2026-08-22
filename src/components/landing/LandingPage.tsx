@@ -20,9 +20,127 @@ export default function LandingPage() {
   const { currentTheme } = useTheme();
 
   const [showPricingModal, setShowPricingModal] = useState(false);
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [selectedPlanTier, setSelectedPlanTier] = useState<string>("growth");
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual" | "custom">("monthly");
   const [activeFeatureTab, setActiveFeatureTab] = useState<"rag" | "inbox" | "bkash" | "security">("rag");
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Custom Slider Builder & Pay-As-You-Go State
+  const [customTokens, setCustomTokens] = useState<number>(1500000);
+  const [customSeats, setCustomSeats] = useState<number>(3);
+  const [customWebsites, setCustomWebsites] = useState<number>(2);
+  const [customDocs, setCustomDocs] = useState<number>(75);
+  const [customModules, setCustomModules] = useState<{
+    custom_branding: boolean;
+    sms_notifications: boolean;
+    dedicated_sla: boolean;
+  }>({
+    custom_branding: false,
+    sms_notifications: true,
+    dedicated_sla: false,
+  });
+  const [walletTopupPreset, setWalletTopupPreset] = useState<number>(1000);
+  const [customAnnual, setCustomAnnual] = useState<boolean>(false);
+  const [isPaygEnabled, setIsPaygEnabled] = useState<boolean>(true);
+  const [defaultTokenRatePer10k, setDefaultTokenRatePer10k] = useState<number>(1.50);
+
+  // Dynamic Subscription Plans State loaded from PostgreSQL database
+  const [dbPlans, setDbPlans] = useState<any[]>([
+    {
+      code: "starter",
+      name: "Starter Package",
+      description: "Perfect for single website stores and small businesses in Bangladesh.",
+      badge_text: null,
+      monthly_price_bdt: 4990,
+      annual_price_bdt: 4240,
+      monthly_token_limit: 500000,
+      max_agents: 2,
+      max_websites: 1,
+      max_knowledge_docs: 50,
+      features: [
+        "500,000 AI Tokens / month",
+        "1 Connected Website Widget",
+        "2 Human Support Seats",
+        "50 Knowledge Documents & URLs",
+        "bKash Automated Invoicing"
+      ],
+      is_popular: false
+    },
+    {
+      code: "growth",
+      name: "Growth Package",
+      description: "Website Live Chatbot with Instant RAG & Live Support Handover.",
+      badge_text: "Most Popular Choice",
+      monthly_price_bdt: 19990,
+      annual_price_bdt: 16990,
+      monthly_token_limit: 2500000,
+      max_agents: 10,
+      max_websites: 5,
+      max_knowledge_docs: 250,
+      features: [
+        "2,500,000 AI Tokens / month",
+        "5 Connected Website Widgets",
+        "10 Human Support Seats",
+        "250 Knowledge Documents & URLs",
+        "Live Agent Handover Inbox",
+        "bKash Merchant Billing"
+      ],
+      is_popular: true
+    },
+    {
+      code: "enterprise",
+      name: "Enterprise Package",
+      description: "Complete white-label, 99.99% uptime SLA, and multi-team workspace routing.",
+      badge_text: null,
+      monthly_price_bdt: 49990,
+      annual_price_bdt: 42490,
+      monthly_token_limit: 10000000,
+      max_agents: 25,
+      max_websites: 9999,
+      max_knowledge_docs: 1000,
+      features: [
+        "10,000,000 AI Tokens / month",
+        "Unlimited Connected Websites",
+        "25 Human Support Seats",
+        "1,000 Knowledge Documents & URLs",
+        "Custom Branding & CNAME",
+        "Dedicated 24/7 Account Manager"
+      ],
+      is_popular: false
+    }
+  ]);
+
+  // Fetch live Super Admin pricing plans and dynamic pricing engine config from backend
+  useEffect(() => {
+    api.getPublicPlans()
+      .then((plans: any[]) => {
+        if (plans && Array.isArray(plans) && plans.length > 0) {
+          const activePaidPlans = plans.filter(p => p.monthly_price_bdt > 0 && p.is_active !== false);
+          if (activePaidPlans.length > 0) {
+            setDbPlans(activePaidPlans);
+          }
+        }
+      })
+      .catch((err) => console.warn("Could not fetch public plans for landing page:", err));
+
+    api.getPublicPricingConfig()
+      .then((cfg: any) => {
+        if (cfg) {
+          if (cfg.pay_as_you_go_enabled !== undefined) {
+            setIsPaygEnabled(cfg.pay_as_you_go_enabled);
+          }
+          if (cfg.default_per_10k_tokens_rate_bdt) {
+            setDefaultTokenRatePer10k(cfg.default_per_10k_tokens_rate_bdt);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const calculatePrice = (monthly: number, annual?: number) => {
+    const ann = annual || Math.round(monthly * 0.85);
+    return billingCycle === "annual" ? ann : monthly;
+  };
 
   // Dynamic injection for Platform Super Admin Live Chat Widget CDN script
   useEffect(() => {
@@ -135,11 +253,6 @@ export default function LandingPage() {
     } finally {
       setIsSimTyping(false);
     }
-  };
-
-  // Pricing calculations
-  const calculatePrice = (monthly: number, annual: number) => {
-    return billingCycle === "annual" ? annual : monthly;
   };
 
   return (
@@ -1004,11 +1117,11 @@ export default function LandingPage() {
           </p>
 
           {/* Billing Cycle Switcher */}
-          <div className="inline-flex items-center p-1 bg-slate-200 rounded-xl text-xs font-bold mt-4">
+          <div className="inline-flex items-center p-1 bg-slate-200 rounded-xl text-xs font-bold mt-4 flex-wrap justify-center gap-1">
             <button
               onClick={() => setBillingCycle("monthly")}
               className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${
-                billingCycle === "monthly" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600"
+                billingCycle === "monthly" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               Monthly Billing
@@ -1016,143 +1129,393 @@ export default function LandingPage() {
             <button
               onClick={() => setBillingCycle("annual")}
               className={`px-4 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                billingCycle === "annual" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600"
+                billingCycle === "annual" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
               }`}
             >
               <span>Annual Billing</span>
               <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded font-extrabold">SAVE 15%</span>
             </button>
+            {isPaygEnabled && (
+              <button
+                onClick={() => setBillingCycle("custom")}
+                className={`px-4 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  billingCycle === "custom" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                <span>⚡ Pay-As-You-Go / Custom Builder</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          
-          {/* Card 1: Starter */}
-          <div className="bg-white p-7 rounded-3xl border border-slate-200 shadow-sm space-y-6 flex flex-col justify-between hover:border-slate-300 transition-all">
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">For Early Startups</span>
-                <h3 className="text-xl font-bold text-slate-900">Starter Package</h3>
-                <p className="text-xs text-slate-500">Perfect for single website stores and small businesses.</p>
-              </div>
-
-              <div className="pt-2 border-t border-slate-100">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-slate-900 font-mono">
-                    ৳{calculatePrice(4990, 4240).toLocaleString()}
-                  </span>
-                  <span className="text-xs text-slate-500 font-medium">/ month</span>
+        {/* Dynamic View: Custom Builder vs Standard Tier Cards */}
+        {billingCycle === "custom" ? (
+          <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 bg-slate-50/80 p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
+            
+            {/* Left Column: Interactive Resource Sliders */}
+            <div className="lg:col-span-7 space-y-6">
+              <div>
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <Calculator className="w-4 h-4 text-emerald-600" /> Interactive Package Customizer
                 </div>
-                {billingCycle === "annual" && (
-                  <div className="text-[11px] text-emerald-600 font-bold mt-0.5">Billed annually (Save ৳9,000/yr)</div>
-                )}
+                <h3 className="text-xl font-black text-slate-900 mt-1">Design Your Perfect Plan</h3>
+                <p className="text-xs text-slate-500">Slide to select your exact token volume, agent team size, and connected stores.</p>
               </div>
 
-              <ul className="space-y-2.5 text-xs text-slate-700 pt-2">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 500,000 AI Tokens / month</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 1 Connected Website Widget</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 2 Human Support Seats</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 50 Knowledge Documents & URLs</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> bKash Automated Invoicing</li>
-              </ul>
+              {/* Slider 1: AI Tokens */}
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                    <Bot className="w-4 h-4 text-blue-600" /> Monthly AI Tokens
+                  </span>
+                  <span className="font-mono font-extrabold text-blue-600 text-sm">
+                    {(customTokens / 1000).toLocaleString()}k Tokens
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="200000"
+                  max="15000000"
+                  step="100000"
+                  value={customTokens}
+                  onChange={(e) => setCustomTokens(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                <div className="flex justify-between text-[10px] text-slate-600 font-medium">
+                  <span>200k (Start)</span>
+                  <span>2.5M (Growth)</span>
+                  <span>7.5M (Scale)</span>
+                  <span>15M+ (High-Traffic)</span>
+                </div>
+              </div>
+
+              {/* Slider 2: Websites & Support Agents */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-emerald-600" /> Store Widgets
+                    </span>
+                    <span className="font-mono font-extrabold text-emerald-600">
+                      {customWebsites} {customWebsites === 1 ? "Store" : "Stores"}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={customWebsites}
+                    onChange={(e) => setCustomWebsites(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  />
+                  <div className="text-[10px] text-slate-600">৳1,200/mo per extra store</div>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-indigo-600" /> Support Seats
+                    </span>
+                    <span className="font-mono font-extrabold text-indigo-600">
+                      {customSeats} {customSeats === 1 ? "Agent" : "Agents"}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    step="1"
+                    value={customSeats}
+                    onChange={(e) => setCustomSeats(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                  <div className="text-[10px] text-slate-600">৳750/mo per extra seat</div>
+                </div>
+              </div>
+
+              {/* Slider 3: Knowledge Documents */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-slate-700 flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-amber-600" /> Knowledge Base & URLs
+                  </span>
+                  <span className="font-mono font-extrabold text-amber-600">
+                    {customDocs} Docs
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="500"
+                  step="10"
+                  value={customDocs}
+                  onChange={(e) => setCustomDocs(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-600"
+                />
+                <div className="text-[10px] text-slate-600">Instant Vector RAG embedding for PDFs, URLs & Catalog</div>
+              </div>
+
+              {/* Modular Add-on Checkboxes */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+                <span className="text-xs font-bold text-slate-700">Enterprise Add-On Modules</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <label className="flex items-center gap-2 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={customModules.custom_branding}
+                      onChange={(e) => setCustomModules({ ...customModules, custom_branding: e.target.checked })}
+                      className="rounded text-emerald-600"
+                    />
+                    <span className="text-slate-700 font-medium">White-Label (+৳1,500)</span>
+                  </label>
+                  <label className="flex items-center gap-2 p-2 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={customModules.sms_notifications}
+                      onChange={(e) => setCustomModules({ ...customModules, sms_notifications: e.target.checked })}
+                      className="rounded text-emerald-600"
+                    />
+                    <span className="text-slate-700 font-medium">SMS Invoicing (+৳1,000)</span>
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-            <button
-              onClick={() => setShowPricingModal(true)}
-              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
-            >
-              Choose Starter
-            </button>
-          </div>
-
-          {/* Card 2: Professional (Popular) */}
-          <div
-            className="bg-white p-7 rounded-3xl border shadow-xl space-y-6 flex flex-col justify-between relative"
-            style={{ borderColor: currentTheme.primary_color, borderWidth: "2px" }}
-          >
-            <span
-              className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-wider text-white px-3 py-1 rounded-full shadow-sm"
-              style={{ backgroundColor: currentTheme.primary_color }}
-            >
-              Most Popular Choice
-            </span>
-
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">For Growing Businesses</span>
-                <h3 className="text-xl font-bold text-slate-900">Professional Plan</h3>
-                <p className="text-xs text-slate-500">Website Live Chatbot with Instant RAG & Live Support Handover.</p>
-              </div>
-
-              <div className="pt-2 border-t border-slate-100">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-slate-900 font-mono">
-                    ৳{calculatePrice(14990, 12740).toLocaleString()}
+            {/* Right Column: Dynamic Quote & Prepaid AI Wallet */}
+            <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
+              
+              {/* Card 1: Custom Plan Quote */}
+              <div
+                className="bg-white p-6 sm:p-7 rounded-3xl border shadow-lg space-y-5"
+                style={{ borderColor: currentTheme.primary_color, borderWidth: "2px" }}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-white px-2.5 py-1 rounded-full shadow-xs" style={{ backgroundColor: currentTheme.primary_color }}>
+                    Custom Configured Plan
                   </span>
-                  <span className="text-xs text-slate-500 font-medium">/ month</span>
+                  <button
+                    onClick={() => setCustomAnnual(!customAnnual)}
+                    className="text-[11px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1"
+                  >
+                    <span>{customAnnual ? "Annual (-15%)" : "Monthly"}</span>
+                    <RefreshCw className="w-3 h-3 text-emerald-600" />
+                  </button>
                 </div>
-                {billingCycle === "annual" && (
-                  <div className="text-[11px] text-emerald-600 font-bold mt-0.5">Billed annually (Save ৳27,000/yr)</div>
-                )}
+
+                {(() => {
+                  const base = 1990;
+                  const tokenCost = (customTokens / 1000000) * 800;
+                  const seatCost = Math.max(0, customSeats - 2) * 750;
+                  const websiteCost = Math.max(0, customWebsites - 1) * 1200;
+                  const docsCost = Math.max(0, customDocs - 50) * 20;
+                  let modCost = 0;
+                  if (customModules.custom_branding) modCost += 1500;
+                  if (customModules.sms_notifications) modCost += 1000;
+                  if (customModules.dedicated_sla) modCost += 3500;
+                  
+                  const monthlySubtotal = Math.round((base + tokenCost + seatCost + websiteCost + docsCost + modCost) / 10) * 10;
+                  const annualRate = Math.round((monthlySubtotal * 0.85) / 10) * 10;
+                  const finalDisplayPrice = customAnnual ? annualRate : monthlySubtotal;
+                  const annualSavings = (monthlySubtotal * 12) - (annualRate * 12);
+
+                  return (
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl sm:text-4xl font-black text-slate-900 font-mono">
+                            ৳{finalDisplayPrice.toLocaleString()}
+                          </span>
+                          <span className="text-xs text-slate-500 font-medium">/ month</span>
+                        </div>
+                        {customAnnual && (
+                          <div className="text-[11px] text-emerald-600 font-bold mt-1">
+                            Billed annually (Save ৳{annualSavings.toLocaleString()}/year)
+                          </div>
+                        )}
+                      </div>
+
+                      <ul className="space-y-2 text-xs text-slate-700 pt-2 border-t border-slate-100">
+                        <li className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span>{(customTokens / 1000).toLocaleString()}k Tokens / month</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span>{customWebsites} Connected Website Widget{customWebsites > 1 ? "s" : ""}</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span>{customSeats} Human Support Agent Seats</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span>{customDocs} Knowledge Base Documents</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span>Autonomous E-Commerce & bKash Invoicing</span>
+                        </li>
+                      </ul>
+
+                      <button
+                        onClick={() => {
+                          setSelectedPlanTier("growth");
+                          setShowPricingModal(true);
+                        }}
+                        className="w-full py-3 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer hover:opacity-95 text-center flex items-center justify-center gap-2"
+                        style={{ backgroundColor: currentTheme.primary_color }}
+                      >
+                        <span>Subscribe Custom Package</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
 
-              <ul className="space-y-2.5 text-xs text-slate-700 pt-2">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 2,000,000 AI Tokens / month</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 3 Connected Website Widgets</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 10 Team Support Seats</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> Advanced Analytics & Role Queues</li>
-              </ul>
+              {/* Card 2: Prepaid AI Wallet Option */}
+              <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-3xl shadow-sm space-y-4">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
+                  <h4 className="text-sm font-black tracking-wide text-white">Prepaid AI Wallet (Pay-As-You-Go)</h4>
+                </div>
+                <p className="text-xs text-slate-300">
+                  No monthly commitment. Top-up credits via bKash and only pay <strong>৳1.50 per 10,000 tokens</strong> used.
+                </p>
+
+                <div className="grid grid-cols-4 gap-2 pt-1">
+                  {[500, 1000, 2500, 5000].map((amt) => (
+                    <button
+                      key={amt}
+                      onClick={() => setWalletTopupPreset(amt)}
+                      className={`py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                        walletTopupPreset === amt
+                          ? "bg-emerald-500 text-white border-emerald-400 shadow-sm"
+                          : "bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500"
+                      }`}
+                    >
+                      ৳{amt}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setSelectedPlanTier("starter");
+                    setShowPricingModal(true);
+                  }}
+                  className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span>Recharge ৳{walletTopupPreset.toLocaleString()} & Get Started</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
             </div>
 
-            <button
-              onClick={() => setShowPricingModal(true)}
-              className="w-full py-2.5 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer hover:opacity-95"
-              style={{ backgroundColor: currentTheme.primary_color }}
-            >
-              Choose Professional
-            </button>
           </div>
+        ) : (
+          /* Standard Pricing Cards Grid */
+          <div className={`grid grid-cols-1 ${dbPlans.length === 1 ? 'max-w-md' : dbPlans.length === 2 ? 'md:grid-cols-2 max-w-3xl' : 'md:grid-cols-3 max-w-5xl'} gap-6 mx-auto`}>
+            {dbPlans.map((plan) => {
+              const monthlyPrice = plan.monthly_price_bdt || 0;
+              const annualPrice = plan.annual_price_bdt || Math.round(monthlyPrice * 0.85);
+              const displayPrice = calculatePrice(monthlyPrice, annualPrice);
+              const annualSavings = (monthlyPrice * 12) - (annualPrice * 12);
+              const isHighlighted = plan.is_popular || (plan.badge_text && plan.badge_text.toLowerCase().includes("popular"));
+              
+              // Build features list dynamically
+              let featuresList: string[] = [];
+              if (Array.isArray(plan.features) && plan.features.length > 0) {
+                featuresList = plan.features;
+              } else {
+                if (plan.monthly_token_limit) featuresList.push(`${(plan.monthly_token_limit / 1000).toLocaleString()}k AI Tokens / month`);
+                if (plan.max_websites) featuresList.push(`${plan.max_websites === 9999 ? 'Unlimited' : plan.max_websites} Connected Website Widget${plan.max_websites > 1 ? 's' : ''}`);
+                if (plan.max_agents) featuresList.push(`${plan.max_agents === 9999 ? 'Unlimited' : plan.max_agents} Team Support Seat${plan.max_agents > 1 ? 's' : ''}`);
+                if (plan.max_knowledge_docs) featuresList.push(`${plan.max_knowledge_docs} Knowledge Documents & URLs`);
+                featuresList.push("bKash Automated Invoicing");
+              }
 
-          {/* Card 3: Enterprise */}
-          <div className="bg-white p-7 rounded-3xl border border-slate-200 shadow-sm space-y-6 flex flex-col justify-between hover:border-slate-300 transition-all">
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">For Large Scale Brands</span>
-                <h3 className="text-xl font-bold text-slate-900">Enterprise Cloud</h3>
-                <p className="text-xs text-slate-500">Unlimited scale, dedicated SLA, and custom personas.</p>
-              </div>
+              return (
+                <div
+                  key={plan.code || plan.id || plan.name}
+                  className={`bg-white p-7 rounded-3xl border shadow-sm space-y-6 flex flex-col justify-between transition-all relative ${
+                    isHighlighted ? "shadow-xl hover:shadow-2xl" : "border-slate-200 hover:border-slate-300"
+                  }`}
+                  style={
+                    isHighlighted
+                      ? { borderColor: currentTheme.primary_color, borderWidth: "2px" }
+                      : {}
+                  }
+                >
+                  {/* Popular / Custom Badge */}
+                  {(plan.badge_text || isHighlighted) && (
+                    <span
+                      className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-wider text-white px-3 py-1 rounded-full shadow-sm whitespace-nowrap"
+                      style={{ backgroundColor: isHighlighted ? currentTheme.primary_color : "#475569" }}
+                    >
+                      {plan.badge_text || "Most Popular Choice"}
+                    </span>
+                  )}
 
-              <div className="pt-2 border-t border-slate-100">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-slate-900 font-mono">
-                    ৳{calculatePrice(34990, 29740).toLocaleString()}
-                  </span>
-                  <span className="text-xs text-slate-500 font-medium">/ month</span>
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <span
+                        className="text-[10px] font-bold uppercase tracking-wider"
+                        style={{ color: isHighlighted ? currentTheme.primary_color : "#64748B" }}
+                      >
+                        {plan.tagline || (plan.monthly_price_bdt <= 5000 ? "For Early Startups" : plan.monthly_price_bdt <= 25000 ? "For Growing Businesses" : "For Large Scale Brands")}
+                      </span>
+                      <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
+                      <p className="text-xs text-slate-500 line-clamp-2">{plan.description}</p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-black text-slate-900 font-mono">
+                          ৳{displayPrice.toLocaleString()}
+                        </span>
+                        <span className="text-xs text-slate-500 font-medium">/ month</span>
+                      </div>
+                      {billingCycle === "annual" && annualSavings > 0 && (
+                        <div className="text-[11px] text-emerald-600 font-bold mt-0.5">
+                          Billed annually (Save ৳{annualSavings.toLocaleString()}/yr)
+                        </div>
+                      )}
+                    </div>
+
+                    <ul className="space-y-2.5 text-xs text-slate-700 pt-2">
+                      {featuresList.map((feat, fIdx) => (
+                        <li key={fIdx} className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setSelectedPlanTier(plan.code || plan.id);
+                      setShowPricingModal(true);
+                    }}
+                    className={`w-full py-2.5 font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer ${
+                      isHighlighted
+                        ? "text-white hover:opacity-95 shadow-md"
+                        : "bg-slate-900 hover:bg-slate-800 text-white"
+                    }`}
+                    style={isHighlighted ? { backgroundColor: currentTheme.primary_color } : {}}
+                  >
+                    Choose {plan.name}
+                  </button>
                 </div>
-                {billingCycle === "annual" && (
-                  <div className="text-[11px] text-emerald-600 font-bold mt-0.5">Billed annually (Save ৳63,000/yr)</div>
-                )}
-              </div>
-
-              <ul className="space-y-2.5 text-xs text-slate-700 pt-2">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 10,000,000+ AI Tokens / month</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> Unlimited Widgets & Custom Domains</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> Unlimited Team Seats & Roles</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> Custom AI Model Fine-Tuning</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500" /> 24/7 Dedicated Account Manager</li>
-              </ul>
-            </div>
-
-            <button
-              onClick={() => setShowPricingModal(true)}
-              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
-            >
-              Choose Enterprise
-            </button>
+              );
+            })}
           </div>
-
-        </div>
+        )}
       </section>
 
       {/* ========================================================================= */}
@@ -1292,6 +1655,13 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Self-Serve Dynamic Subscription Plans & bKash Checkout Modal */}
+      <PricingModal
+        isOpen={showPricingModal}
+        onClose={() => setShowPricingModal(false)}
+        initialSelectedTier={selectedPlanTier}
+      />
 
     </div>
   );

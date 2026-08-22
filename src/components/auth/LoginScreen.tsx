@@ -18,16 +18,16 @@ export default function LoginScreen() {
   const { currentTheme } = useTheme();
   const { showToast } = useToast();
 
-  const [email, setEmail] = useState<string>("owner@padmadigital.example");
-  const [password, setPassword] = useState<string>("DemoPass123!");
+  // Debug Testing Panel State & Environment Detection (Only active in development mode)
+  const isDevMode = process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_ENABLE_DEBUG_DEMO === "true";
+
+  const [email, setEmail] = useState<string>(isDevMode ? "admin@gmail.com" : "");
+  const [password, setPassword] = useState<string>(isDevMode ? "12345678" : "");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showPricingModal, setShowPricingModal] = useState<boolean>(false);
-
-  // Debug Testing Panel State (Only visible in development mode)
-  const isDevMode = process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_ENABLE_DEBUG_DEMO === "true";
   const [showDebugDrawer, setShowDebugDrawer] = useState<boolean>(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +38,7 @@ export default function LoginScreen() {
     const ok = await login(email, password);
     if (ok) {
       showToast("Authentication Successful", `Signed in as ${email}`, "success");
-      if (email.toLowerCase().includes("superadmin")) {
+      if (email.toLowerCase().includes("admin")) {
         router.replace("/superadmin");
       } else {
         router.replace("/dashboard");
@@ -341,7 +341,7 @@ export default function LoginScreen() {
               className="mt-2.5 pt-2 border-t text-[10.5px] text-slate-500 flex items-center justify-between"
               style={{ borderColor: currentTheme.dark_border }}
             >
-              <span>All test accounts pre-configured with password: <code className="font-mono" style={{ color: currentTheme.primary_color }}>DemoPass123!</code></span>
+              <span>All test accounts pre-configured with password: <code className="font-mono" style={{ color: currentTheme.primary_color }}>12345678</code></span>
               <span className="text-[10px] text-slate-500 font-mono">NODE_ENV: {process.env.NODE_ENV}</span>
             </div>
           </div>

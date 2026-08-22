@@ -15,8 +15,8 @@ export interface DemoAccount {
 
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
-    email: "owner@padmadigital.example",
-    name: "Avijit Barua",
+    email: "client@gmail.com",
+    name: "Demo Client",
     role: "tenant_owner",
     roleLabel: "Organization Owner",
     department: "Executive",
@@ -55,7 +55,7 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     description: "Read-only analytics for sales conversion & token meter"
   },
   {
-    email: "superadmin@enterprise.example",
+    email: "admin@gmail.com",
     name: "Platform Super Admin",
     role: "super_admin",
     roleLabel: "Super Admin",
@@ -151,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string = "DemoPass123!"): Promise<boolean> => {
+  const login = async (email: string, password: string = "12345678"): Promise<boolean> => {
     setIsLoading(true);
     try {
       const res = await api.login(email, password);
@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const register = async (name: string, email: string, tenantName: string, password: string = "DemoPass123!"): Promise<boolean> => {
+  const register = async (name: string, email: string, tenantName: string, password: string = "12345678"): Promise<boolean> => {
     setIsLoading(true);
     try {
       const res = await api.register(name, email, tenantName, password);
@@ -261,7 +261,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const switchDemoAccount = async (account: DemoAccount) => {
     setIsLoading(true);
     try {
-      const res = await api.login(account.email, "DemoPass123!");
+      const res = await api.login(account.email, "12345678");
       localStorage.setItem("aiaas_token", res.access_token);
       setToken(res.access_token);
 

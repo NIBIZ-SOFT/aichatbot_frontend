@@ -15,6 +15,8 @@ import { api } from "../../lib/api";
 import { useRouter, usePathname } from "next/navigation";
 import ModuleConfigModal from "../superadmin/ModuleConfigModal";
 import ThemeManagementTab from "../superadmin/ThemeManagementTab";
+import PricingEngineTab from "../superadmin/PricingEngineTab";
+import TenantPricingContractModal from "../superadmin/TenantPricingContractModal";
 
 interface TenantItem {
   id: string;
@@ -48,8 +50,10 @@ interface MetricsData {
   platform_uptime_percent: number;
 }
 
+export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "bkash" | "infrastructure" | "audit" | "theme";
+
 interface SuperAdminViewProps {
-  defaultTab?: "overview" | "tenants" | "plans" | "coupons" | "revenue" | "bkash" | "infrastructure" | "audit" | "theme";
+  defaultTab?: SuperAdminTabType;
 }
 
 export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminViewProps) {
@@ -58,7 +62,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   const pathname = usePathname() || "";
 
   // Active Tab state (initialized from prop or route)
-  const [activeTab, setActiveTab] = useState<"overview" | "tenants" | "plans" | "coupons" | "revenue" | "bkash" | "infrastructure" | "audit" | "theme">(defaultTab);
+  const [activeTab, setActiveTab] = useState<SuperAdminTabType>(defaultTab);
 
   // Sync tab when prop changes
   useEffect(() => {
@@ -68,7 +72,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   }, [defaultTab]);
 
   // Tab Navigation Handler
-  const navigateTab = (tab: "overview" | "tenants" | "plans" | "coupons" | "revenue" | "bkash" | "infrastructure" | "audit" | "theme") => {
+  const navigateTab = (tab: SuperAdminTabType) => {
     setActiveTab(tab);
     if (tab === "overview") {
       router.push("/superadmin");
@@ -181,6 +185,9 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   // Dynamic Module Configuration Modal State
   const [configuringModulesTenant, setConfiguringModulesTenant] = useState<TenantItem | null>(null);
 
+  // VIP Contract Override Modal State
+  const [contractOverrideTenant, setContractOverrideTenant] = useState<TenantItem | null>(null);
+
   // Suspension Reason Modal State (Best-Practice Business Account Lifecycle)
   const [suspensionModalTenant, setSuspensionModalTenant] = useState<TenantItem | null>(null);
   const [suspensionCategory, setSuspensionCategory] = useState<string>("payment_overdue");
@@ -217,7 +224,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
     setIsDraggingTabs(false);
   };
 
-  const handleTabClick = (tab: "overview" | "tenants" | "plans" | "coupons" | "revenue" | "bkash" | "infrastructure" | "audit" | "theme") => {
+  const handleTabClick = (tab: SuperAdminTabType) => {
     if (hasDraggedTabs) return;
     navigateTab(tab);
   };
@@ -818,6 +825,16 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
             </button>
 
             <button
+              onClick={() => handleTabClick("pricing-engine")}
+              className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "pricing-engine"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                }`}
+            >
+              <Zap className="w-4 h-4 text-amber-400 fill-amber-400" /> AI Pricing Engine
+            </button>
+
+            <button
               onClick={() => handleTabClick("bkash")}
               className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "bkash"
                 ? "bg-[#e2136e] text-white shadow-md shadow-pink-600/30"
@@ -1301,6 +1318,16 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                               <span className="bg-indigo-600 text-white text-[9.5px] px-1.5 py-0.2 rounded-full font-mono">
                                 {activeModCount}/10
                               </span>
+                            </button>
+
+                            {/* Custom VIP Agreement & Contract Override */}
+                            <button
+                              onClick={() => setContractOverrideTenant(t)}
+                              className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl border border-emerald-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                              title="Edit Custom Pricing Contract & Token Rate"
+                            >
+                              <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Contract Deal</span>
                             </button>
 
                             {/* Suspend / Activate Toggle */}
@@ -2452,9 +2479,25 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       )}
 
       {/* ========================================================================= */}
+      {/* TAB: DYNAMIC AI TOKEN & PRICING ENGINE CONTROL PLANE */}
+      {/* ========================================================================= */}
+      {activeTab === "pricing-engine" && <PricingEngineTab />}
+
+      {/* ========================================================================= */}
       {/* TAB 9: PLATFORM THEME & BRANDING APPEARANCE SETUP */}
       {/* ========================================================================= */}
       {activeTab === "theme" && <ThemeManagementTab />}
+
+      {/* VIP Custom Agreement & Pricing Contract Override Modal */}
+      {contractOverrideTenant && (
+        <TenantPricingContractModal
+          tenant={contractOverrideTenant}
+          onClose={() => setContractOverrideTenant(null)}
+          onSuccess={() => {
+            loadData();
+          }}
+        />
+      )}
 
       {/* ========================================================================= */}
       {/* MODAL: CREATE / EDIT SAAS PRICING PLAN */}

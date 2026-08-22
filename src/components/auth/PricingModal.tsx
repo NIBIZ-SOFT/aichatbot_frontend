@@ -15,9 +15,10 @@ import { api } from "../../lib/api";
 interface PricingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialSelectedTier?: string;
 }
 
-export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
+export default function PricingModal({ isOpen, onClose, initialSelectedTier }: PricingModalProps) {
   const router = useRouter();
   const { loginWithToken } = useAuth();
   const { currentTheme } = useTheme();
@@ -67,8 +68,15 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
     }
   ]);
 
-  const [selectedTier, setSelectedTier] = useState<string>("growth");
+  const [selectedTier, setSelectedTier] = useState<string>(initialSelectedTier || "growth");
   const [activeStep, setActiveStep] = useState<1 | 2>(1);
+
+  // Sync initialSelectedTier when prop changes
+  useEffect(() => {
+    if (initialSelectedTier) {
+      setSelectedTier(initialSelectedTier);
+    }
+  }, [initialSelectedTier]);
 
   // Form State
   const [orgName, setOrgName] = useState("");
@@ -91,14 +99,14 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
       api.getPublicPlans()
         .then((dbPlans: any[]) => {
           if (dbPlans && dbPlans.length > 0) {
-            const paid = dbPlans.filter(p => p.monthly_price_bdt > 0);
+            const paid = dbPlans.filter(p => p.monthly_price_bdt > 0 && p.is_active !== false);
             if (paid.length > 0) {
               const formatted = paid.map(p => ({
                 id: p.code,
                 code: p.code,
                 name: p.name,
                 monthlyPrice: p.monthly_price_bdt,
-                annualPrice: p.annual_price_bdt,
+                annualPrice: p.annual_price_bdt || Math.round(p.monthly_price_bdt * 0.85),
                 price: `৳${p.monthly_price_bdt.toLocaleString()}`,
                 period: "/ month",
                 popular: p.is_popular,
@@ -106,10 +114,36 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
                 tokens: `${(p.monthly_token_limit / 1000).toLocaleString()}k AI Tokens`,
                 seats: `${p.max_agents} Support Seats`,
                 widgets: `${p.max_websites} Website Widgets`,
-                desc: p.description
+                desc: p.description,
+                features: p.features
               }));
-              setPlans(formatted);
-              if (!formatted.some(p => p.id === selectedTier)) {
+              const paygPlan = {
+                id: "payg",
+                code: "payg",
+                name: "⚡ Pay-As-You-Go Wallet",
+                monthlyPrice: 1000,
+                annualPrice: 1000,
+                price: "৳1,000 Initial Top-Up",
+                period: "prepaid credit",
+                popular: false,
+                badge_text: "ZERO CONTRACT",
+                tokens: "Pay ৳1.50 per 10k Tokens",
+                seats: "5 Support Seats",
+                widgets: "2 Website Widgets",
+                desc: "No recurring subscription. Pure usage-based billing with instant bKash recharge.",
+                features: [
+                  "No monthly recurring fees",
+                  "৳1.50 per 10,000 tokens",
+                  "Instant bKash Recharge",
+                  "Full Autonomous AI & RAG",
+                  "Credits never expire"
+                ]
+              };
+              setPlans([...formatted, paygPlan]);
+              const targetTier = initialSelectedTier || selectedTier;
+              if (formatted.some(p => p.id === targetTier) || targetTier === "payg") {
+                setSelectedTier(targetTier);
+              } else {
                 setSelectedTier(formatted[0].id);
               }
             }
@@ -117,7 +151,7 @@ export default function PricingModal({ isOpen, onClose }: PricingModalProps) {
         })
         .catch(() => {});
     }
-  }, [isOpen]);
+  }, [isOpen, initialSelectedTier]);
 
   if (!isOpen) return null;
 

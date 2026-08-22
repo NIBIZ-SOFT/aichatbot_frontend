@@ -67,11 +67,34 @@ export default function SubscriptionView() {
   const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
+  // Prepaid AI Wallet State
+  const [wallet, setWallet] = useState<any | null>(null);
+  const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
+  const [topupAmount, setTopupAmount] = useState<number>(1000);
+  const [isInitiatingTopup, setIsInitiatingTopup] = useState(false);
+
   // Plan Upgrade / Change Modal State
   const [selectedPlanForChange, setSelectedPlanForChange] = useState<any | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("bKash Direct Merchant");
   const [isChangingPlan, setIsChangingPlan] = useState(false);
   const [isInitiatingBkash, setIsInitiatingBkash] = useState<string | null>(null);
+
+  const handleTopupWallet = async (amount: number) => {
+    setIsInitiatingTopup(true);
+    try {
+      const session = await api.initWalletTopup(amount);
+      if (session && session.paymentID) {
+        await api.executeWalletTopup(session.paymentID);
+        showToast("Wallet Credited!", `৳${amount.toLocaleString()} added to your AI Prepaid Balance!`, "success");
+        setIsTopupModalOpen(false);
+        loadData();
+      }
+    } catch (err: any) {
+      showToast("Top-Up Failed", err.message || "Failed to process bKash recharge.", "error");
+    } finally {
+      setIsInitiatingTopup(false);
+    }
+  };
 
   const handlePayWithBkash = async (plan: any) => {
     try {
@@ -184,14 +207,16 @@ export default function SubscriptionView() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [subData, invList, dbPlans, tSettings] = await Promise.all([
+      const [subData, invList, dbPlans, tSettings, walletData] = await Promise.all([
         api.getSubscriptionCurrent(),
         api.getSubscriptionInvoices(),
         api.getPublicPlans().catch(() => []),
-        api.getTenantSettings().catch(() => null)
+        api.getTenantSettings().catch(() => null),
+        api.getTenantWallet().catch(() => null)
       ]);
       setSubscription(subData);
       setInvoices(invList);
+      if (walletData) setWallet(walletData);
       if (tSettings) setTenantInfo(tSettings);
       if (dbPlans && dbPlans.length > 0) {
         const mapped = dbPlans.map(p => ({
@@ -438,7 +463,95 @@ export default function SubscriptionView() {
         </div>
       )}
 
-      {/* 2. Billing Toggle & Section Title */}
+      {/* 2. Prepaid AI Wallet & Pay-As-You-Go Pulse */}
+      {wallet && (
+        <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <div className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                <Zap className="w-4 h-4 text-amber-500 fill-amber-500" /> Prepaid AI Balance & Pay-As-You-Go Wallet
+              </div>
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono mt-1">
+                ৳{wallet.balance_bdt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsTopupModalOpen(true)}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Zap className="w-3.5 h-3.5 fill-white" />
+                <span>Recharge with bKash</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="text-slate-500 font-medium">Total Top-Ups</div>
+              <div className="text-base font-bold text-slate-900 font-mono mt-0.5">
+                ৳{wallet.total_credited_bdt.toLocaleString()}
+              </div>
+            </div>
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="text-slate-500 font-medium">AI Usage Consumed</div>
+              <div className="text-base font-bold text-slate-900 font-mono mt-0.5">
+                ৳{wallet.total_consumed_bdt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="text-slate-500 font-medium">Token Metering Rate</div>
+              <div className="text-base font-bold text-emerald-600 font-mono mt-0.5">
+                ৳{wallet.per_1k_tokens_rate_bdt} / 1k Tokens
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Wallet Transactions Ledger */}
+          {wallet.recent_transactions && wallet.recent_transactions.length > 0 && (
+            <div className="pt-2">
+              <div className="text-xs font-bold text-slate-700 mb-2">Recent Wallet Activity</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-[11px] text-slate-400 font-mono">
+                      <th className="py-2">Type</th>
+                      <th className="py-2">Description</th>
+                      <th className="py-2">Amount</th>
+                      <th className="py-2">Balance After</th>
+                      <th className="py-2">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {wallet.recent_transactions.slice(0, 5).map((tx: any) => (
+                      <tr key={tx.id} className="hover:bg-slate-50/50">
+                        <td className="py-2.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            tx.transaction_type === "topup" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
+                          }`}>
+                            {tx.transaction_type.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="py-2.5 text-slate-700 font-medium">{tx.description}</td>
+                        <td className={`py-2.5 font-mono font-bold ${tx.amount_bdt >= 0 ? 'text-emerald-600' : 'text-slate-600'}`}>
+                          {tx.amount_bdt >= 0 ? `+৳${tx.amount_bdt.toLocaleString()}` : `-৳${Math.abs(tx.amount_bdt).toFixed(2)}`}
+                        </td>
+                        <td className="py-2.5 font-mono text-slate-500">৳{tx.balance_after_bdt.toFixed(2)}</td>
+                        <td className="py-2.5 text-slate-400 font-mono text-[11px]">
+                          {new Date(tx.created_at).toLocaleDateString()} {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 3. Billing Toggle & Section Title */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-[#CBD7D0]">
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-[#0F1713] tracking-tight">Available Subscription Packages</h2>
@@ -1070,6 +1183,93 @@ export default function SubscriptionView() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* 4. bKash Prepaid Wallet Top-Up Modal */}
+      {isTopupModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 p-6 sm:p-7 space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-pink-50 flex items-center justify-center font-black text-pink-600 text-xs">
+                  bKash
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Recharge AI Prepaid Wallet</h3>
+                  <p className="text-[11px] text-slate-500">Instant credit addition via official bKash Merchant Gateway</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsTopupModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">Select Top-Up Amount (BDT)</label>
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                  {[500, 1000, 2500, 5000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setTopupAmount(amt)}
+                      className={`py-2 rounded-xl text-xs font-bold font-mono border transition-all cursor-pointer ${
+                        topupAmount === amt
+                          ? "bg-pink-600 text-white border-pink-600 shadow-xs"
+                          : "bg-slate-50 text-slate-700 border-slate-200 hover:border-pink-300"
+                      }`}
+                    >
+                      ৳{amt.toLocaleString()}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold font-mono text-sm">৳</span>
+                  <input
+                    type="number"
+                    min="100"
+                    step="50"
+                    value={topupAmount}
+                    onChange={(e) => setTopupAmount(Number(e.target.value))}
+                    placeholder="Enter custom amount..."
+                    className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-pink-50/60 rounded-xl border border-pink-100 text-[11px] text-pink-900 space-y-1">
+                <div className="font-bold flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-pink-600" /> Secure Tokenized bKash Checkout
+                </div>
+                <div className="text-slate-600">
+                  Your funds are immediately credited to your AI balance and deducted at ৳1.50 per 10k AI tokens used.
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleTopupWallet(topupAmount)}
+                disabled={isInitiatingTopup || topupAmount < 100}
+                className="w-full py-3 bg-[#E2136E] hover:bg-[#C90E60] text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isInitiatingTopup ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Processing bKash Payment...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Proceed to Pay ৳{topupAmount.toLocaleString()} via bKash</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

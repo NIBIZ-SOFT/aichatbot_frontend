@@ -567,9 +567,67 @@ export const api = {
     });
   },
 
-  // Public Plans & Coupon Validation
+  // Public Plans & Dynamic Pricing Engine
   async getPublicPlans() {
     return apiFetch("/plans/public");
+  },
+
+  async getPublicPricingConfig() {
+    return apiFetch("/plans/config");
+  },
+
+  async getSuperAdminPricingEngine() {
+    return apiFetch("/superadmin/pricing-engine");
+  },
+
+  async updateSuperAdminPricingEngine(data: any) {
+    return apiFetch("/superadmin/pricing-engine", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async getTenantPricingContract(tenantId: string) {
+    return apiFetch(`/superadmin/tenants/${tenantId}/pricing-contract`);
+  },
+
+  async updateTenantPricingContract(tenantId: string, data: any) {
+    return apiFetch(`/superadmin/tenants/${tenantId}/pricing-contract`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async getCustomPlanQuote(payload: {
+    tokens: number;
+    seats: number;
+    websites: number;
+    knowledge_docs?: number;
+    is_annual?: boolean;
+    modules?: Record<string, boolean>;
+  }) {
+    return apiFetch("/plans/custom-quote", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getTenantWallet() {
+    return apiFetch("/payment/wallet");
+  },
+
+  async initWalletTopup(amountBdt: number) {
+    return apiFetch("/payment/wallet/topup", {
+      method: "POST",
+      body: JSON.stringify({ amount_bdt: amountBdt }),
+    });
+  },
+
+  async executeWalletTopup(paymentId: string) {
+    return apiFetch("/payment/wallet/execute", {
+      method: "POST",
+      body: JSON.stringify({ payment_id: paymentId }),
+    });
   },
 
   async validateCoupon(code: string, planCode: string, amountBdt: number) {

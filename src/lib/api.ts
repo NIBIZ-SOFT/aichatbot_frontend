@@ -199,7 +199,7 @@ export const api = {
     });
   },
 
-  async register(fullName: string, email: string, tenantName: string, password: string = "DemoPass123!") {
+  async register(fullName: string, email: string, tenantName: string, password: string = "DemoPass123!", businessCategory: string = "ecommerce") {
     return apiFetch("/auth/register", {
       method: "POST",
       body: JSON.stringify({
@@ -207,7 +207,23 @@ export const api = {
         email,
         tenant_name: tenantName,
         password,
+        business_category: businessCategory
       }),
+    });
+  },
+
+  async provisionTenant(data: {
+    organization_name: string;
+    admin_name: string;
+    admin_email: string;
+    password: string;
+    subscription_tier?: string;
+    billing_cycle?: string;
+    business_category?: string;
+  }) {
+    return apiFetch("/auth/provision-tenant", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   },
 
@@ -720,21 +736,6 @@ export const api = {
   async deleteSuperAdminCoupon(couponId: string) {
     return apiFetch(`/superadmin/coupons/${couponId}`, {
       method: "DELETE",
-    });
-  },
-
-  // Public Self-Serve Package Provisioning
-  async provisionTenant(data: {
-    organization_name: string;
-    admin_name: string;
-    admin_email: string;
-    password: string;
-    subscription_tier: string;
-    billing_cycle?: string;
-  }) {
-    return apiFetch("/auth/provision-tenant", {
-      method: "POST",
-      body: JSON.stringify(data),
     });
   },
 

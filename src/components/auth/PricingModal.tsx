@@ -83,6 +83,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
   const [adminName, setAdminName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [businessCategory, setBusinessCategory] = useState<"ecommerce" | "erp" | "services">("ecommerce");
   const [isLoading, setIsLoading] = useState(false);
 
   // Coupon State
@@ -212,7 +213,8 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
           admin_email: adminEmail,
           password: password,
           subscription_tier: selectedTier,
-          billing_cycle: "monthly"
+          billing_cycle: "monthly",
+          business_category: businessCategory
         }));
       }
 
@@ -237,7 +239,8 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
         admin_name: adminName || orgName + " Admin",
         admin_email: adminEmail,
         password: password,
-        subscription_tier: selectedTier
+        subscription_tier: selectedTier,
+        business_category: businessCategory
       });
 
       if (res.access_token) {
@@ -496,15 +499,78 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                 </div>
 
                 {/* Form Fields */}
-                <form id="pricing-modal-form" onSubmit={handleStartBkashPayment} className="space-y-2.5 text-xs">
+                <form id="pricing-modal-form" onSubmit={handleStartBkashPayment} className="space-y-3 text-xs">
+                  {/* Business Model / Archetype Selector */}
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">Company / Store Name *</label>
+                    <label className="block font-bold text-slate-700 mb-1.5">Business Model / Industry Type *</label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setBusinessCategory("ecommerce")}
+                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                          businessCategory === "ecommerce"
+                            ? "bg-indigo-50/80 border-indigo-600 ring-1 ring-indigo-600 text-indigo-950 font-bold shadow-xs"
+                            : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-base">🛍️</span>
+                          {businessCategory === "ecommerce" && <Check className="w-3 h-3 text-indigo-600" />}
+                        </div>
+                        <div>
+                          <div className="font-bold text-[11px]">E-Commerce</div>
+                          <div className="text-[9px] text-slate-500 font-normal leading-tight">Products & COD</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setBusinessCategory("erp")}
+                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                          businessCategory === "erp"
+                            ? "bg-blue-50/80 border-blue-600 ring-1 ring-blue-600 text-blue-950 font-bold shadow-xs"
+                            : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-base">🏢</span>
+                          {businessCategory === "erp" && <Check className="w-3 h-3 text-blue-600" />}
+                        </div>
+                        <div>
+                          <div className="font-bold text-[11px]">ERP / B2B</div>
+                          <div className="text-[9px] text-slate-500 font-normal leading-tight">SLA & Knowledge</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setBusinessCategory("services")}
+                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                          businessCategory === "services"
+                            ? "bg-emerald-50/80 border-emerald-600 ring-1 ring-emerald-600 text-emerald-950 font-bold shadow-xs"
+                            : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-base">💼</span>
+                          {businessCategory === "services" && <Check className="w-3 h-3 text-emerald-600" />}
+                        </div>
+                        <div>
+                          <div className="font-bold text-[11px]">Services</div>
+                          <div className="text-[9px] text-slate-500 font-normal leading-tight">Leads & Bookings</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Company / Organization Name *</label>
                     <input
                       type="text"
                       required
                       value={orgName}
                       onChange={e => setOrgName(e.target.value)}
-                      placeholder="e.g. Acme Tech Solutions"
+                      placeholder={businessCategory === "ecommerce" ? "e.g. Padma Fashion BD" : "e.g. Apex Enterprise Solutions"}
                       className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-xl outline-none focus:border-indigo-600 transition-all"
                     />
                   </div>

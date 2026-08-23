@@ -1,6 +1,7 @@
 {
+  "/products/page": "app/products/page.js",
+  "/superadmin/page": "app/superadmin/page.js",
   "/login/page": "app/login/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/superadmin/page": "app/superadmin/page.js",
-  "/products/page": "app/products/page.js"
+  "/icon.svg/route": "app/icon.svg/route.js"
 }

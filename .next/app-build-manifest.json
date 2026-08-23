@@ -50,6 +50,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/websites/page.js"
+    ],
+    "/support-inbox/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/support-inbox/page.js"
     ]
   }
 }

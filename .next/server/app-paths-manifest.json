@@ -1,9 +1,8 @@
 {
   "/dashboard/page": "app/dashboard/page.js",
-  "/login/page": "app/login/page.js",
   "/superadmin/page": "app/superadmin/page.js",
-  "/products/page": "app/products/page.js",
-  "/icon.svg/route": "app/icon.svg/route.js",
   "/contacts/page": "app/contacts/page.js",
-  "/websites/page": "app/websites/page.js"
+  "/websites/page": "app/websites/page.js",
+  "/support-inbox/page": "app/support-inbox/page.js",
+  "/icon.svg/route": "app/icon.svg/route.js"
 }

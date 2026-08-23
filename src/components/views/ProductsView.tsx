@@ -517,9 +517,21 @@ export default function ProductsView() {
                             title="Click to set display priority rank"
                             className="group/rank flex items-center gap-1.5 transition-all cursor-pointer"
                           >
-                            {p.priority > 0 ? (
+                            {p.priority === 1 ? (
+                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 shadow-md shadow-amber-500/20 ring-1 ring-amber-300/40 transition-transform group-hover/rank:scale-110">
+                                #1
+                              </span>
+                            ) : p.priority === 2 ? (
+                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black bg-gradient-to-r from-slate-200 to-slate-300 text-slate-900 shadow-md ring-1 ring-slate-200/40 transition-transform group-hover/rank:scale-110">
+                                #2
+                              </span>
+                            ) : p.priority === 3 ? (
+                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-md ring-1 ring-amber-600/40 transition-transform group-hover/rank:scale-110">
+                                #3
+                              </span>
+                            ) : p.priority > 3 ? (
                               <span
-                                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black text-white shadow-md transition-transform group-hover/rank:scale-110"
+                                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm transition-transform group-hover/rank:scale-110"
                                 style={{ backgroundColor: currentTheme.primary_color }}
                               >
                                 #{p.priority}
@@ -529,7 +541,7 @@ export default function ProductsView() {
                                 <Star className="w-3 h-3 text-slate-600 group-hover/rank:text-slate-400 transition-colors" />
                               </span>
                             )}
-                            <span className="text-[10px] text-slate-600 group-hover/rank:text-slate-400 transition-colors opacity-0 group-hover/rank:opacity-100">
+                            <span className="text-[10px] text-slate-500 group-hover/rank:text-slate-300 transition-colors opacity-0 group-hover/rank:opacity-100">
                               {p.priority > 0 ? "Edit" : "Set rank"}
                             </span>
                           </button>

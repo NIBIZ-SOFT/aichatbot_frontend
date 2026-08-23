@@ -136,10 +136,58 @@ export default function LoginScreen() {
         >
           
           {/* Form Title & Subtitle */}
-          <div className="text-center mb-6 space-y-1">
+          <div className="text-center mb-5 space-y-1">
             <h2 className="text-xl font-bold text-white tracking-tight">Sign In to Workspace</h2>
             <p className="text-xs text-slate-400">Enter your credentials to access your organization portal</p>
           </div>
+
+          {/* Quick Demo Fill Pills for Rapid Testing */}
+          {isDevMode && (
+            <div className="mb-4 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+              <div className="text-[10px] font-bold text-slate-400 mb-1.5 px-1 uppercase tracking-wider flex items-center justify-between">
+                <span>⚡ Quick Demo Selector</span>
+                <span className="text-[9px] text-amber-400 font-mono">Dev Mode</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => { setEmail("admin@gmail.com"); setPassword("12345678"); }}
+                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
+                    email === "admin@gmail.com" ? "bg-amber-500/20 border-amber-500 text-amber-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                  }`}
+                >
+                  <span className="truncate font-semibold">🛡️ Super Admin</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail("ecommerceclient1@gmail.com"); setPassword("12345678"); }}
+                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
+                    email === "ecommerceclient1@gmail.com" ? "bg-indigo-500/20 border-indigo-500 text-indigo-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                  }`}
+                >
+                  <span className="truncate font-semibold">🛍️ E-Comm 1 (Padma)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail("erpclient1@gmail.com"); setPassword("12345678"); }}
+                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
+                    email === "erpclient1@gmail.com" ? "bg-blue-500/20 border-blue-500 text-blue-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                  }`}
+                >
+                  <span className="truncate font-semibold">🏢 ERP 1 (Apex)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail("ecommerceclient2@gmail.com"); setPassword("12345678"); }}
+                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
+                    email === "ecommerceclient2@gmail.com" ? "bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                  }`}
+                >
+                  <span className="truncate font-semibold">🖥️ E-Comm 2 (Horizon)</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Error Alert Box if any */}
           {errorMessage && (

@@ -15,20 +15,36 @@ export interface DemoAccount {
 
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
-    email: "client@gmail.com",
-    name: "Demo Client 1 (Padma Mart)",
-    role: "tenant_owner",
-    roleLabel: "Padma Mart Owner",
-    department: "Executive",
-    description: "Padma Mart 15-product fashion & gadgets catalog, orders & AI"
+    email: "admin@gmail.com",
+    name: "Platform Super Admin",
+    role: "super_admin",
+    roleLabel: "Super Admin",
+    department: "Platform Operations",
+    description: "Master control over all multi-tenant stores, token metering & global MRR"
   },
   {
-    email: "client2@gmail.com",
-    name: "Demo Client 2 (Horizon Store)",
+    email: "ecommerceclient1@gmail.com",
+    name: "E-Commerce Client 1 (Padma Mart)",
+    role: "tenant_owner",
+    roleLabel: "E-Commerce Owner",
+    department: "Padma Mart Store",
+    description: "15 diverse fashion, electronics, footwear & home products with bKash COD"
+  },
+  {
+    email: "erpclient1@gmail.com",
+    name: "ERP Client 1 (Apex Cloud)",
+    role: "tenant_owner",
+    roleLabel: "ERP Organization Owner",
+    department: "Apex Enterprise Cloud",
+    description: "Pure B2B & ERP management with workflow knowledge base and team controls"
+  },
+  {
+    email: "ecommerceclient2@gmail.com",
+    name: "E-Commerce Client 2 (Horizon Store)",
     role: "tenant_owner",
     roleLabel: "Horizon Store Owner",
-    department: "Executive",
-    description: "Horizon Retail office & tech catalog (for multi-tenant testing)"
+    department: "Horizon Retail Ltd.",
+    description: "Independent 4-product office tech & ergonomics store for isolation testing"
   },
   {
     email: "nusrat.support@padmadigital.example",
@@ -61,14 +77,6 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     roleLabel: "Analytics Viewer",
     department: "E-Commerce Business Analytics",
     description: "Read-only analytics for sales conversion & token meter"
-  },
-  {
-    email: "admin@gmail.com",
-    name: "Platform Super Admin",
-    role: "super_admin",
-    roleLabel: "Super Admin",
-    department: "Platform Operations",
-    description: "Global e-commerce tenant management & platform MRR"
   }
 ];
 

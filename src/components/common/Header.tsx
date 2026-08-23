@@ -153,6 +153,30 @@ export default function Header({ onOpenNotifications, activeNav, onToggleMobileN
         </div>
       </div>
 
+      {/* Center/Right: Prominent Active Organization / Client Store Indicator */}
+      <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/80 shadow-2xs">
+        <div
+          className="h-2 w-2 rounded-full animate-pulse shrink-0"
+          style={{ backgroundColor: currentTheme.primary_color || "#00C978" }}
+        />
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
+          <span className="truncate max-w-[200px]">
+            {user?.role === "super_admin"
+              ? "Platform Master Control"
+              : user?.full_name?.includes("Padma") || user?.email === "ecommerceclient1@gmail.com"
+              ? "🛍️ Padma Mart Store"
+              : user?.full_name?.includes("Apex") || user?.email === "erpclient1@gmail.com"
+              ? "🏢 Apex ERP Cloud"
+              : user?.full_name?.includes("Horizon") || user?.email === "ecommerceclient2@gmail.com"
+              ? "🖥️ Horizon Office Tech"
+              : currentTheme.platform_name || "Active Storefront"}
+          </span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold bg-white text-slate-600 border border-slate-200">
+            {user?.role === "super_admin" ? "MASTER" : user?.email === "erpclient1@gmail.com" ? "ERP SaaS" : "E-COMMERCE"}
+          </span>
+        </div>
+      </div>
+
       {/* Right: Notifications & User Menu */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         

@@ -16,11 +16,19 @@ export interface DemoAccount {
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     email: "client@gmail.com",
-    name: "Demo Client",
+    name: "Demo Client 1 (Padma Mart)",
     role: "tenant_owner",
-    roleLabel: "Organization Owner",
+    roleLabel: "Padma Mart Owner",
     department: "Executive",
-    description: "Full store management, billing, AI products & orders"
+    description: "Padma Mart 15-product fashion & gadgets catalog, orders & AI"
+  },
+  {
+    email: "client2@gmail.com",
+    name: "Demo Client 2 (Horizon Store)",
+    role: "tenant_owner",
+    roleLabel: "Horizon Store Owner",
+    department: "Executive",
+    description: "Horizon Retail office & tech catalog (for multi-tenant testing)"
   },
   {
     email: "nusrat.support@padmadigital.example",

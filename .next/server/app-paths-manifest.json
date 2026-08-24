@@ -1,9 +1,10 @@
 {
-  "/superadmin/page": "app/superadmin/page.js",
-  "/websites/page": "app/websites/page.js",
-  "/contacts/page": "app/contacts/page.js",
+  "/usage/page": "app/usage/page.js",
   "/assistants/page": "app/assistants/page.js",
   "/support-inbox/page": "app/support-inbox/page.js",
-  "/icon.svg/route": "app/icon.svg/route.js",
-  "/usage/page": "app/usage/page.js"
+  "/login/page": "app/login/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/settings/page": "app/settings/page.js",
+  "/products/page": "app/products/page.js",
+  "/icon.svg/route": "app/icon.svg/route.js"
 }

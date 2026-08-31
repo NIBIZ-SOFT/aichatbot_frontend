@@ -34,6 +34,7 @@ export default function WebsitesView() {
     allow_instant_checkout: true,
     cod_enabled: true,
     bkash_enabled: true,
+    eps_enabled: true,
     delivery_charge_inside_dhaka: 60,
     delivery_charge_outside_dhaka: 120,
   });
@@ -174,23 +175,24 @@ export default function WebsitesView() {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto pb-8">
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto pb-8 font-sans text-slate-900">
+      
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 p-5 sm:p-6 rounded-2xl border border-indigo-500/20 backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+            <span className="p-2 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
               <Globe className="w-5 h-5" />
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Connected CDN Storefronts & Widgets</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Connected Storefronts & CDN Widgets</h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-500">
             Configure dynamic business categories, customize in-chat product carousels, and embed AI commerce on any website.
           </p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-medium text-xs rounded-xl shadow-lg shadow-indigo-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer shrink-0"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Add Website CDN</span>
@@ -198,8 +200,8 @@ export default function WebsitesView() {
       </div>
 
       {isLoading ? (
-        <div className="p-12 text-center text-xs text-slate-400">
-          <div className="animate-spin w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-3" />
+        <div className="p-12 text-center text-xs text-slate-500">
+          <div className="animate-spin w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full mx-auto mb-3" />
           <span>Loading CDN storefronts from PostgreSQL...</span>
         </div>
       ) : (
@@ -225,19 +227,19 @@ export default function WebsitesView() {
                   }}
                   className={`p-4 sm:p-5 rounded-2xl border cursor-pointer transition-all ${
                     selectedSite?.id === w.id
-                      ? "bg-slate-900 border-indigo-500 shadow-lg ring-1 ring-indigo-500/50"
-                      : "bg-slate-900/60 border-slate-800 hover:border-slate-700"
+                      ? "bg-indigo-50/50 border-indigo-500 shadow-sm ring-1 ring-indigo-500/30"
+                      : "bg-white border-slate-200 hover:border-slate-300 shadow-xs"
                   }`}
                 >
                   <div className="flex justify-between items-center mb-2">
-                    <div className="h-3.5 w-3.5 rounded-full shadow-sm" style={{ backgroundColor: w.primary_color }}></div>
-                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold px-2 py-0.5 rounded">
+                    <div className="h-3.5 w-3.5 rounded-full shadow-xs border border-white" style={{ backgroundColor: w.primary_color }}></div>
+                    <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2 py-0.5 rounded">
                       {w.business_category === "ecommerce" ? "E-Commerce" : "SaaS"}
                     </span>
                   </div>
-                  <h4 className="font-bold text-sm text-white truncate">{w.name}</h4>
-                  <p className="text-xs text-indigo-400 font-medium mb-3 truncate">{w.domain}</p>
-                  <div className="text-[10px] text-slate-400 bg-slate-950 p-2 rounded-lg border border-slate-800 font-mono truncate">
+                  <h4 className="font-bold text-sm text-slate-900 truncate">{w.name}</h4>
+                  <p className="text-xs text-indigo-600 font-medium mb-3 truncate">{w.domain}</p>
+                  <div className="text-[10.5px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200 font-mono truncate">
                     {w.widget_key}
                   </div>
                 </div>
@@ -246,14 +248,14 @@ export default function WebsitesView() {
 
             {/* Tab Controls for Selected Website: Embed Code vs Widget Customizer */}
             {selectedSite && (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-                <div className="flex border-b border-slate-800 bg-slate-950/60 px-4 sm:px-6 pt-3 overflow-x-auto custom-scrollbar-horizontal flex-nowrap">
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="flex border-b border-slate-200 bg-slate-50 px-4 sm:px-6 pt-3 overflow-x-auto custom-scrollbar-horizontal flex-nowrap">
                   <button
                     onClick={() => setActiveTab("embed")}
-                    className={`pb-3 px-3 sm:px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+                    className={`pb-3 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
                       activeTab === "embed"
-                        ? "border-indigo-500 text-indigo-400"
-                        : "border-transparent text-slate-400 hover:text-slate-200"
+                        ? "border-indigo-600 text-indigo-600"
+                        : "border-transparent text-slate-500 hover:text-slate-800"
                     }`}
                   >
                     <Code2 className="w-4 h-4" />
@@ -261,10 +263,10 @@ export default function WebsitesView() {
                   </button>
                   <button
                     onClick={() => setActiveTab("customizer")}
-                    className={`pb-3 px-3 sm:px-4 text-xs font-semibold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
+                    className={`pb-3 px-3 sm:px-4 text-xs font-bold flex items-center gap-2 border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
                       activeTab === "customizer"
-                        ? "border-indigo-500 text-indigo-400"
-                        : "border-transparent text-slate-400 hover:text-slate-200"
+                        ? "border-indigo-600 text-indigo-600"
+                        : "border-transparent text-slate-500 hover:text-slate-800"
                     }`}
                   >
                     <Sliders className="w-4 h-4" />
@@ -276,23 +278,23 @@ export default function WebsitesView() {
                   <div className="p-4 sm:p-6 space-y-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
-                        <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                          <Code2 className="w-4 h-4 text-indigo-400" /> Embed Installation Snippet
+                        <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                          <Code2 className="w-4 h-4 text-indigo-600" /> Embed Installation Snippet
                         </h3>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          Paste this 1-line script into <strong className="text-white">{selectedSite.domain}</strong> before &lt;/body&gt;.
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Paste this 1-line script into <strong className="text-slate-800">{selectedSite.domain}</strong> before &lt;/body&gt;.
                         </p>
                       </div>
                       <button
                         onClick={() => handleCopySnippet(selectedSite.widget_key)}
-                        className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-md shadow-indigo-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+                        className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
                       >
                         <Copy className="w-3.5 h-3.5" />
                         <span>Copy Code</span>
                       </button>
                     </div>
 
-                    <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-indigo-300 overflow-x-auto">
+                    <div className="p-4 bg-slate-900 rounded-xl border border-slate-800 text-xs font-mono text-indigo-200 overflow-x-auto shadow-inner">
                       <code>{`<!-- Enterprise AI Chatbot Widget -->
 <script src="${CDN_WIDGET_URL}"></script>
 <script>
@@ -306,102 +308,116 @@ export default function WebsitesView() {
                 ) : (
                   <div className="p-6 space-y-5">
                     <div>
-                      <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                        <ShoppingBag className="w-4 h-4 text-indigo-400" />
+                      <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                        <ShoppingBag className="w-4 h-4 text-indigo-600" />
                         Client Widget Commerce Customization
                       </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-500 mt-0.5">
                         Customize what features your website visitors experience inside the live chat widget.
                       </p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Product Carousel Toggle */}
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
                         <div>
-                          <div className="text-xs font-bold text-white">In-Chat Product Cards</div>
-                          <div className="text-[11px] text-slate-400">Show visual product carousel when users ask</div>
+                          <div className="text-xs font-bold text-slate-900">In-Chat Product Cards</div>
+                          <div className="text-[11px] text-slate-500">Show visual product carousel when users ask</div>
                         </div>
                         <input
                           type="checkbox"
                           checked={ecomConfig.show_products_carousel}
                           onChange={e => setEcomConfig({ ...ecomConfig, show_products_carousel: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded bg-slate-900 border-slate-700 cursor-pointer"
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
                         />
                       </div>
 
                       {/* 1-Click Instant Checkout */}
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
                         <div>
-                          <div className="text-xs font-bold text-white">1-Click Instant Checkout</div>
-                          <div className="text-[11px] text-slate-400">Allow visitors to place order inside chat</div>
+                          <div className="text-xs font-bold text-slate-900">1-Click Instant Checkout</div>
+                          <div className="text-[11px] text-slate-500">Allow visitors to place order inside chat</div>
                         </div>
                         <input
                           type="checkbox"
                           checked={ecomConfig.allow_instant_checkout}
                           onChange={e => setEcomConfig({ ...ecomConfig, allow_instant_checkout: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded bg-slate-900 border-slate-700 cursor-pointer"
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
                         />
                       </div>
 
                       {/* Cash on Delivery */}
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
                         <div>
-                          <div className="text-xs font-bold text-white">Cash on Delivery (COD)</div>
-                          <div className="text-[11px] text-slate-400">Enable nationwide COD payment</div>
+                          <div className="text-xs font-bold text-slate-900">Cash on Delivery (COD)</div>
+                          <div className="text-[11px] text-slate-500">Enable nationwide COD payment</div>
                         </div>
                         <input
                           type="checkbox"
                           checked={ecomConfig.cod_enabled}
                           onChange={e => setEcomConfig({ ...ecomConfig, cod_enabled: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded bg-slate-900 border-slate-700 cursor-pointer"
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
                         />
                       </div>
 
                       {/* bKash Online */}
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
                         <div>
-                          <div className="text-xs font-bold text-white">bKash Online Payment</div>
-                          <div className="text-[11px] text-slate-400">Enable instant mobile checkout</div>
+                          <div className="text-xs font-bold text-slate-900">bKash Online Payment</div>
+                          <div className="text-[11px] text-slate-500">Enable instant mobile checkout</div>
                         </div>
                         <input
                           type="checkbox"
                           checked={ecomConfig.bkash_enabled}
                           onChange={e => setEcomConfig({ ...ecomConfig, bkash_enabled: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded bg-slate-900 border-slate-700 cursor-pointer"
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
+                        />
+                      </div>
+
+                      {/* EPS Multi-Channel Online */}
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">EPS Online Payment</div>
+                          <div className="text-[11px] text-slate-500">Cards, NetBanking, Nagad, Rocket</div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={ecomConfig.eps_enabled}
+                          onChange={e => setEcomConfig({ ...ecomConfig, eps_enabled: e.target.checked })}
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-400 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Delivery Charge (Inside Dhaka) ৳
                         </label>
                         <input
                           type="number"
                           value={ecomConfig.delivery_charge_inside_dhaka}
                           onChange={e => setEcomConfig({ ...ecomConfig, delivery_charge_inside_dhaka: parseFloat(e.target.value) || 0 })}
-                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-slate-400 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Delivery Charge (Outside Dhaka) ৳
                         </label>
                         <input
                           type="number"
                           value={ecomConfig.delivery_charge_outside_dhaka}
                           onChange={e => setEcomConfig({ ...ecomConfig, delivery_charge_outside_dhaka: parseFloat(e.target.value) || 0 })}
-                          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold"
                         />
                       </div>
                     </div>
 
-                    <div className="flex justify-end pt-3 border-t border-slate-800">
+                    <div className="flex justify-end pt-3 border-t border-slate-100">
                       <button
                         onClick={handleSaveCustomizer}
-                        className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-indigo-500/20 transition-all"
+                        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
                       >
                         Save Widget Settings
                       </button>
@@ -414,21 +430,21 @@ export default function WebsitesView() {
 
           {/* Right Col: Live Interactive Widget Preview Simulator with Product Cards */}
           {selectedSite && (
-            <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl flex flex-col justify-between">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
               <div>
-                <h3 className="font-bold text-sm text-white mb-1 flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-indigo-400" /> Live CDN Widget Simulator
+                <h3 className="font-bold text-sm text-slate-900 mb-1 flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-indigo-600" /> Live CDN Widget Simulator
                 </h3>
-                <p className="text-xs text-slate-400 mb-4">
-                  Interactive storefront preview on <span className="text-indigo-400 font-mono">{selectedSite.domain}</span>.
+                <p className="text-xs text-slate-500 mb-4">
+                  Interactive storefront preview on <span className="text-indigo-600 font-mono font-semibold">{selectedSite.domain}</span>.
                 </p>
 
                 {/* Chatbox Preview Frame */}
-                <div className="border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[460px] bg-slate-950">
+                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-md flex flex-col h-[460px] bg-slate-50">
                   
                   {/* Header */}
                   <div
-                    className="p-3.5 text-white flex items-center justify-between shadow-sm"
+                    className="p-3.5 text-white flex items-center justify-between shadow-xs"
                     style={{ backgroundColor: selectedSite.primary_color }}
                   >
                     <div>
@@ -441,7 +457,7 @@ export default function WebsitesView() {
                   </div>
 
                   {/* Messages Area */}
-                  <div className="flex-1 p-3.5 overflow-y-auto space-y-3 text-xs">
+                  <div className="flex-1 p-3.5 overflow-y-auto space-y-3 text-xs bg-slate-50">
                     {previewMessages.map((m, idx) => (
                       <div
                         key={idx}
@@ -451,7 +467,7 @@ export default function WebsitesView() {
                           className={`p-2.5 rounded-xl max-w-[90%] leading-relaxed ${
                             m.sender === "user"
                               ? "bg-indigo-600 text-white rounded-br-none"
-                              : "bg-slate-900 text-slate-200 border border-slate-800 rounded-bl-none shadow-sm"
+                              : "bg-white text-slate-800 border border-slate-200 rounded-bl-none shadow-xs"
                           }`}
                         >
                           {m.text}
@@ -463,18 +479,18 @@ export default function WebsitesView() {
                             {products.slice(0, 2).map(prod => (
                               <div
                                 key={prod.id}
-                                className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 flex items-center gap-2.5 shadow-md"
+                                className="bg-white border border-slate-200 rounded-xl p-2.5 flex items-center gap-2.5 shadow-xs"
                               >
                                 {prod.images && prod.images[0] && (
                                   <img
                                     src={prod.images[0]}
                                     alt=""
-                                    className="w-12 h-12 rounded-lg object-cover bg-slate-950 border border-slate-800 flex-shrink-0"
+                                    className="w-12 h-12 rounded-lg object-cover bg-slate-100 border border-slate-200 flex-shrink-0"
                                   />
                                 )}
                                 <div className="min-w-0 flex-1">
-                                  <div className="font-bold text-white text-xs truncate">{prod.title}</div>
-                                  <div className="text-emerald-400 font-bold text-xs mt-0.5">
+                                  <div className="font-bold text-slate-900 text-xs truncate">{prod.title}</div>
+                                  <div className="text-emerald-600 font-bold text-xs mt-0.5">
                                     ৳{prod.selling_price.toLocaleString()} BDT
                                   </div>
                                 </div>
@@ -483,7 +499,7 @@ export default function WebsitesView() {
                                   onClick={() => {
                                     showToast("Simulator Checkout", `Opened 1-Click Order for ${prod.title}`, "info");
                                   }}
-                                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] rounded-lg shadow-sm flex-shrink-0 transition-colors"
+                                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-lg shadow-xs flex-shrink-0 transition-colors cursor-pointer"
                                 >
                                   Order
                                 </button>
@@ -496,17 +512,17 @@ export default function WebsitesView() {
                   </div>
 
                   {/* Composer */}
-                  <form onSubmit={handleSendPreview} className="p-2 border-t border-slate-800 bg-slate-900 flex gap-1.5">
+                  <form onSubmit={handleSendPreview} className="p-2 border-t border-slate-200 bg-white flex gap-1.5">
                     <input
                       type="text"
                       value={previewInput}
                       onChange={e => setPreviewInput(e.target.value)}
                       placeholder="Type 'show products' or 'price'..."
-                      className="flex-1 px-3 py-1.5 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white outline-none focus:border-indigo-500"
+                      className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
                     />
                     <button
                       type="submit"
-                      className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors"
+                      className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer"
                     >
                       <Send className="w-3.5 h-3.5" />
                     </button>
@@ -514,7 +530,7 @@ export default function WebsitesView() {
                 </div>
               </div>
 
-              <div className="text-[11px] text-slate-500 text-center mt-3">
+              <div className="text-[11px] text-slate-400 text-center mt-3">
                 Live CDN Widget • Autonomous In-Chat Order Desk
               </div>
             </div>
@@ -525,49 +541,49 @@ export default function WebsitesView() {
 
       {/* Add Website CDN Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="font-bold text-base text-white flex items-center gap-2">
-                <Globe className="w-4 h-4 text-indigo-400" />
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-indigo-600" />
                 Add Connected CDN Website
               </h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleAddWebsite} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Website Name *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Website Name *</label>
                 <input
                   type="text"
                   required
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
                   placeholder="e.g. Padma Mart Main Storefront"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-medium"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Domain Name *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Domain Name *</label>
                 <input
                   type="text"
                   required
                   value={newDomain}
                   onChange={e => setNewDomain(e.target.value)}
                   placeholder="e.g. shop.padmamart.com.bd"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-mono"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Business Category *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Business Category *</label>
                 <select
                   value={newCategory}
                   onChange={e => setNewCategory(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 cursor-pointer"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 cursor-pointer transition-all font-medium"
                 >
                   <option value="ecommerce">E-Commerce Store (Products, In-Chat Orders, COD, bKash)</option>
                   <option value="healthcare">Healthcare & Hospital (Doctor Appointments, Tests)</option>
@@ -579,37 +595,37 @@ export default function WebsitesView() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Brand Theme Color</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Brand Theme Color</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={newColor}
                       onChange={e => setNewColor(e.target.value)}
-                      className="h-9 w-12 rounded cursor-pointer border border-slate-800 bg-slate-950"
+                      className="h-9 w-12 rounded cursor-pointer border border-slate-200 bg-white"
                     />
-                    <span className="font-mono text-slate-300">{newColor}</span>
+                    <span className="font-mono text-slate-700">{newColor}</span>
                   </div>
                 </div>
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">Header Title</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Header Title</label>
                   <input
                     type="text"
                     value={newHeader}
                     onChange={e => setNewHeader(e.target.value)}
                     placeholder="Padma Mart AI"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Welcome Message</label>
+                <label className="block font-semibold text-slate-700 mb-1">Welcome Message</label>
                 <textarea
                   rows={2}
                   value={newWelcome}
                   onChange={e => setNewWelcome(e.target.value)}
                   placeholder="Hello! How can we assist you today?"
-                  className="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-medium"
                 />
               </div>
 
@@ -617,13 +633,13 @@ export default function WebsitesView() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 bg-slate-800 text-slate-300 font-semibold rounded-xl hover:bg-slate-700"
+                  className="px-4 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl hover:bg-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/20"
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-sm cursor-pointer"
                 >
                   Save & Generate Widget Key
                 </button>

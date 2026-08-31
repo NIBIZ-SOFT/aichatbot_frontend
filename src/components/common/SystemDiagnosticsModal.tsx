@@ -99,7 +99,7 @@ export default function SystemDiagnosticsModal({ isOpen, onClose }: SystemDiagno
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans">
-        
+
         {/* Modal Header */}
         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-900 text-white">
           <div className="flex items-center gap-3">
@@ -111,11 +111,10 @@ export default function SystemDiagnosticsModal({ isOpen, onClose }: SystemDiagno
                 <h3 className="text-base font-black text-white">
                   System Connection & Architecture Diagnostics
                 </h3>
-                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase ${
-                  isHealthy
+                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase ${isHealthy
                     ? "bg-emerald-950 text-emerald-400 border-emerald-800"
                     : "bg-rose-950 text-rose-400 border-rose-800"
-                }`}>
+                  }`}>
                   {isHealthy ? "100% HEALTHY" : "DEGRADED / ACTION NEEDED"}
                 </span>
               </div>
@@ -145,13 +144,12 @@ export default function SystemDiagnosticsModal({ isOpen, onClose }: SystemDiagno
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
-          
+
           {/* Health Score Overview Banner */}
           <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-4">
-              <div className={`h-14 w-14 rounded-2xl flex items-center justify-center font-black text-xl font-mono shadow-sm ${
-                score >= 80 ? "bg-emerald-100 text-emerald-800" : score >= 50 ? "bg-amber-100 text-amber-800" : "bg-rose-100 text-rose-800"
-              }`}>
+              <div className={`h-14 w-14 rounded-2xl flex items-center justify-center font-black text-xl font-mono shadow-sm ${score >= 80 ? "bg-emerald-100 text-emerald-800" : score >= 50 ? "bg-amber-100 text-amber-800" : "bg-rose-100 text-rose-800"
+                }`}>
                 {score}%
               </div>
               <div>
@@ -186,7 +184,7 @@ export default function SystemDiagnosticsModal({ isOpen, onClose }: SystemDiagno
 
           {/* Component Diagnostics Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
+
             {/* Card 1: FastAPI Backend */}
             <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-3">
               <div className="flex justify-between items-start">
@@ -205,7 +203,7 @@ export default function SystemDiagnosticsModal({ isOpen, onClose }: SystemDiagno
               </div>
               <div className="text-[11px] text-slate-600 space-y-1 font-mono bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                 <div>Environment: {diagnostics?.environment || "Development"}</div>
-                <div>Service: {diagnostics?.service_name || "Enterprise AIaaS"}</div>
+                <div>Service: {diagnostics?.service_name || "Jobab Chat"}</div>
               </div>
             </div>
 

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useToast } from "../../context/ToastContext";
-import { useTheme } from "../../context/ThemeContext";
 import { api } from "../../lib/api";
 import { Product, ProductCreateInput } from "../../types";
 import {
@@ -17,7 +16,6 @@ type SortDir = "asc" | "desc";
 
 export default function ProductsView() {
   const { showToast } = useToast();
-  const { currentTheme } = useTheme();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -101,40 +99,49 @@ export default function ProductsView() {
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (field !== sortBy) return <ChevronsUpDown className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />;
+    if (sortBy !== field) {
+      return <ChevronsUpDown className="w-3.5 h-3.5 text-slate-400 opacity-40 group-hover:opacity-100 transition-opacity ml-1 inline" />;
+    }
     return sortDir === "asc"
-      ? <ChevronUp className="w-3.5 h-3.5" style={{ color: currentTheme.primary_color }} />
-      : <ChevronDown className="w-3.5 h-3.5" style={{ color: currentTheme.primary_color }} />;
+      ? <ChevronUp className="w-3.5 h-3.5 text-indigo-600 ml-1 inline" />
+      : <ChevronDown className="w-3.5 h-3.5 text-indigo-600 ml-1 inline" />;
   };
 
-  // Priority inline editor
-  const startEditPriority = (p: Product) => {
-    setEditingPriority(p.id);
-    setPriorityInputVal(p.priority > 0 ? String(p.priority) : "");
-    setTimeout(() => priorityInputRef.current?.focus(), 50);
+  // Inline Priority Quick Edit
+  const startEditPriority = (product: Product) => {
+    setEditingPriority(product.id);
+    setPriorityInputVal(String(product.priority ?? 0));
+    setTimeout(() => {
+      priorityInputRef.current?.focus();
+      priorityInputRef.current?.select();
+    }, 50);
   };
 
   const commitPriorityEdit = async (productId: string) => {
-    const val = parseInt(priorityInputVal, 10);
-    const priority = isNaN(val) || val < 0 ? 0 : val;
-    setEditingPriority(null);
+    const newRank = parseInt(priorityInputVal, 10);
+    if (isNaN(newRank) || newRank < 0) {
+      setEditingPriority(null);
+      return;
+    }
+
     try {
-      const updated = await api.setProductPriority(productId, priority);
-      // Re-fetch to reflect cascade reorder
-      await fetchProducts();
+      await api.setProductPriority(productId, newRank);
+      setProducts(prev =>
+        prev.map(p => (p.id === productId ? { ...p, priority: newRank } : p))
+      );
       showToast(
-        priority > 0 ? "Priority Set" : "Priority Removed",
-        priority > 0
-          ? `Product moved to rank #${priority}. Others auto-shifted.`
-          : "Product removed from priority ranking.",
+        "Priority Updated",
+        newRank === 0 ? "Product unranked" : `Product assigned rank #${newRank}`,
         "success"
       );
+      fetchProducts();
     } catch (err: any) {
-      showToast("Error", err.message || "Could not update priority", "error");
+      showToast("Error", err.message || "Failed to update priority", "error");
+    } finally {
+      setEditingPriority(null);
     }
   };
 
-  // Modal handlers
   const handleOpenAddModal = () => {
     setEditingProduct(null);
     setFormData({
@@ -201,22 +208,21 @@ export default function ProductsView() {
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim()) {
-      showToast("Validation Error", "Product title is required", "error");
-      return;
-    }
+    if (!formData.title.trim()) return;
+
     try {
       setIsSaving(true);
       if (editingProduct) {
-        await api.updateProduct(editingProduct.id, formData);
-        await fetchProducts();
-        showToast("Product Updated", `"${formData.title}" updated and auto-synced with pgvector AI embeddings.`, "success");
+        const updated = await api.updateProduct(editingProduct.id, formData);
+        setProducts(prev => prev.map(p => (p.id === editingProduct.id ? updated : p)));
+        showToast("Product Updated", `"${updated.title}" saved and synced with PostgreSQL.`, "success");
       } else {
-        await api.createProduct(formData);
-        await fetchProducts();
-        showToast("Product Created", `"${formData.title}" added to catalog & 768-dim AI knowledge base.`, "success");
+        const created = await api.createProduct(formData);
+        setProducts(prev => [created, ...prev]);
+        showToast("Product Added", `"${created.title}" added to catalog and vector embeddings.`, "success");
       }
       setShowAddModal(false);
+      fetchProducts();
     } catch (err: any) {
       showToast("Error", err.message || "Failed to save product", "error");
     } finally {
@@ -229,7 +235,7 @@ export default function ProductsView() {
     try {
       await api.deleteProduct(product.id);
       setProducts(prev => prev.filter(p => p.id !== product.id));
-      showToast("Product Deleted", `"${product.title}" removed from catalog and AI vector database.`, "info");
+      showToast("Product Deleted", `"${product.title}" removed from catalog.`, "info");
     } catch (err: any) {
       showToast("Delete Failed", err.message || "Failed to delete product", "error");
     }
@@ -244,106 +250,66 @@ export default function ProductsView() {
   const categories = ["all", "Fashion", "Gadgets", "Lifestyle", "Groceries", "Books", "General"];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12 font-sans antialiased">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 font-sans text-slate-900">
 
-      {/* Top Header Banner */}
-      <div
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden transition-all"
-        style={{
-          backgroundColor: currentTheme.dark_card,
-          borderColor: currentTheme.dark_border,
-          boxShadow: `0 20px 40px -15px ${currentTheme.primary_color}15`
-        }}
-      >
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span
-              className="text-[10px] font-extrabold px-3 py-1 rounded-full border uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
-              style={{
-                backgroundColor: `${currentTheme.primary_color}15`,
-                color: currentTheme.primary_color,
-                borderColor: `${currentTheme.primary_color}35`
-              }}
-            >
-              <Sparkles className="w-3 h-3 animate-pulse" />
-              {currentTheme.name || "Curated Theme Active"}
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+        <div>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="p-2 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
+              <ShoppingBag className="w-5 h-5" />
             </span>
-            <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              E-Commerce Product Catalog
+            </h1>
+            <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
               Live pgvector RAG Sync
             </span>
-            <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 flex items-center gap-1">
-              <Trophy className="w-3 h-3" /> Smart Priority Ordering
-            </span>
           </div>
-          <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-            <div
-              className="p-2 sm:p-2.5 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0"
-              style={{ backgroundColor: currentTheme.primary_color }}
-            >
-              <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <span>E-Commerce Product Catalog</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-2 max-w-xl font-medium">
-            Manage inventory, prices, specs, and drag-rank products to control CDN widget display order.
+          <p className="text-xs sm:text-sm text-slate-500">
+            Manage inventory, prices, specs, and rank products to control CDN widget display order.
           </p>
         </div>
         <button
           onClick={handleOpenAddModal}
-          className="relative z-10 w-full sm:w-auto px-5 py-3 rounded-2xl text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg hover:scale-105 active:scale-95 cursor-pointer shrink-0"
-          style={{
-            backgroundColor: currentTheme.primary_color,
-            boxShadow: `0 10px 25px -5px ${currentTheme.primary_color}50`
-          }}
+          className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Product</span>
         </button>
-        <div
-          className="absolute -right-16 -top-16 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
-          style={{ backgroundColor: currentTheme.primary_color }}
-        />
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { label: "Total Catalog Items", value: totalProducts, icon: <Package className="w-4 h-4 text-slate-500" />, sub: "Synchronized with AI Knowledge", color: "text-white" },
-          { label: "Active & In Stock", value: inStockCount, icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" />, sub: "Ready for instant in-chat orders", color: "text-emerald-400" },
-          { label: "Low Stock Alert", value: lowStockCount, icon: <AlertTriangle className="w-4 h-4 text-amber-400" />, sub: "Stock quantity ≤ 10 units", color: "text-amber-400" },
-          { label: "Priority Ranked", value: rankedCount, icon: <Trophy className="w-4 h-4 text-violet-400" />, sub: "Shown first in CDN widget", color: "text-violet-400" },
+          { label: "Total Catalog Items", value: totalProducts, icon: <Package className="w-4 h-4 text-slate-500" />, sub: "Synced with AI Knowledge", color: "text-slate-900" },
+          { label: "Active & In Stock", value: inStockCount, icon: <CheckCircle2 className="w-4 h-4 text-emerald-600" />, sub: "Ready for in-chat orders", color: "text-emerald-600" },
+          { label: "Low Stock Alert", value: lowStockCount, icon: <AlertTriangle className="w-4 h-4 text-amber-600" />, sub: "Stock ≤ 10 units", color: "text-amber-600" },
+          { label: "Priority Ranked", value: rankedCount, icon: <Trophy className="w-4 h-4 text-indigo-600" />, sub: "Shown first in CDN widget", color: "text-indigo-600" },
         ].map((kpi, i) => (
-          <div
-            key={i}
-            className="p-4 sm:p-5 rounded-2xl border transition-all"
-            style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
-          >
-            <div className="flex items-center justify-between text-slate-400 text-xs font-bold mb-2">
+          <div key={i} className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+            <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-2">
               <span className="truncate">{kpi.label}</span>
               {kpi.icon}
             </div>
-            <div className={`text-xl sm:text-2xl font-black ${kpi.color}`}>{kpi.value}</div>
-            <div className="text-[10.5px] text-slate-500 mt-1 font-medium truncate">{kpi.sub}</div>
+            <div className={`text-xl sm:text-2xl font-bold font-mono ${kpi.color}`}>{kpi.value}</div>
+            <div className="text-[11px] text-slate-500 mt-1 font-medium truncate">{kpi.sub}</div>
           </div>
         ))}
       </div>
 
       {/* Filter, Search & Sort Bar */}
-      <div
-        className="p-4 rounded-2xl border flex flex-col gap-3 shadow-sm"
-        style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
-      >
+      <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col gap-3">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
           {/* Search */}
           <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 absolute left-3.5 top-2.5 text-slate-500" />
+            <Search className="w-4 h-4 absolute left-3.5 top-2.5 text-slate-400" />
             <input
               type="text"
               placeholder="Search by title, SKU, or category..."
               value={searchQuery}
               onChange={e => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-950/80 border border-slate-800 rounded-xl text-white text-xs placeholder:text-slate-500 outline-none transition-all font-medium"
-              style={{ borderColor: currentTheme.dark_border }}
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium"
             />
           </div>
 
@@ -356,9 +322,10 @@ export default function ProductsView() {
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all capitalize whitespace-nowrap cursor-pointer shrink-0 ${
-                    isSelected ? "text-white shadow-md" : "text-slate-400 hover:text-white bg-slate-950/50 hover:bg-slate-900"
+                    isSelected
+                      ? "bg-indigo-600 text-white shadow-xs"
+                      : "text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200/60"
                   }`}
-                  style={isSelected ? { backgroundColor: currentTheme.primary_color } : {}}
                 >
                   {cat === "all" ? "All Categories" : cat}
                 </button>
@@ -368,8 +335,10 @@ export default function ProductsView() {
         </div>
 
         {/* Sort Quick-Access Pills */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[11px] text-slate-500 font-bold flex items-center gap-1"><ArrowUpDown className="w-3.5 h-3.5" /> Quick Sort:</span>
+        <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-100">
+          <span className="text-[11px] text-slate-500 font-semibold flex items-center gap-1">
+            <ArrowUpDown className="w-3.5 h-3.5" /> Quick Sort:
+          </span>
           {([
             { key: "priority", label: "🏆 Priority" },
             { key: "title", label: "A→Z Title" },
@@ -382,15 +351,14 @@ export default function ProductsView() {
               <button
                 key={s.key}
                 onClick={() => handleSort(s.key)}
-                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all border flex items-center gap-1 cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all border flex items-center gap-1 cursor-pointer ${
                   isActive
-                    ? "text-white border-transparent"
-                    : "text-slate-400 border-slate-800 hover:text-white hover:border-slate-700"
+                    ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                    : "text-slate-600 bg-white border-slate-200 hover:bg-slate-50"
                 }`}
-                style={isActive ? { backgroundColor: currentTheme.primary_color } : {}}
               >
                 {s.label}
-                {isActive && (sortDir === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}
+                {isActive && (sortDir === "asc" ? <ChevronUp className="w-3 h-3 text-indigo-600" /> : <ChevronDown className="w-3 h-3 text-indigo-600" />)}
               </button>
             );
           })}
@@ -400,44 +368,33 @@ export default function ProductsView() {
       {/* Product Table */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 text-slate-500">
-          <RefreshCw className="w-8 h-8 animate-spin mb-3" style={{ color: currentTheme.primary_color }} />
+          <RefreshCw className="w-8 h-8 animate-spin text-indigo-600 mb-3" />
           <p className="text-xs font-medium">Loading store catalog...</p>
         </div>
       ) : products.length === 0 ? (
-        <div
-          className="text-center py-20 rounded-3xl border border-dashed p-8"
-          style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
-        >
-          <div
-            className="p-4 rounded-2xl w-14 h-14 mx-auto mb-3 flex items-center justify-center shadow-lg"
-            style={{ backgroundColor: `${currentTheme.primary_color}15`, color: currentTheme.primary_color }}
-          >
+        <div className="text-center py-20 rounded-3xl bg-white border border-slate-200 border-dashed p-8">
+          <div className="p-4 rounded-2xl w-14 h-14 mx-auto mb-3 flex items-center justify-center bg-indigo-50 text-indigo-600">
             <ShoppingBag className="w-7 h-7" />
           </div>
-          <h3 className="text-base font-bold text-white mb-1">No products found</h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto mb-4 font-medium">
+          <h3 className="text-base font-bold text-slate-900 mb-1">No products found</h3>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4 font-medium">
             {searchQuery ? `No products matching "${searchQuery}".` : "Get started by adding your first product."}
           </p>
           <button
             onClick={handleOpenAddModal}
-            className="px-4 py-2 text-white font-bold text-xs rounded-xl shadow-md transition-all hover:scale-105"
-            style={{ backgroundColor: currentTheme.primary_color }}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
           >
             + Add First Product
           </button>
         </div>
       ) : (
-        <div
-          className="rounded-3xl border overflow-hidden shadow-sm"
-          style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
-        >
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/60 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800/80">
+              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
                 <tr>
-                  {/* Priority column */}
                   <th
-                    className="px-4 py-4 cursor-pointer hover:text-white group transition-colors select-none"
+                    className="px-4 py-4 cursor-pointer hover:text-slate-900 group transition-colors select-none"
                     onClick={() => handleSort("priority")}
                   >
                     <div className="flex items-center gap-1.5">
@@ -447,7 +404,7 @@ export default function ProductsView() {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 cursor-pointer hover:text-white group transition-colors select-none"
+                    className="px-6 py-4 cursor-pointer hover:text-slate-900 group transition-colors select-none"
                     onClick={() => handleSort("title")}
                   >
                     <div className="flex items-center gap-1.5">
@@ -457,7 +414,7 @@ export default function ProductsView() {
                   </th>
                   <th className="px-6 py-4">Category & SKU</th>
                   <th
-                    className="px-6 py-4 cursor-pointer hover:text-white group transition-colors select-none"
+                    className="px-6 py-4 cursor-pointer hover:text-slate-900 group transition-colors select-none"
                     onClick={() => handleSort("selling_price")}
                   >
                     <div className="flex items-center gap-1.5">
@@ -466,7 +423,7 @@ export default function ProductsView() {
                     </div>
                   </th>
                   <th
-                    className="px-6 py-4 cursor-pointer hover:text-white group transition-colors select-none"
+                    className="px-6 py-4 cursor-pointer hover:text-slate-900 group transition-colors select-none"
                     onClick={() => handleSort("stock_quantity")}
                   >
                     <div className="flex items-center gap-1.5">
@@ -478,14 +435,14 @@ export default function ProductsView() {
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-medium">
-                {products.map((p, idx) => {
+              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                {products.map((p) => {
                   const hasDiscount = p.unit_price > p.selling_price && p.selling_price > 0;
                   const discountPercent = hasDiscount ? Math.round(((p.unit_price - p.selling_price) / p.unit_price) * 100) : 0;
                   const isEditingThisPriority = editingPriority === p.id;
 
                   return (
-                    <tr key={p.id} className="hover:bg-slate-900/40 transition-colors group">
+                    <tr key={p.id} className="hover:bg-slate-50/80 transition-colors group">
                       {/* Priority Cell */}
                       <td className="px-4 py-4">
                         {isEditingThisPriority ? (
@@ -494,8 +451,7 @@ export default function ProductsView() {
                               ref={priorityInputRef}
                               type="number"
                               min="0"
-                              className="w-14 px-2 py-1.5 bg-slate-950 border rounded-lg text-white text-xs font-bold outline-none text-center"
-                              style={{ borderColor: currentTheme.primary_color }}
+                              className="w-14 px-2 py-1.5 bg-white border border-indigo-500 rounded-lg text-slate-900 text-xs font-bold outline-none text-center"
                               value={priorityInputVal}
                               onChange={e => setPriorityInputVal(e.target.value)}
                               onBlur={() => commitPriorityEdit(p.id)}
@@ -505,7 +461,7 @@ export default function ProductsView() {
                               }}
                             />
                             <button
-                              className="text-emerald-400 hover:text-emerald-300"
+                              className="text-emerald-600 hover:text-emerald-700"
                               onMouseDown={e => { e.preventDefault(); commitPriorityEdit(p.id); }}
                             >
                               <CheckCircle2 className="w-4 h-4" />
@@ -518,30 +474,27 @@ export default function ProductsView() {
                             className="group/rank flex items-center gap-1.5 transition-all cursor-pointer"
                           >
                             {p.priority === 1 ? (
-                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 shadow-md shadow-amber-500/20 ring-1 ring-amber-300/40 transition-transform group-hover/rank:scale-110">
+                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black bg-amber-400 text-slate-950 shadow-xs ring-1 ring-amber-300">
                                 #1
                               </span>
                             ) : p.priority === 2 ? (
-                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black bg-gradient-to-r from-slate-200 to-slate-300 text-slate-900 shadow-md ring-1 ring-slate-200/40 transition-transform group-hover/rank:scale-110">
+                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black bg-slate-200 text-slate-800 shadow-xs">
                                 #2
                               </span>
                             ) : p.priority === 3 ? (
-                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-md ring-1 ring-amber-600/40 transition-transform group-hover/rank:scale-110">
+                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black bg-amber-700 text-white shadow-xs">
                                 #3
                               </span>
                             ) : p.priority > 3 ? (
-                              <span
-                                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-sm transition-transform group-hover/rank:scale-110"
-                                style={{ backgroundColor: currentTheme.primary_color }}
-                              >
+                              <span className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white bg-indigo-600 shadow-xs">
                                 #{p.priority}
                               </span>
                             ) : (
-                              <span className="w-7 h-7 rounded-full flex items-center justify-center border-2 border-dashed border-slate-700 group-hover/rank:border-slate-500 transition-colors">
-                                <Star className="w-3 h-3 text-slate-600 group-hover/rank:text-slate-400 transition-colors" />
+                              <span className="w-7 h-7 rounded-full flex items-center justify-center border-2 border-dashed border-slate-300 group-hover/rank:border-slate-400 transition-colors">
+                                <Star className="w-3 h-3 text-slate-400 group-hover/rank:text-slate-600 transition-colors" />
                               </span>
                             )}
-                            <span className="text-[10px] text-slate-500 group-hover/rank:text-slate-300 transition-colors opacity-0 group-hover/rank:opacity-100">
+                            <span className="text-[10px] text-slate-400 group-hover/rank:text-slate-600 transition-colors opacity-0 group-hover/rank:opacity-100 font-bold">
                               {p.priority > 0 ? "Edit" : "Set rank"}
                             </span>
                           </button>
@@ -551,31 +504,31 @@ export default function ProductsView() {
                       {/* Product Details */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 overflow-hidden flex-shrink-0">
+                          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden flex-shrink-0">
                             {p.images && p.images[0] ? (
                               <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-600">
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
                                 <ImageIcon className="w-5 h-5" />
                               </div>
                             )}
                           </div>
                           <div className="min-w-0 max-w-xs">
-                            <div className="text-white font-bold truncate group-hover:text-cyan-300 transition-colors">
+                            <div className="text-slate-900 font-bold truncate group-hover:text-indigo-600 transition-colors">
                               {p.title}
                             </div>
-                            <div className="text-[11px] text-slate-400 truncate">
+                            <div className="text-[11px] text-slate-500 truncate">
                               {p.description || "No description provided"}
                             </div>
                             {p.tags && p.tags.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-1.5">
                                 {p.tags.slice(0, 3).map((t, tIdx) => (
-                                  <span key={tIdx} className="text-[9.5px] font-mono px-1.5 py-0.5 bg-indigo-950/40 text-indigo-300 rounded border border-indigo-500/20">
+                                  <span key={tIdx} className="text-[9.5px] font-mono px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded border border-slate-200 font-semibold">
                                     #{t}
                                   </span>
                                 ))}
                                 {p.tags.length > 3 && (
-                                  <span className="text-[9.5px] text-slate-500 font-mono self-center">
+                                  <span className="text-[9.5px] text-slate-400 font-mono self-center">
                                     +{p.tags.length - 3} more
                                   </span>
                                 )}
@@ -587,28 +540,21 @@ export default function ProductsView() {
 
                       {/* Category & SKU */}
                       <td className="px-6 py-4">
-                        <span
-                          className="inline-block px-2.5 py-0.5 rounded-md font-bold text-[10px] border mb-1"
-                          style={{
-                            backgroundColor: `${currentTheme.primary_color}10`,
-                            color: currentTheme.primary_color,
-                            borderColor: `${currentTheme.primary_color}30`
-                          }}
-                        >
+                        <span className="inline-block px-2.5 py-0.5 rounded-md font-bold text-[10px] bg-indigo-50 text-indigo-700 border border-indigo-200 mb-1">
                           {p.category}
                         </span>
-                        <div className="font-mono text-[11px] text-slate-400">{p.sku || "N/A"}</div>
+                        <div className="font-mono text-[11px] text-slate-500">{p.sku || "N/A"}</div>
                       </td>
 
                       {/* Price */}
                       <td className="px-6 py-4">
-                        <div className="font-black text-white text-sm">
-                          ৳{p.selling_price.toLocaleString()} <span className="text-[10px] text-slate-400 font-bold">BDT</span>
+                        <div className="font-bold text-slate-900 text-xs font-mono">
+                          ৳{p.selling_price.toLocaleString()} <span className="text-[10px] text-slate-500 font-sans">BDT</span>
                         </div>
                         {hasDiscount && (
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-slate-500 line-through text-[11px]">৳{p.unit_price.toLocaleString()}</span>
-                            <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-1.5 rounded border border-emerald-500/20">
+                            <span className="text-slate-400 line-through text-[11px] font-mono">৳{p.unit_price.toLocaleString()}</span>
+                            <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 rounded border border-emerald-200">
                               -{discountPercent}%
                             </span>
                           </div>
@@ -618,19 +564,19 @@ export default function ProductsView() {
                       {/* Stock Status */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full ${p.stock_status === "in_stock" ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
-                          <span className="text-white capitalize font-semibold">
+                          <span className={`w-2 h-2 rounded-full ${p.stock_status === "in_stock" ? "bg-emerald-500" : "bg-red-500"}`} />
+                          <span className="text-slate-800 capitalize font-semibold text-xs">
                             {p.stock_status === "in_stock" ? `${p.stock_quantity} in stock` : "Out of Stock"}
                           </span>
                           {p.stock_quantity <= 10 && p.stock_status === "in_stock" && (
-                            <span className="text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded font-bold">Low</span>
+                            <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-bold">Low</span>
                           )}
                         </div>
                       </td>
 
                       {/* AI Vector RAG Badge */}
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 w-fit">
+                        <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 w-fit font-semibold">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>pgvector 768d</span>
                         </div>
@@ -641,14 +587,14 @@ export default function ProductsView() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleOpenEditModal(p)}
-                            className="p-2 rounded-xl text-slate-400 hover:text-white bg-slate-950/60 hover:bg-slate-800 border border-slate-800 transition-all cursor-pointer"
+                            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-all cursor-pointer shadow-xs"
                             title="Edit Product"
                           >
                             <Edit3 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteProduct(p)}
-                            className="p-2 rounded-xl text-slate-400 hover:text-red-400 bg-slate-950/60 hover:bg-red-950/30 border border-slate-800 hover:border-red-500/30 transition-all cursor-pointer"
+                            className="p-2 rounded-xl text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition-all cursor-pointer shadow-xs"
                             title="Delete Product"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -663,7 +609,7 @@ export default function ProductsView() {
           </div>
 
           {/* Footer count */}
-          <div className="px-6 py-3 border-t border-slate-800/50 flex items-center justify-between text-[11px] text-slate-500 font-medium">
+          <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium bg-slate-50/50">
             <span>Showing {products.length} product{products.length !== 1 ? "s" : ""}</span>
             <span className="flex items-center gap-1">
               <Trophy className="w-3 h-3 text-amber-500" />
@@ -675,31 +621,26 @@ export default function ProductsView() {
 
       {/* Add / Edit Product Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div
-            className="rounded-3xl border p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200"
-            style={{ backgroundColor: currentTheme.dark_card, borderColor: currentTheme.dark_border }}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div
-                  className="p-2 rounded-xl text-white shadow-md"
-                  style={{ backgroundColor: currentTheme.primary_color }}
-                >
+                <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
                   <ShoppingBag className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-slate-900">
                     {editingProduct ? "Edit Product Details" : "Add New Product"}
                   </h3>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-slate-500">
                     Product will automatically sync with PostgreSQL pgvector live embeddings.
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="p-1.5 rounded-full text-slate-400 hover:text-white bg-slate-950 border border-slate-800"
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -707,24 +648,24 @@ export default function ProductsView() {
 
             <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="block font-bold text-slate-300">Product Title *</label>
+                <label className="block font-semibold text-slate-700">Product Title *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Men's Premium Cotton Panjabi Collection"
                   value={formData.title}
                   onChange={e => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-medium"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 font-medium transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-300">Category</label>
+                  <label className="block font-semibold text-slate-700">Category</label>
                   <select
                     value={formData.category}
                     onChange={e => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 cursor-pointer transition-all"
                   >
                     <option value="Fashion">Fashion & Apparel</option>
                     <option value="Gadgets">Gadgets & Electronics</option>
@@ -735,102 +676,102 @@ export default function ProductsView() {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-300">SKU Code</label>
+                  <label className="block font-semibold text-slate-700">SKU Code</label>
                   <input
                     type="text"
                     placeholder="e.g. SKU-PANJ-01"
                     value={formData.sku || ""}
                     onChange={e => setFormData({ ...formData, sku: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-indigo-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-mono outline-none focus:border-indigo-500 transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-300">Unit Price / MSRP (৳)</label>
+                  <label className="block font-semibold text-slate-700">Unit Price / MSRP (৳)</label>
                   <input
                     type="number" min="0"
                     placeholder="2500"
                     value={formData.unit_price}
                     onChange={e => setFormData({ ...formData, unit_price: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-mono"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-300">Selling / Offer Price (৳) *</label>
+                  <label className="block font-semibold text-slate-700">Selling / Offer Price (৳) *</label>
                   <input
                     type="number" min="0" required
                     placeholder="2190"
                     value={formData.selling_price}
                     onChange={e => setFormData({ ...formData, selling_price: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-bold outline-none focus:border-indigo-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none focus:border-indigo-500 transition-all font-mono"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-300">Stock Quantity</label>
+                  <label className="block font-semibold text-slate-700">Stock Quantity</label>
                   <input
                     type="number" min="0"
                     value={formData.stock_quantity}
                     onChange={e => setFormData({ ...formData, stock_quantity: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-mono"
                   />
                 </div>
               </div>
 
               {/* Priority Field */}
               <div className="space-y-1">
-                <label className="block font-bold text-slate-300 flex items-center gap-2">
-                  <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                <label className="block font-semibold text-slate-700 flex items-center gap-2">
+                  <Trophy className="w-3.5 h-3.5 text-amber-500" />
                   CDN Widget Display Priority
-                  <span className="text-[10px] font-normal text-slate-500">(1 = shown first, 0 = unranked / newest-first)</span>
+                  <span className="text-[10.5px] font-normal text-slate-500">(1 = shown first, 0 = unranked)</span>
                 </label>
                 <input
                   type="number" min="0"
                   placeholder="0 (unranked)"
                   value={formData.priority ?? 0}
                   onChange={e => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-amber-500/30 rounded-xl text-amber-300 font-bold outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none focus:border-indigo-500 font-mono"
                 />
                 <p className="text-[11px] text-slate-500">
-                  Setting priority 1 will move this product to the top of the widget catalog. Existing products auto-shift.
+                  Setting priority 1 will move this product to the top of the chat widget catalog.
                 </p>
               </div>
 
               <div className="space-y-1">
-                <label className="block font-bold text-slate-300">Product Image URL</label>
+                <label className="block font-semibold text-slate-700">Product Image URL</label>
                 <input
                   type="url"
                   placeholder="https://images.unsplash.com/..."
                   value={formData.images?.[0] || ""}
                   onChange={e => setFormData({ ...formData, images: [e.target.value] })}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono text-[11px]"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 font-mono text-[11px] transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block font-bold text-slate-300">Description & Specifications</label>
+                <label className="block font-semibold text-slate-700">Description & Specifications</label>
                 <textarea
                   rows={3}
                   placeholder="Describe material, warranty, sizing guide, or package contents for the AI..."
                   value={formData.description || ""}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-medium"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 font-medium transition-all"
                 />
               </div>
 
               {/* Multilingual AI Search Keywords & Tags */}
-              <div className="space-y-2 p-4 bg-indigo-950/20 rounded-2xl border border-indigo-500/20">
+              <div className="space-y-2 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
                 <div className="flex justify-between items-center">
-                  <label className="block font-bold text-slate-200 text-xs flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                  <label className="block font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
                     AI Search Keywords & Multilingual Tags
                   </label>
                   <button
                     type="button"
                     disabled={isGeneratingTags || !formData.title.trim()}
                     onClick={handleGenerateAiTags}
-                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-sm"
+                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
                   >
                     {isGeneratingTags ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
                     <span>{isGeneratingTags ? "Generating..." : "✨ Auto-Generate with AI"}</span>
@@ -844,29 +785,25 @@ export default function ProductsView() {
                     ...formData, 
                     tags: e.target.value.split(",").map(t => t.trim().toLowerCase()).filter(Boolean) 
                   })}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-indigo-200 font-mono text-xs outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 font-mono text-xs outline-none focus:border-indigo-500"
                 />
-                <p className="text-[10.5px] text-slate-400">
-                  Tip: Leave empty to auto-generate keywords on save, or click "✨ Auto-Generate with AI" to preview and customize keywords now.
+                <p className="text-[10.5px] text-slate-500">
+                  Tip: Leave empty to auto-generate keywords on save, or click "✨ Auto-Generate with AI" to customize now.
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2.5 bg-slate-950 hover:bg-slate-800 text-slate-300 font-bold rounded-xl border border-slate-800 transition-all"
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-200 transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-6 py-2.5 text-white font-bold rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  style={{
-                    backgroundColor: currentTheme.primary_color,
-                    boxShadow: `0 10px 20px -5px ${currentTheme.primary_color}40`
-                  }}
+                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isSaving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                   <span>{isSaving ? "Saving & Syncing AI..." : (editingProduct ? "Update Product" : "Create Product")}</span>

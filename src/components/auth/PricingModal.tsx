@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { useToast } from "../../context/ToastContext";
-import { 
-  Building2, Check, Sparkles, X, RefreshCw, 
-  ArrowRight, ArrowLeft, ShieldCheck, Zap, Lock, 
-  CreditCard, Tag, User, Mail, Key, ExternalLink 
+import {
+  Building2, Check, Sparkles, X, RefreshCw,
+  ArrowRight, ArrowLeft, ShieldCheck, Zap, Lock,
+  CreditCard, Tag, User, Mail, Key, ExternalLink
 } from "lucide-react";
 import { api } from "../../lib/api";
 
@@ -271,7 +271,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
       }
 
       showToast(
-        "Welcome to Enterprise AIaaS!",
+        "Welcome to Jobab Chat!",
         `Successfully provisioned ${orgName} on ${selectedTier.toUpperCase()} plan.` + (trxData?.trxID ? ` bKash TrxID: ${trxData.trxID}` : ""),
         "success"
       );
@@ -288,10 +288,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
   return (
     <>
       <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto font-sans antialiased animate-in fade-in">
-        
+
         {/* Main Modal Container with Max-Height and Flex Column */}
         <div className="bg-white rounded-2xl sm:rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden my-auto animate-in zoom-in-95">
-          
+
           {/* 1. Modal Fixed Header */}
           <div className="shrink-0 px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 bg-white flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -300,7 +300,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight leading-tight">
-                  Buy AIaaS Package & Start Workspace
+                  Choose Jobab Chat Plan & Launch Workspace
                 </h2>
                 <p className="text-[11px] text-slate-500 hidden sm:block">
                   Instant multi-tenant PostgreSQL provisioning & bKash checkout
@@ -321,8 +321,8 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                 <span>Full Page</span>
                 <ExternalLink className="w-3 h-3" />
               </button>
-              <button 
-                onClick={onClose} 
+              <button
+                onClick={onClose}
                 className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
@@ -335,11 +335,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
             <button
               type="button"
               onClick={() => setActiveStep(1)}
-              className={`flex-1 py-2 text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                activeStep === 1
+              className={`flex-1 py-2 text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeStep === 1
                   ? "border-b-2 border-blue-600 text-blue-700 bg-white shadow-xs"
                   : "text-slate-500 hover:text-slate-700"
-              }`}
+                }`}
             >
               <span className="h-4 w-4 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">1</span>
               <span>Select Plan</span>
@@ -347,11 +346,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
             <button
               type="button"
               onClick={() => setActiveStep(2)}
-              className={`flex-1 py-2 text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                activeStep === 2
+              className={`flex-1 py-2 text-center transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeStep === 2
                   ? "border-b-2 border-blue-600 text-blue-700 bg-white shadow-xs"
                   : "text-slate-500 hover:text-slate-700"
-              }`}
+                }`}
             >
               <span className="h-4 w-4 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">2</span>
               <span>Account & Pay</span>
@@ -360,10 +358,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
 
           {/* 2. Scrollable Modal Body */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-5 custom-scrollbar">
-            
+
             {/* Desktop 2-Column Split OR Mobile Step Swapping */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-              
+
               {/* LEFT COLUMN: Plan Selection Cards */}
               <div className={`lg:col-span-7 space-y-3 ${activeStep === 1 ? "block" : "hidden lg:block"}`}>
                 <div className="flex justify-between items-center mb-1">
@@ -383,11 +381,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                           setSelectedTier(p.id);
                           setAppliedCoupon(null);
                         }}
-                        className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
-                          isSelected
+                        className={`p-3.5 sm:p-4 rounded-xl border transition-all cursor-pointer relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${isSelected
                             ? "shadow-sm ring-2"
                             : "border-slate-200 hover:border-slate-400 bg-white"
-                        }`}
+                          }`}
                         style={isSelected ? { borderColor: currentTheme.primary_color, backgroundColor: `${currentTheme.primary_color}10`, outlineColor: currentTheme.primary_color } : {}}
                       >
                         <div className="space-y-1 flex-1">
@@ -426,11 +423,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                             {p.price} <span className="text-[10px] font-normal text-slate-500 font-sans">/mo</span>
                           </div>
                           <div
-                            className={`mt-1.5 px-3 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1 ${
-                              isSelected 
-                                ? "text-white shadow-xs" 
+                            className={`mt-1.5 px-3 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1 ${isSelected
+                                ? "text-white shadow-xs"
                                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                            }`}
+                              }`}
                             style={isSelected ? { backgroundColor: currentTheme.primary_color } : {}}
                           >
                             {isSelected ? <Check className="w-3 h-3 font-bold" /> : null}
@@ -457,7 +453,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
 
               {/* RIGHT COLUMN: Workspace Account & Checkout Form */}
               <div className={`lg:col-span-5 space-y-3.5 ${activeStep === 2 ? "block" : "hidden lg:block"}`}>
-                
+
                 {/* Active Plan Pill */}
                 <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between text-xs">
                   <div>
@@ -525,11 +521,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                       <button
                         type="button"
                         onClick={() => setBusinessCategory("ecommerce")}
-                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
-                          businessCategory === "ecommerce"
+                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${businessCategory === "ecommerce"
                             ? "bg-indigo-50/80 border-indigo-600 ring-1 ring-indigo-600 text-indigo-950 font-bold shadow-xs"
                             : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-base">🛍️</span>
@@ -544,11 +539,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                       <button
                         type="button"
                         onClick={() => setBusinessCategory("erp")}
-                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
-                          businessCategory === "erp"
+                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${businessCategory === "erp"
                             ? "bg-blue-50/80 border-blue-600 ring-1 ring-blue-600 text-blue-950 font-bold shadow-xs"
                             : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-base">🏢</span>
@@ -563,11 +557,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                       <button
                         type="button"
                         onClick={() => setBusinessCategory("services")}
-                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
-                          businessCategory === "services"
+                        className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${businessCategory === "services"
                             ? "bg-emerald-50/80 border-emerald-600 ring-1 ring-emerald-600 text-emerald-950 font-bold shadow-xs"
                             : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-base">💼</span>
@@ -638,7 +631,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
 
           {/* 3. Modal Sticky Bottom Action Bar */}
           <div className="shrink-0 px-4 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
-            
+
             <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
               <div className="text-left">
                 <span className="text-[10px] text-slate-400 uppercase font-bold block">Total Amount</span>

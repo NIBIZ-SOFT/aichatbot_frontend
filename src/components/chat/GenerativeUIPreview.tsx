@@ -470,7 +470,7 @@ function BkashPaymentCardView({ data, isDark }: { data: any; isDark?: boolean })
 }
 
 // -------------------------------------------------------------
-// 5. Order Placed Success Card (CDN Style)
+// 5. Order Success / Confirmation Card
 // -------------------------------------------------------------
 function OrderSuccessCardView({ data, isDark }: { data: any; isDark?: boolean }) {
   if (!data) return null;
@@ -479,21 +479,19 @@ function OrderSuccessCardView({ data, isDark }: { data: any; isDark?: boolean })
     <div
       className={`rounded-2xl border p-4 mt-2.5 transition-all shadow-md space-y-3 max-w-sm ${
         isDark
-          ? "bg-emerald-950/20 border-emerald-800/40 text-emerald-100"
+          ? "bg-slate-900/95 border-emerald-900/50 text-white"
           : "bg-emerald-50/70 border-emerald-200 text-slate-900"
       }`}
     >
-      <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-xs pb-1.5 border-b border-emerald-200 dark:border-emerald-800/40">
-        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-        <span>🎉 Order Placed Successfully!</span>
+      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+        <CheckCircle2 className="w-5 h-5" />
+        <span className="font-bold text-xs uppercase tracking-wide">Order Successfully Placed!</span>
       </div>
 
       <div className="space-y-1 text-xs">
         <div className="flex justify-between items-center">
-          <span className="text-slate-500 dark:text-slate-400">Order #:</span>
-          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/50 px-1.5 py-0.5 rounded">
-            {data.order_number}
-          </span>
+          <span className="text-slate-500 dark:text-slate-400">Order Number:</span>
+          <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{data.order_number}</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-slate-500 dark:text-slate-400">Total Amount:</span>
@@ -503,7 +501,9 @@ function OrderSuccessCardView({ data, isDark }: { data: any; isDark?: boolean })
         </div>
         <div className="flex justify-between items-center">
           <span className="text-slate-500 dark:text-slate-400">Payment:</span>
-          <span className="font-medium capitalize">{data.payment_method === "bkash" ? "📱 bKash" : "💵 Cash on Delivery"}</span>
+          <span className="font-medium capitalize">
+            {data.payment_method === "eps" ? "💳 EPS Multi-Channel" : data.payment_method === "bkash" ? "📱 bKash" : "💵 Cash on Delivery"}
+          </span>
         </div>
         {data.delivery_address && (
           <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
@@ -600,6 +600,89 @@ function BkashConfirmedReceiptCardView({ data, isDark }: { data: any; isDark?: b
       <div className="pt-2 border-t border-pink-200/60 dark:border-pink-900/50 flex items-center justify-between text-[10px] text-pink-800 dark:text-pink-300">
         <span className="flex items-center gap-1">
           <MessageSquare className="w-3 h-3 text-[#E2136E]" />
+          <span>Automated SMS Dispatched</span>
+        </span>
+        <span className="font-bold text-emerald-600 dark:text-emerald-400">⚡ In Dispatch Queue</span>
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// 6b. EPS (Easy Payment System) Verified Payment Receipt Card
+// -------------------------------------------------------------
+function EpsConfirmedReceiptCardView({ data, isDark }: { data: any; isDark?: boolean }) {
+  if (!data) return null;
+
+  return (
+    <div
+      className={`rounded-2xl border p-4 mt-2.5 transition-all shadow-md space-y-3 max-w-sm ${
+        isDark
+          ? "bg-slate-900/95 border-emerald-900/50 text-white"
+          : "bg-gradient-to-b from-emerald-50/70 to-white border-emerald-200 text-slate-900"
+      }`}
+    >
+      {/* Header with EPS Brand Badge & Verified Stamp */}
+      <div className="flex items-center justify-between pb-2 border-b border-emerald-200/60 dark:border-emerald-900/50">
+        <div className="flex items-center gap-1.5">
+          <div className="w-5 h-5 rounded-md bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px] shadow-xs">
+            EPS
+          </div>
+          <span className="font-bold text-xs text-emerald-700 dark:text-emerald-300">
+            EPS Payment Receipt
+          </span>
+        </div>
+        <span className="px-2 py-0.5 rounded-full text-[9.5px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase tracking-wider flex items-center gap-1">
+          <CheckCircle2 className="w-3 h-3" />
+          <span>PAID & SETTLED</span>
+        </span>
+      </div>
+
+      {/* Itemized Receipt Table */}
+      <div className="space-y-1.5 text-xs">
+        <div className="flex justify-between items-center py-0.5">
+          <span className="text-slate-500 dark:text-slate-400 text-[11px]">Order Number:</span>
+          <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded text-[11px]">
+            {data.order_number}
+          </span>
+        </div>
+
+        <div className="flex justify-between items-center py-0.5">
+          <span className="text-slate-500 dark:text-slate-400 text-[11px]">EPS TrxID:</span>
+          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded text-[11px]">
+            {data.eps_trx_id || data.trx_id || "EPS-VERIFIED"}
+          </span>
+        </div>
+
+        {data.items_summary && (
+          <div className="py-1 border-t border-dashed border-slate-200 dark:border-slate-800">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Purchased Items:</span>
+            <div className="text-[11.5px] font-medium text-slate-800 dark:text-slate-200 mt-0.5">
+              {data.items_summary}
+            </div>
+          </div>
+        )}
+
+        {data.delivery_address && (
+          <div className="py-1 border-t border-dashed border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-1">
+            <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
+            <span className="truncate">{data.delivery_address}</span>
+          </div>
+        )}
+
+        {/* Total Paid Highlight */}
+        <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center">
+          <span className="text-slate-500 dark:text-slate-400 font-semibold">Total Paid:</span>
+          <span className="font-mono font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
+            ৳{(data.total_amount || 0).toLocaleString()} BDT
+          </span>
+        </div>
+      </div>
+
+      {/* Footer Dispatch Notification */}
+      <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-900/50 flex items-center justify-between text-[10px] text-emerald-800 dark:text-emerald-300">
+        <span className="flex items-center gap-1">
+          <MessageSquare className="w-3 h-3 text-emerald-600" />
           <span>Automated SMS Dispatched</span>
         </span>
         <span className="font-bold text-emerald-600 dark:text-emerald-400">⚡ In Dispatch Queue</span>
@@ -732,6 +815,8 @@ export default function GenerativeUIPreview({ uiComponent, isDark }: GenerativeU
     case "bkash_confirmed_card":
     case "payment_receipt_card":
       return <BkashConfirmedReceiptCardView data={uiComponent.data} isDark={isDark} />;
+    case "eps_confirmed_card":
+      return <EpsConfirmedReceiptCardView data={uiComponent.data} isDark={isDark} />;
     case "order_success_card":
     case "order_confirmed_card":
       return <OrderSuccessCardView data={uiComponent.data} isDark={isDark} />;

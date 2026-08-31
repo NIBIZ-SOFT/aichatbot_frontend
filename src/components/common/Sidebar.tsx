@@ -122,11 +122,11 @@ export default function Sidebar({ activeNav, onSelectNav, mobileOpen, onCloseMob
           icon: DollarSign
         },
         {
-          id: "bkash",
-          label: "bKash PGW Gateway",
-          route: "/superadmin/bkash",
+          id: "payments",
+          label: "Payment Gateways Setup",
+          route: "/superadmin/payments",
           icon: CreditCard,
-          badge: "bKash"
+          badge: "bKash/EPS"
         },
         {
           id: "infrastructure",

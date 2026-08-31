@@ -1,24 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, DEMO_ACCOUNTS, DemoAccount } from "../../context/AuthContext";
-import { useTheme } from "../../context/ThemeContext";
 import { useToast } from "../../context/ToastContext";
-import { 
-  Building2, Shield, User, Key, ArrowRight, 
+import {
+  Building2, Shield, User, Key, ArrowRight,
   CheckCircle2, Bot, Users, Globe, Lock, ShieldCheck,
-  Eye, EyeOff, Terminal, ChevronDown, ChevronUp, AlertCircle, Layers
+  Eye, EyeOff, Terminal, ChevronDown, ChevronUp, AlertCircle, Sparkles
 } from "lucide-react";
 import PricingModal from "./PricingModal";
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login, switchDemoAccount } = useAuth();
-  const { currentTheme } = useTheme();
   const { showToast } = useToast();
 
-  // Debug Testing Panel State & Environment Detection (Only active in development mode)
   const isDevMode = process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_ENABLE_DEBUG_DEMO === "true";
 
   const [email, setEmail] = useState<string>(isDevMode ? "admin@gmail.com" : "");
@@ -62,137 +60,118 @@ export default function LoginScreen() {
   };
 
   return (
-    <div
-      className="min-h-screen w-full text-slate-100 flex flex-col justify-between font-sans antialiased transition-colors"
-      style={{ backgroundColor: currentTheme.dark_surface }}
-    >
-      
+    <div className="min-h-screen w-full bg-slate-50 text-slate-900 flex flex-col justify-between font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
       {/* Top Header */}
-      <header
-        className="px-4 sm:px-10 py-3.5 sm:py-4 flex items-center justify-between border-b backdrop-blur-md sticky top-0 z-30 transition-colors gap-2 sm:gap-4"
-        style={{
-          backgroundColor: `${currentTheme.dark_surface}E6`,
-          borderColor: currentTheme.dark_border
-        }}
-      >
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          {currentTheme.logo_url ? (
-            <img src={currentTheme.logo_url} alt="Logo" className="h-8 sm:h-9 w-auto max-w-[100px] sm:max-w-[120px] object-contain rounded-xl shadow-sm shrink-0" />
-          ) : (
-            <div
-              className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center font-bold text-white shadow-sm transition-colors shrink-0"
-              style={{ backgroundColor: currentTheme.primary_color }}
-            >
-              <Layers className="w-4 h-4 text-white" />
-            </div>
-          )}
-          <div className="min-w-0">
-            <div className="font-bold text-white text-sm sm:text-base tracking-tight truncate">
-              {currentTheme.platform_name || "AIaaS Enterprise Platform"}
-            </div>
-            <div className="text-[10px] sm:text-[11px] text-slate-400 font-normal truncate hidden sm:block">
-              {currentTheme.platform_tagline || "Customer Communication & Autonomous AI Support"}
-            </div>
+      <header className="px-4 sm:px-8 py-3.5 sm:py-4 flex items-center justify-between border-b border-slate-200/80 bg-white/90 backdrop-blur-md sticky top-0 z-30">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-white shadow-md shadow-indigo-600/30 group-hover:scale-105 transition-transform">
+            <Bot className="w-5 h-5" />
           </div>
-        </div>
-        
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex flex-col">
+            <span className="font-bold text-slate-900 text-base tracking-tight leading-tight">
+              Jobab<span className="text-indigo-600">.chat</span>
+            </span>
+            <span className="text-[10px] text-slate-500 font-medium tracking-wide">
+              Universal AI Support & Operations
+            </span>
+          </div>
+        </Link>
+
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setShowPricingModal(true)}
-            className="px-3 sm:px-4 py-1.5 sm:py-2 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-            style={{ backgroundColor: currentTheme.primary_color }}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <span>Buy Plan / Sign Up</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
-          <span
-            className="text-[11px] px-3 py-1.5 rounded-full font-medium hidden md:flex items-center gap-1.5"
-            style={{
-              backgroundColor: `${currentTheme.primary_color}18`,
-              borderColor: `${currentTheme.primary_color}40`,
-              color: currentTheme.primary_color,
-              borderWidth: "1px"
-            }}
-          >
-            <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: currentTheme.primary_color }}></span>
-            TLS 1.3 / AES-256
+          <span className="text-[11px] px-3 py-1.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hidden md:flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            TLS 1.3 • AES-256
           </span>
         </div>
       </header>
 
-      {/* Self-Serve Pricing & Package Modal */}
+      {/* Pricing Modal */}
       <PricingModal isOpen={showPricingModal} onClose={() => setShowPricingModal(false)} />
 
       {/* Main Authentication Centerpiece */}
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 max-w-5xl mx-auto w-full my-auto">
-        
+
         {/* Core Login Card */}
-        <div
-          className="w-full max-w-md border rounded-2xl p-5 sm:p-8 shadow-2xl relative overflow-hidden transition-colors"
-          style={{
-            backgroundColor: currentTheme.dark_card,
-            borderColor: currentTheme.dark_border
-          }}
-        >
+        <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl relative space-y-5">
           
-          {/* Form Title & Subtitle */}
-          <div className="text-center mb-5 space-y-1">
-            <h2 className="text-xl font-bold text-white tracking-tight">Sign In to Workspace</h2>
-            <p className="text-xs text-slate-400">Enter your credentials to access your organization portal</p>
+          {/* Header Info */}
+          <div className="text-center space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-[11px] font-bold mb-1">
+              <Sparkles className="w-3 h-3 text-indigo-600" />
+              <span>Workspace Portal Access</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Sign In to Account</h2>
+            <p className="text-xs text-slate-500">Enter your credentials to access your business desk</p>
           </div>
 
-          {/* Quick Demo Fill Pills for Rapid Testing */}
+          {/* Quick Demo Fill Pills for Dev Mode */}
           {isDevMode && (
-            <div className="mb-4 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-              <div className="text-[10px] font-bold text-slate-400 mb-1.5 px-1 uppercase tracking-wider flex items-center justify-between">
+            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+              <div className="text-[10.5px] font-bold text-slate-600 mb-2 px-1 uppercase tracking-wider flex items-center justify-between">
                 <span>⚡ Quick Demo Selector</span>
-                <span className="text-[9px] text-amber-400 font-mono">Dev Mode</span>
+                <span className="text-[9.5px] text-amber-700 bg-amber-50 px-2 py-0.2 rounded border border-amber-200 font-bold font-mono">Dev Mode</span>
               </div>
               <div className="grid grid-cols-2 gap-1.5 text-[11px]">
                 <button
                   type="button"
                   onClick={() => { setEmail("admin@gmail.com"); setPassword("12345678"); }}
-                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
-                    email === "admin@gmail.com" ? "bg-amber-500/20 border-amber-500 text-amber-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                  className={`p-2 rounded-xl border text-left font-bold transition-all flex items-center justify-between cursor-pointer ${
+                    email === "admin@gmail.com" 
+                      ? "bg-amber-50 border-amber-300 text-amber-900 shadow-2xs" 
+                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
                   }`}
                 >
-                  <span className="truncate font-semibold">🛡️ Super Admin</span>
+                  <span className="truncate">🛡️ Super Admin</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setEmail("ecommerceclient1@gmail.com"); setPassword("12345678"); }}
-                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
-                    email === "ecommerceclient1@gmail.com" ? "bg-indigo-500/20 border-indigo-500 text-indigo-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                  className={`p-2 rounded-xl border text-left font-bold transition-all flex items-center justify-between cursor-pointer ${
+                    email === "ecommerceclient1@gmail.com" 
+                      ? "bg-indigo-50 border-indigo-300 text-indigo-900 shadow-2xs" 
+                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
                   }`}
                 >
-                  <span className="truncate font-semibold">🛍️ E-Comm 1 (Padma)</span>
+                  <span className="truncate">🛍️ E-Comm (Padma)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setEmail("erpclient1@gmail.com"); setPassword("12345678"); }}
-                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
-                    email === "erpclient1@gmail.com" ? "bg-blue-500/20 border-blue-500 text-blue-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                  className={`p-2 rounded-xl border text-left font-bold transition-all flex items-center justify-between cursor-pointer ${
+                    email === "erpclient1@gmail.com" 
+                      ? "bg-blue-50 border-blue-300 text-blue-900 shadow-2xs" 
+                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
                   }`}
                 >
-                  <span className="truncate font-semibold">🏢 ERP 1 (Apex)</span>
+                  <span className="truncate">🏢 ERP (Apex)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setEmail("ecommerceclient2@gmail.com"); setPassword("12345678"); }}
-                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
-                    email === "ecommerceclient2@gmail.com" ? "bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                  className={`p-2 rounded-xl border text-left font-bold transition-all flex items-center justify-between cursor-pointer ${
+                    email === "ecommerceclient2@gmail.com" 
+                      ? "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs" 
+                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
                   }`}
                 >
-                  <span className="truncate font-semibold">🖥️ E-Comm 2 (Horizon)</span>
+                  <span className="truncate">🖥️ Retail (Horizon)</span>
                 </button>
               </div>
             </div>
           )}
 
-          {/* Error Alert Box if any */}
+          {/* Error Alert Box */}
           {errorMessage && (
-            <div className="mb-4 p-3 bg-rose-950/40 border border-rose-800/40 rounded-xl text-rose-300 text-xs flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
@@ -200,27 +179,23 @@ export default function LoginScreen() {
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Work Email Address *</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">Work Email Address *</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full px-3.5 py-2.5 text-xs rounded-xl text-white outline-none transition-colors placeholder:text-slate-500 font-medium border"
-                style={{
-                  backgroundColor: currentTheme.dark_surface,
-                  borderColor: currentTheme.dark_border
-                }}
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 hover:bg-white focus:bg-white text-slate-900 border border-slate-200 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
               />
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-semibold text-slate-300">Password *</label>
+                <label className="block text-xs font-semibold text-slate-700">Password *</label>
                 <span
-                  className="text-[11px] hover:underline cursor-pointer font-medium"
-                  style={{ color: currentTheme.primary_color }}
+                  onClick={() => showToast("Password Reset", "Contact support@jobab.chat or use Super Admin panel to reset credentials.", "info")}
+                  className="text-[11px] text-indigo-600 hover:underline cursor-pointer font-medium"
                 >
                   Forgot password?
                 </span>
@@ -232,16 +207,12 @@ export default function LoginScreen() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full px-3.5 py-2.5 pr-10 text-xs rounded-xl text-white outline-none transition-colors placeholder:text-slate-500 font-mono border"
-                  style={{
-                    backgroundColor: currentTheme.dark_surface,
-                    borderColor: currentTheme.dark_border
-                  }}
+                  className="w-full px-3.5 py-2.5 pr-10 text-xs rounded-xl bg-slate-50 hover:bg-white focus:bg-white text-slate-900 border border-slate-200 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-mono"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white transition-colors p-0.5 cursor-pointer"
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors p-0.5 cursor-pointer"
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -250,12 +221,12 @@ export default function LoginScreen() {
             </div>
 
             <div className="flex items-center justify-between text-xs pt-0.5">
-              <label className="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-200">
+              <label className="flex items-center gap-2 cursor-pointer text-slate-600 hover:text-slate-900">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={e => setRememberMe(e.target.checked)}
-                  className="rounded bg-slate-900 border-slate-700 cursor-pointer"
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 accent-indigo-600 cursor-pointer"
                 />
                 <span>Remember this device for 30 days</span>
               </label>
@@ -264,8 +235,7 @@ export default function LoginScreen() {
             <button
               type="submit"
               disabled={isLoading || !email.trim() || !password.trim()}
-              className="w-full mt-2 py-2.5 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              style={{ backgroundColor: currentTheme.primary_color }}
+              className="w-full mt-2 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">
@@ -278,105 +248,76 @@ export default function LoginScreen() {
             </button>
           </form>
 
-          {/* New Tenant Signup & Buy Package CTA */}
-          <div
-            className="mt-5 pt-4 border-t text-center space-y-2.5"
-            style={{ borderColor: currentTheme.dark_border }}
-          >
-            <p className="text-xs text-slate-400">
+          {/* New Tenant Signup CTA */}
+          <div className="pt-4 border-t border-slate-100 text-center space-y-2">
+            <p className="text-xs text-slate-500">
               Don't have an organization workspace yet?
             </p>
             <button
               type="button"
               onClick={() => setShowPricingModal(true)}
-              className="w-full py-2.5 px-4 hover:opacity-90 text-slate-200 hover:text-white font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer border"
-              style={{
-                backgroundColor: currentTheme.dark_surface,
-                borderColor: currentTheme.dark_border
-              }}
+              className="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Building2 className="w-3.5 h-3.5" style={{ color: currentTheme.primary_color }} />
+              <Building2 className="w-3.5 h-3.5 text-indigo-600" />
               View Pricing & Self-Serve Setup
             </button>
-            
-            <div className="pt-1 text-[11px] text-slate-500 flex items-center justify-center gap-1.5">
-              <Lock className="w-3 h-3 text-slate-500" />
+
+            <div className="pt-1 text-[11px] text-slate-400 flex items-center justify-center gap-1.5 font-medium">
+              <Lock className="w-3 h-3 text-slate-400" />
               <span>Encrypted Session • Multi-Tenant Isolation</span>
             </div>
           </div>
 
         </div>
 
-        {/* 🛠️ DEBUG / DEVELOPMENT ONLY: Role Testing Switcher */}
+        {/* Developer Testing Account Switcher (Dev Mode) */}
         {isDevMode && (
-          <div
-            className="w-full max-w-4xl mt-6 border rounded-2xl p-4 transition-colors"
-            style={{
-              backgroundColor: currentTheme.dark_card,
-              borderColor: currentTheme.dark_border
-            }}
-          >
-            
-            <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => setShowDebugDrawer(!showDebugDrawer)}>
+          <div className="w-full max-w-4xl mt-6 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+            <div 
+              className="flex items-center justify-between cursor-pointer select-none" 
+              onClick={() => setShowDebugDrawer(!showDebugDrawer)}
+            >
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/40 flex items-center gap-1">
-                  <Terminal className="w-3 h-3" /> DEBUG ONLY
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 flex items-center gap-1">
+                  <Terminal className="w-3 h-3 text-amber-600" /> DEV ONLY
                 </span>
-                <span className="text-xs font-semibold text-slate-300">
-                  Developer Testing Account Switcher (Hidden in Production)
+                <span className="text-xs font-bold text-slate-700">
+                  Role-Based Account Switcher (Dev Mode)
                 </span>
               </div>
-              <button className="text-slate-400 hover:text-white p-1 cursor-pointer">
+              <button className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
                 {showDebugDrawer ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
             </div>
 
             {showDebugDrawer && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-3">
                 {DEMO_ACCOUNTS.map((acc, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleQuickLogin(acc)}
-                    className="p-3 border rounded-xl text-left transition-colors group flex flex-col justify-between cursor-pointer"
-                    style={{
-                      backgroundColor: currentTheme.dark_surface,
-                      borderColor: currentTheme.dark_border
-                    }}
+                    className="p-3 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-xl text-left transition-colors group flex flex-col justify-between cursor-pointer"
                   >
                     <div>
                       <div className="flex items-center justify-between">
-                        <span
-                          className="text-xs font-semibold text-white group-hover:underline transition-colors"
-                        >
+                        <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
                           {acc.name}
                         </span>
-                        <span className={`text-[9.5px] px-2 py-0.2 rounded-full font-medium ${
-                          acc.role === 'super_admin' 
-                            ? 'bg-amber-950/60 text-amber-300 border border-amber-800/40'
+                        <span className={`text-[9.5px] px-2 py-0.2 rounded-full font-bold border ${
+                          acc.role === 'super_admin'
+                            ? 'bg-amber-50 text-amber-800 border-amber-200'
                             : acc.role === 'tenant_owner'
-                            ? 'bg-blue-950/60 text-blue-300 border border-blue-800/40'
-                            : acc.role === 'support_agent' && acc.department.includes('Tech')
-                            ? 'bg-cyan-950/60 text-cyan-300 border border-cyan-800/40'
-                            : acc.role === 'support_agent'
-                            ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40'
-                            : acc.role === 'sales_agent'
-                            ? 'bg-teal-950/60 text-teal-300 border border-teal-800/40'
-                            : 'bg-slate-800 text-slate-300'
+                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                         }`}>
                           {acc.department}
                         </span>
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">{acc.email}</div>
+                      <div className="text-[10px] text-slate-500 font-mono mt-0.5">{acc.email}</div>
                     </div>
 
-                    <div
-                      className="mt-2 pt-1.5 border-t flex items-center justify-between text-[10px] font-medium"
-                      style={{
-                        borderColor: currentTheme.dark_border,
-                        color: currentTheme.primary_color
-                      }}
-                    >
+                    <div className="mt-2 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[10px] font-bold text-indigo-600">
                       <span>Login as {acc.roleLabel.split(' ')[0]}</span>
                       <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                     </div>
@@ -385,12 +326,9 @@ export default function LoginScreen() {
               </div>
             )}
 
-            <div
-              className="mt-2.5 pt-2 border-t text-[10.5px] text-slate-500 flex items-center justify-between"
-              style={{ borderColor: currentTheme.dark_border }}
-            >
-              <span>All test accounts pre-configured with password: <code className="font-mono" style={{ color: currentTheme.primary_color }}>12345678</code></span>
-              <span className="text-[10px] text-slate-500 font-mono">NODE_ENV: {process.env.NODE_ENV}</span>
+            <div className="mt-3 pt-2 border-t border-slate-100 text-[10.5px] text-slate-400 flex items-center justify-between">
+              <span>Test password: <code className="font-mono font-bold text-indigo-600">12345678</code></span>
+              <span className="text-[10px] text-slate-400 font-mono">NODE_ENV: {process.env.NODE_ENV}</span>
             </div>
           </div>
         )}
@@ -398,14 +336,8 @@ export default function LoginScreen() {
       </main>
 
       {/* Footer */}
-      <footer
-        className="px-6 py-3.5 text-center text-xs text-slate-500 border-t transition-colors"
-        style={{
-          backgroundColor: currentTheme.dark_surface,
-          borderColor: currentTheme.dark_border
-        }}
-      >
-        {currentTheme.footer_text || "Enterprise AIaaS Platform • Multi-Tenant PostgreSQL 18 & Google Gemini AI • ISO/IEC 27001 Security Standard"}
+      <footer className="px-6 py-3.5 text-center text-xs text-slate-500 border-t border-slate-200/80 bg-white">
+        Jobab Chat Platform • Multi-Tenant PostgreSQL 18 & Google Gemini AI • ISO/IEC 27001 Security Standard
       </footer>
     </div>
   );

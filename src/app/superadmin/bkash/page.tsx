@@ -6,7 +6,7 @@ import SuperAdminView from "../../../components/views/SuperAdminView";
 
 export default function SuperAdminBkashPage() {
   return (
-    <AppShell activeNav="bkash" requiredRole="super_admin">
+    <AppShell activeNav="payments" requiredRole="super_admin">
       <SuperAdminView defaultTab="bkash" />
     </AppShell>
   );

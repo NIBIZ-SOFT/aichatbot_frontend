@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { useToast } from "../../context/ToastContext";
-import { 
-  Sparkles, Check, ArrowRight, ShieldCheck, Zap, Lock, 
+import {
+  Sparkles, Check, ArrowRight, ShieldCheck, Zap, Lock,
   CreditCard, Tag, ArrowLeft, Building2, User, Mail, Key,
   CheckCircle2, RefreshCw, Star, HelpCircle, PhoneCall, Layers
 } from "lucide-react";
@@ -139,7 +139,7 @@ export default function PricingPage() {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const currentPlan = plans.find(p => p.id === selectedTier) || plans[0];
@@ -247,7 +247,7 @@ export default function PricingPage() {
       }
 
       showToast(
-        "Welcome to Enterprise AIaaS!",
+        "Welcome to Jobab Chat!",
         `Successfully provisioned ${orgName} on ${selectedTier.toUpperCase()} plan.` + (trxData?.trxID ? ` bKash TrxID: ${trxData.trxID}` : ""),
         "success"
       );
@@ -265,7 +265,7 @@ export default function PricingPage() {
       className="min-h-screen text-slate-100 font-sans antialiased flex flex-col justify-between transition-colors"
       style={{ backgroundColor: currentTheme.dark_surface }}
     >
-      
+
       {/* Top Header */}
       <header
         className="px-4 sm:px-8 py-3.5 flex items-center justify-between border-b backdrop-blur-md sticky top-0 z-30 transition-colors"
@@ -294,7 +294,7 @@ export default function PricingPage() {
           )}
           <div>
             <div className="font-bold text-white text-sm tracking-tight">
-              {currentTheme.platform_name || "AIaaS Platform"} Workspace
+              {currentTheme.platform_name || "Jobab Chat Platform"} Workspace
             </div>
             <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
               {currentTheme.platform_tagline || "Self-Serve Instant Multi-Tenant Setup"}
@@ -342,18 +342,16 @@ export default function PricingPage() {
             <button
               type="button"
               onClick={() => setIsAnnual(false)}
-              className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${
-                !isAnnual ? "bg-[#00C978] text-[#080D0A] shadow-sm font-bold" : "text-[#759B87] hover:text-white"
-              }`}
+              className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer ${!isAnnual ? "bg-[#00C978] text-[#080D0A] shadow-sm font-bold" : "text-[#759B87] hover:text-white"
+                }`}
             >
               Monthly Billing
             </button>
             <button
               type="button"
               onClick={() => setIsAnnual(true)}
-              className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                isAnnual ? "bg-[#00C978] text-[#080D0A] shadow-sm font-bold" : "text-[#759B87] hover:text-white"
-              }`}
+              className={`px-3.5 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${isAnnual ? "bg-[#00C978] text-[#080D0A] shadow-sm font-bold" : "text-[#759B87] hover:text-white"
+                }`}
             >
               <span>Annual Billing</span>
               <span className="text-[10px] bg-[#080D0A] text-[#00C978] px-1.5 py-0.2 rounded-full font-bold">
@@ -366,27 +364,25 @@ export default function PricingPage() {
 
       {/* Main Responsive Split Layout */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
-        
+
         {/* Mobile Step Indicator Tabs (< lg) */}
         <div className="lg:hidden flex border-b border-[#17271F] mb-6 font-semibold text-xs">
           <button
             onClick={() => setActiveStep(1)}
-            className={`flex-1 py-2.5 border-b-2 text-center transition-all cursor-pointer flex items-center justify-center gap-2 ${
-              activeStep === 1
+            className={`flex-1 py-2.5 border-b-2 text-center transition-all cursor-pointer flex items-center justify-center gap-2 ${activeStep === 1
                 ? "border-[#00C978] text-white bg-[#00C978]/10"
                 : "border-transparent text-[#759B87] hover:text-[#CBD7D0]"
-            }`}
+              }`}
           >
             <span className="h-4 w-4 rounded-full bg-[#17271F] text-[#CBD7D0] flex items-center justify-center text-[10px]">1</span>
             <span>1. Choose Package</span>
           </button>
           <button
             onClick={() => setActiveStep(2)}
-            className={`flex-1 py-2.5 border-b-2 text-center transition-all cursor-pointer flex items-center justify-center gap-2 ${
-              activeStep === 2
+            className={`flex-1 py-2.5 border-b-2 text-center transition-all cursor-pointer flex items-center justify-center gap-2 ${activeStep === 2
                 ? "border-[#00C978] text-white bg-[#00C978]/10"
                 : "border-transparent text-[#759B87] hover:text-[#CBD7D0]"
-            }`}
+              }`}
           >
             <span className="h-4 w-4 rounded-full bg-[#17271F] text-[#CBD7D0] flex items-center justify-center text-[10px]">2</span>
             <span>2. Account & Checkout</span>
@@ -394,7 +390,7 @@ export default function PricingPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
+
           {/* LEFT SIDE: Package Selection Cards */}
           <div className={`lg:col-span-7 space-y-4 ${activeStep === 1 ? "block" : "hidden lg:block"}`}>
             <div className="flex justify-between items-center mb-1">
@@ -413,11 +409,10 @@ export default function PricingPage() {
                       setSelectedTier(p.id);
                       setAppliedCoupon(null);
                     }}
-                    className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between ${
-                      isSelected
+                    className={`p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between ${isSelected
                         ? "border-[#00C978] bg-[#0F1713] shadow-lg ring-2 ring-[#00C978]"
                         : "border-[#1A2922] bg-[#0F1713]/80 hover:border-[#00C978]/60 hover:bg-[#0F1713]"
-                    }`}
+                      }`}
                   >
                     {p.popular && (
                       <span className="absolute -top-2.5 right-3 text-[10px] font-bold bg-[#00C978] text-[#080D0A] px-2 py-0.5 rounded-full shadow-sm">
@@ -436,9 +431,8 @@ export default function PricingPage() {
                           <h3 className="font-bold text-sm text-white">{p.name}</h3>
                           <p className="text-[11px] text-[#759B87] mt-0.5 line-clamp-2 leading-relaxed">{p.desc}</p>
                         </div>
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-2 ${
-                          isSelected ? "border-[#00C978] bg-[#00C978] text-[#080D0A]" : "border-[#1A2922]"
-                        }`}>
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ml-2 ${isSelected ? "border-[#00C978] bg-[#00C978] text-[#080D0A]" : "border-[#1A2922]"
+                          }`}>
                           {isSelected && <Check className="w-3 h-3 font-bold" />}
                         </div>
                       </div>
@@ -477,11 +471,10 @@ export default function PricingPage() {
                           setSelectedTier(p.id);
                           setActiveStep(2);
                         }}
-                        className={`w-full py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          isSelected
+                        className={`w-full py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${isSelected
                             ? "bg-[#00C978] text-[#080D0A] shadow-sm"
                             : "bg-[#080D0A] hover:bg-[#17271F] text-[#CBD7D0] border border-[#1A2922]"
-                        }`}
+                          }`}
                       >
                         {isSelected ? "Selected Plan" : "Choose Tier"}
                       </button>
@@ -520,9 +513,9 @@ export default function PricingPage() {
 
           {/* RIGHT SIDE: Workspace Registration & bKash Checkout */}
           <div className={`lg:col-span-5 space-y-4 ${activeStep === 2 ? "block" : "hidden lg:block"}`}>
-            
+
             <div className="bg-[#0F1713] border border-[#1A2922] rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
-              
+
               {/* Selected Plan Summary Banner */}
               <div className="p-3.5 rounded-xl bg-[#080D0A] border border-[#1A2922] flex items-center justify-between text-xs">
                 <div className="space-y-0.5">
@@ -653,7 +646,7 @@ export default function PricingPage() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950/60 py-6 px-4 text-center text-xs text-slate-500">
-        <p>© 2026 {currentTheme.platform_name || "Enterprise AIaaS Platform"}. Powered by N.I. BIZ Soft & bKash Tokenized Payment Gateway.</p>
+        <p>© 2026 {currentTheme.platform_name || "Jobab Chat Platform"}. Powered by N.I. BIZ Soft & bKash Tokenized Payment Gateway.</p>
       </footer>
 
     </div>

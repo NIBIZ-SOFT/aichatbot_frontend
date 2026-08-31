@@ -161,7 +161,7 @@ export default function BkashCheckoutModal({
                 <span>bKash Payment Gateway</span>
               </div>
               <h2 className="text-base font-black tracking-tight leading-none text-white mt-0.5">
-                PADMA AI-AS-A-SERVICE
+                JOBAB CHAT PLATFORM
               </h2>
             </div>
           </div>

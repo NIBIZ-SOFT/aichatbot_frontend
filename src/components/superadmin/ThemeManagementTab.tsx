@@ -74,7 +74,7 @@ export default function ThemeManagementTab() {
       if (ok) {
         showToast(
           "Branding Saved & Deployed",
-          `Platform "${themeForm.platform_name || 'Enterprise AIaaS'}" & colors saved to PostgreSQL database!`,
+          `Platform "${themeForm.platform_name || 'Jobab Chat'}" & colors saved to PostgreSQL database!`,
           "success"
         );
       } else {
@@ -97,7 +97,7 @@ export default function ThemeManagementTab() {
 
   return (
     <div className="space-y-8 animate-in fade-in pb-12">
-      
+
       {/* Top Banner & Quick Controls */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 w-96 h-96 bg-gradient-to-bl from-blue-600/20 via-indigo-600/10 to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -165,7 +165,7 @@ export default function ThemeManagementTab() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
+
           {/* Platform Name */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-slate-700">Platform Brand Name *</label>
@@ -173,7 +173,7 @@ export default function ThemeManagementTab() {
               type="text"
               value={themeForm.platform_name || ""}
               onChange={(e) => handleInputChange("platform_name", e.target.value)}
-              placeholder="e.g. Padma AI, LazyChat Enterprise, Enterprise AIaaS"
+              placeholder="e.g. Padma AI, LazyChat Enterprise, Jobab Chat"
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:border-blue-600 focus:bg-white transition-all"
             />
             <span className="text-[10px] text-slate-400">Displayed on the navbar, login screen, and page titles</span>
@@ -257,7 +257,7 @@ export default function ThemeManagementTab() {
               type="text"
               value={themeForm.footer_text || ""}
               onChange={(e) => handleInputChange("footer_text", e.target.value)}
-              placeholder="© 2026 Enterprise AIaaS Platform • Multi-Tenant PostgreSQL 18"
+              placeholder="© 2026 Jobab Chat Platform • Multi-Tenant PostgreSQL 18"
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 outline-none focus:border-blue-600 focus:bg-white transition-all"
             />
           </div>
@@ -286,11 +286,10 @@ export default function ThemeManagementTab() {
               <div
                 key={p.preset_id}
                 onClick={() => handleSelectPreset(p)}
-                className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between group ${
-                  isSelected
+                className={`p-5 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between group ${isSelected
                     ? "bg-white border-blue-600 shadow-md ring-2 ring-blue-600"
                     : "bg-white border-slate-200 hover:border-slate-300 shadow-xs"
-                }`}
+                  }`}
               >
                 {/* Selected Indicator */}
                 {isSelected && (
@@ -355,7 +354,7 @@ export default function ThemeManagementTab() {
       {/* 3. CUSTOM COLOR PALETTE STUDIO & LIVE SANDBOX */}
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
+
         {/* LEFT: Custom Color Pickers */}
         <div className="lg:col-span-6 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-4">
           <div className="border-b border-slate-100 pb-3 flex justify-between items-center">
@@ -371,7 +370,7 @@ export default function ThemeManagementTab() {
           </div>
 
           <div className="space-y-3 text-xs">
-            
+
             {/* Primary Accent */}
             <div className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200">
               <div className="flex items-center gap-3">
@@ -503,7 +502,7 @@ export default function ThemeManagementTab() {
 
             {/* Simulated Mini App Interface */}
             <div className="p-4 sm:p-5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-4">
-              
+
               {/* Mini Header */}
               <div
                 className="p-3 rounded-xl flex items-center justify-between text-white shadow-xs transition-colors"
@@ -521,7 +520,7 @@ export default function ThemeManagementTab() {
                     </div>
                   )}
                   <div className="min-w-0">
-                    <div className="font-bold text-xs truncate">{themeForm.platform_name || "Enterprise AIaaS"}</div>
+                    <div className="font-bold text-xs truncate">{themeForm.platform_name || "Jobab Chat"}</div>
                     <div className="text-[9px] text-slate-400 truncate">{themeForm.platform_tagline || "Autonomous Support Cloud"}</div>
                   </div>
                 </div>

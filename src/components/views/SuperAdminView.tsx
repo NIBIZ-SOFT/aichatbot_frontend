@@ -50,7 +50,7 @@ interface MetricsData {
   platform_uptime_percent: number;
 }
 
-export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "bkash" | "eps" | "infrastructure" | "audit" | "theme";
+export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "payments" | "bkash" | "eps" | "infrastructure" | "audit" | "theme";
 
 interface SuperAdminViewProps {
   defaultTab?: SuperAdminTabType;
@@ -63,11 +63,16 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
 
   // Active Tab state (initialized from prop or route)
   const [activeTab, setActiveTab] = useState<SuperAdminTabType>(defaultTab);
+  const [activePaymentSubTab, setActivePaymentSubTab] = useState<"bkash" | "eps">(
+    defaultTab === "eps" ? "eps" : "bkash"
+  );
 
   // Sync tab when prop changes
   useEffect(() => {
     if (defaultTab) {
       setActiveTab(defaultTab);
+      if (defaultTab === "eps") setActivePaymentSubTab("eps");
+      if (defaultTab === "bkash") setActivePaymentSubTab("bkash");
     }
   }, [defaultTab]);
 
@@ -177,21 +182,53 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   const [aiSettings, setAiSettings] = useState<any>({
     api_key: "",
     api_key_masked: "",
-    ai_base_url: "https://generativelanguage.googleapis.com/v1beta/openai/",
-    master_model: "gemini-2.5-flash",
-    fallback_model: "gemini-1.5-flash",
+    ai_base_url: "https://openrouter.ai/api/v1",
+    master_model: "google/gemini-2.5-flash",
+    fallback_model: "google/gemini-2.5-flash-lite",
     embedding_model: "text-embedding-004",
     temperature: 0.3,
     max_tokens: 2048,
     rate_limit_rpm: 120,
     system_prompt_prefix: "You are an enterprise AI customer support specialist.",
     status: "Operational — High Throughput",
-    available_models: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-3.6-flash"]
+    available_models: [
+      "google/gemini-2.5-flash",
+      "google/gemini-2.5-pro",
+      "google/gemini-2.5-flash-lite",
+      "google/gemini-3.7-flash",
+      "deepseek/deepseek-chat",
+      "openai/gpt-4o-mini",
+      "openai/gpt-4o",
+      "anthropic/claude-3.5-haiku",
+      "anthropic/claude-3.5-sonnet",
+      "meta-llama/llama-3.3-70b-instruct"
+    ]
   });
   const [isSavingAI, setIsSavingAI] = useState(false);
   const [showAIKey, setShowAIKey] = useState(false);
   const [isTestingAI, setIsTestingAI] = useState(false);
   const [aiTestResult, setAiTestResult] = useState<any | null>(null);
+
+  // OpenRouter Real-time Model Catalog State
+  const [openRouterModels, setOpenRouterModels] = useState<any[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [modelSearchQuery, setModelSearchQuery] = useState("");
+  const [modelProviderFilter, setModelProviderFilter] = useState("all");
+  const [toolsOnlyFilter, setToolsOnlyFilter] = useState(true);
+
+  const loadOpenRouterModels = async (provider = modelProviderFilter, query = modelSearchQuery, toolsOnly = toolsOnlyFilter) => {
+    setIsLoadingModels(true);
+    try {
+      const res = await api.getOpenRouterModels({ query, provider, tools_only: toolsOnly });
+      if (res && res.models) {
+        setOpenRouterModels(res.models);
+      }
+    } catch (e) {
+      console.error("OpenRouter models fetch error:", e);
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
 
   // Dynamic AI Token & Pricing Engine State
   const [pricingEngineConfig, setPricingEngineConfig] = useState({
@@ -462,10 +499,13 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
     setIsTestingAI(true);
     setAiTestResult(null);
     try {
-      const res = await api.testSuperAdminAIPing();
+      const res = await api.testSuperAdminAIPing({
+        model: aiSettings.master_model,
+        base_url: aiSettings.base_url,
+      });
       setAiTestResult(res);
       if (res.status === "online") {
-        showToast("AI Cluster Operational", `Response received in ${res.latency_ms}ms`, "success");
+        showToast("AI Cluster Operational", `Pinged ${res.model} in ${res.latency_ms}ms`, "success");
       } else {
         showToast("AI Ping Warning", res.error || "Degraded latency", "info");
       }
@@ -552,7 +592,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
     setPlanFormData({
       code: `custom_tier_${Math.floor(Math.random() * 900 + 100)}`,
       name: "New Campaign Offer",
-      description: "Custom promotional AIaaS package for Bangladeshi startups and businesses.",
+      description: "Custom promotional Jobab Chat package for Bangladeshi startups and businesses.",
       badge_text: "LIMITED OFFER",
       monthly_price_bdt: 9990,
       annual_price_bdt: 8490,
@@ -915,23 +955,13 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
             </button>
 
             <button
-              onClick={() => handleTabClick("bkash")}
-              className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "bkash"
-                ? "bg-[#e2136e] text-white shadow-md shadow-pink-600/30"
+              onClick={() => handleTabClick("payments")}
+              className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "payments" || activeTab === "bkash" || activeTab === "eps"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
                 : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                 }`}
             >
-              <CreditCard className="w-4 h-4 text-pink-400" /> bKash PGW
-            </button>
-
-            <button
-              onClick={() => handleTabClick("eps")}
-              className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "eps"
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                }`}
-            >
-              <CreditCard className="w-4 h-4 text-emerald-400" /> EPS PGW Gateway
+              <CreditCard className="w-4 h-4 text-emerald-400" /> Payment Gateways Setup
             </button>
 
             <button
@@ -1967,563 +1997,704 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       )}
 
       {/* ========================================================================= */}
-      {/* TAB: BKASH PAYMENT GATEWAY CONFIGURATION & CONTROL PLANE */}
+      {/* TAB: UNIFIED PLATFORM PAYMENT GATEWAYS SETUP (bKash & EPS) */}
       {/* ========================================================================= */}
-      {activeTab === "bkash" && (
+      {(activeTab === "payments" || activeTab === "bkash" || activeTab === "eps") && (
         <div className="space-y-6 animate-in fade-in duration-200">
 
-          {/* Top Status & Ping Hero Card */}
-          <div className="bg-gradient-to-r from-[#e2136e] via-[#c00f5c] to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="space-y-2 max-w-xl">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
-                  bKash Tokenized Checkout (v1.2.0-beta)
-                </span>
-                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${bkashSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'
-                  }`}>
-                  {bkashSettings.is_sandbox ? 'Sandbox Mode' : 'Live Production'}
-                </span>
+          {/* Platform Owner Gateway Scope Header & Sub-Switcher Card */}
+          <div className="bg-slate-900 border border-slate-800 p-6 sm:p-7 rounded-3xl shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/30 shadow-inner">
+                <CreditCard className="w-6 h-6 text-indigo-400" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                bKash Payment Gateway Management
-              </h2>
-              <p className="text-xs text-pink-100/90 leading-relaxed">
-                Configure your official bKash credentials, merchant parameters, and toggle between Sandbox simulation and live payment collection for all client subscriptions.
-              </p>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-black text-white">
+                    Platform Owner Payment Gateways Setup
+                  </h2>
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    Master SaaS Billing Only
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                  Configure central gateway credentials for collecting client subscription package purchases and AI prepaid wallet recharges. (Strictly isolated from tenant client customer-facing store checkouts).
+                </p>
+              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            {/* Gateway Sub-Tabs Switcher */}
+            <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200 shrink-0 w-full lg:w-auto">
               <button
                 type="button"
-                onClick={handleTestBkashPing}
-                disabled={isTestingBkash}
-                className="px-5 py-2.5 bg-white hover:bg-pink-50 text-[#e2136e] font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                onClick={() => setActivePaymentSubTab("bkash")}
+                className={`flex-1 lg:flex-initial px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  activePaymentSubTab === "bkash"
+                    ? "bg-[#e2136e] text-white shadow-sm ring-1 ring-pink-400"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                }`}
               >
-                {isTestingBkash ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-[#e2136e]" />}
-                <span>{isTestingBkash ? "Testing Ping..." : "Test Connection / Ping"}</span>
+                <span className="w-4 h-4 rounded-full bg-white text-[#e2136e] flex items-center justify-center text-[10px] font-black">৳</span>
+                <span>bKash Direct PGW</span>
+                <span className={`text-[9px] font-black px-1.5 py-0.2 rounded ${bkashSettings.is_sandbox ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'}`}>
+                  {bkashSettings.is_sandbox ? 'SANDBOX' : 'LIVE'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActivePaymentSubTab("eps")}
+                className={`flex-1 lg:flex-initial px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  activePaymentSubTab === "eps"
+                    ? "bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                }`}
+              >
+                <CreditCard className="w-4 h-4 text-white" />
+                <span>EPS (Easy Payment System)</span>
+                <span className={`text-[9px] font-black px-1.5 py-0.2 rounded ${epsSettings.is_sandbox ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'}`}>
+                  {epsSettings.is_sandbox ? 'SANDBOX' : 'LIVE'}
+                </span>
               </button>
             </div>
           </div>
 
-          {/* Test Ping Response Box if triggered */}
-          {bkashPingResult && (
-            <div className="p-4 rounded-2xl bg-slate-900 text-white font-mono text-xs border border-slate-800 space-y-2 animate-in fade-in">
-              <div className="flex justify-between items-center">
-                <span className="text-emerald-400 font-bold flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" /> {bkashPingResult.message}
-                </span>
-                <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
-                  Latency: {bkashPingResult.latency_ms}ms
-                </span>
+          {/* SUB-VIEW 1: bKash PGW Configuration */}
+          {activePaymentSubTab === "bkash" && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Top Status & Ping Hero Card */}
+              <div className="bg-gradient-to-r from-[#e2136e] via-[#c00f5c] to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-2 max-w-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
+                      bKash Tokenized Checkout (v1.2.0-beta)
+                    </span>
+                    <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${bkashSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'}`}>
+                      {bkashSettings.is_sandbox ? 'Sandbox Mode' : 'Live Production'}
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                    bKash Payment Gateway Management
+                  </h2>
+                  <p className="text-xs text-pink-100/90 leading-relaxed">
+                    Configure your official bKash credentials, merchant parameters, and toggle between Sandbox simulation and live payment collection for all client subscriptions.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleTestBkashPing}
+                    disabled={isTestingBkash}
+                    className="px-5 py-2.5 bg-white hover:bg-pink-50 text-[#e2136e] font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {isTestingBkash ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-[#e2136e]" />}
+                    <span>{isTestingBkash ? "Testing Ping..." : "Test Connection / Ping"}</span>
+                  </button>
+                </div>
               </div>
-              <div className="text-slate-400 text-[11px]">
-                Token Preview: <span className="text-pink-400 font-semibold">{bkashPingResult.token_preview}</span>
+
+              {/* Test Ping Response Box if triggered */}
+              {bkashPingResult && (
+                <div className="p-4 rounded-2xl bg-slate-900 text-white font-mono text-xs border border-slate-800 space-y-2 animate-in fade-in">
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-400 font-bold flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" /> {bkashPingResult.message}
+                    </span>
+                    <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
+                      Latency: {bkashPingResult.latency_ms}ms
+                    </span>
+                  </div>
+                  <div className="text-slate-400 text-[11px]">
+                    Token Preview: <span className="text-pink-400 font-semibold">{bkashPingResult.token_preview}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Configuration Form Card */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main Form (2 cols) */}
+                <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                        <Key className="w-4 h-4 text-[#e2136e]" /> API Credentials & Gateway Parameters
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Updates will take effect immediately across all client checkout sessions.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSecrets(!showSecrets)}
+                      className="text-xs text-slate-500 hover:text-slate-700 font-semibold flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+                    >
+                      {showSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      <span>{showSecrets ? "Hide Secrets" : "Show Secrets"}</span>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveBkashSettings} className="space-y-4 text-xs">
+                    {/* Environment Mode Toggle */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <div className="font-bold text-slate-900">Gateway Environment Mode</div>
+                        <div className="text-[11px] text-slate-500">
+                          Toggle to switch between Sandbox developer testing and Live payment capture.
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+                        <button
+                          type="button"
+                          onClick={() => setBkashSettings({
+                            ...bkashSettings,
+                            is_sandbox: true,
+                            base_url: "https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized"
+                          })}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${bkashSettings.is_sandbox
+                            ? "bg-amber-400 text-slate-950 shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                            }`}
+                        >
+                          Sandbox
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setBkashSettings({
+                            ...bkashSettings,
+                            is_sandbox: false,
+                            base_url: "https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized"
+                          })}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${!bkashSettings.is_sandbox
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                            }`}
+                        >
+                          Production Live
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Base URL */}
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">bKash Base API URL</label>
+                      <input
+                        type="text"
+                        required
+                        value={bkashSettings.base_url}
+                        onChange={e => setBkashSettings({ ...bkashSettings, base_url: e.target.value })}
+                        placeholder="https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    {/* App Key & App Secret */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">App Key</label>
+                        <input
+                          type="text"
+                          required
+                          value={bkashSettings.app_key}
+                          onChange={e => setBkashSettings({ ...bkashSettings, app_key: e.target.value })}
+                          placeholder="Enter bKash App Key"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">App Secret</label>
+                        <input
+                          type={showSecrets ? "text" : "password"}
+                          required
+                          value={bkashSettings.app_secret}
+                          onChange={e => setBkashSettings({ ...bkashSettings, app_secret: e.target.value })}
+                          placeholder="Enter bKash App Secret"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Username & Password */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">bKash API Username</label>
+                        <input
+                          type="text"
+                          required
+                          value={bkashSettings.username}
+                          onChange={e => setBkashSettings({ ...bkashSettings, username: e.target.value })}
+                          placeholder="sandboxTokenizedUser02"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">bKash API Password</label>
+                        <input
+                          type={showSecrets ? "text" : "password"}
+                          required
+                          value={bkashSettings.password}
+                          onChange={e => setBkashSettings({ ...bkashSettings, password: e.target.value })}
+                          placeholder="Enter password"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Merchant Short Code */}
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Merchant Short Code / Wallet Number</label>
+                      <input
+                        type="text"
+                        value={bkashSettings.merchant_number || ""}
+                        onChange={e => setBkashSettings({ ...bkashSettings, merchant_number: e.target.value })}
+                        placeholder="e.g. 01837586105"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    {/* Submit Action */}
+                    <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                      <button
+                        type="submit"
+                        disabled={isSavingBkash}
+                        className="px-6 py-2.5 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-bold rounded-xl shadow-md shadow-pink-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        {isSavingBkash ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                        <span>{isSavingBkash ? "Saving Settings..." : "Save bKash PGW Settings"}</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Side Card: Official Sandbox Reference */}
+                <div className="space-y-4">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
+                    <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <Smartphone className="w-4 h-4 text-[#e2136e]" /> Official Sandbox Credentials
+                    </div>
+                    <p className="text-slate-500 text-[11.5px] leading-relaxed">
+                      These verified sandbox test credentials can be used anytime to simulate client subscription checkout in development.
+                    </p>
+
+                    <div className="p-3.5 bg-pink-50/70 rounded-2xl border border-pink-200/80 space-y-2 font-mono text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Success Wallet 1:</span>
+                        <span className="font-bold text-pink-900">01770618575</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Success Wallet 2:</span>
+                        <span className="font-bold text-pink-900">01929918378</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">PIN:</span>
+                        <span className="font-bold text-pink-900">12345</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">OTP:</span>
+                        <span className="font-bold text-pink-900">123456</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 text-[11px] text-slate-500 space-y-1">
+                      <div className="font-bold text-slate-800">Checkout Mode:</div>
+                      <div className="font-mono text-slate-600">&quot;0011&quot; (URL-based Hosted PGW)</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Configuration Form Card */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {/* Main Form (2 cols) */}
-            <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                    <Key className="w-4 h-4 text-[#e2136e]" /> API Credentials & Gateway Parameters
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Updates will take effect immediately across all client checkout sessions.
+          {/* SUB-VIEW 2: EPS PGW Configuration */}
+          {activePaymentSubTab === "eps" && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Top Status & Ping Hero Card */}
+              <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-2 max-w-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
+                      EPS (Easy Payment System) Engine
+                    </span>
+                    <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${epsSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'}`}>
+                      {epsSettings.is_sandbox ? 'Sandbox Mode' : 'Live Production'}
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                    EPS Payment Gateway Management
+                  </h2>
+                  <p className="text-xs text-emerald-100/90 leading-relaxed">
+                    Configure your official EPS credentials (Cards, MFS, Internet Banking), Merchant ID, Store ID, and Hash Key for multi-channel automated subscription settlement.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowSecrets(!showSecrets)}
-                  className="text-xs text-slate-500 hover:text-slate-700 font-semibold flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
-                >
-                  {showSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  <span>{showSecrets ? "Hide Secrets" : "Show Secrets"}</span>
-                </button>
-              </div>
 
-              <form onSubmit={handleSaveBkashSettings} className="space-y-4 text-xs">
-
-                {/* Environment Mode Toggle */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <div>
-                    <div className="font-bold text-slate-900">Gateway Environment Mode</div>
-                    <div className="text-[11px] text-slate-500">
-                      Toggle to switch between Sandbox developer testing and Live payment capture.
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-                    <button
-                      type="button"
-                      onClick={() => setBkashSettings({
-                        ...bkashSettings,
-                        is_sandbox: true,
-                        base_url: "https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized"
-                      })}
-                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${bkashSettings.is_sandbox
-                        ? "bg-amber-400 text-slate-950 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                        }`}
-                    >
-                      Sandbox
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBkashSettings({
-                        ...bkashSettings,
-                        is_sandbox: false,
-                        base_url: "https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized"
-                      })}
-                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${!bkashSettings.is_sandbox
-                        ? "bg-emerald-600 text-white shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                        }`}
-                    >
-                      Production Live
-                    </button>
-                  </div>
-                </div>
-
-                {/* Base URL */}
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">bKash Base API URL</label>
-                  <input
-                    type="text"
-                    required
-                    value={bkashSettings.base_url}
-                    onChange={e => setBkashSettings({ ...bkashSettings, base_url: e.target.value })}
-                    placeholder="https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                  />
-                </div>
-
-                {/* App Key & App Secret */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">App Key</label>
-                    <input
-                      type="text"
-                      required
-                      value={bkashSettings.app_key}
-                      onChange={e => setBkashSettings({ ...bkashSettings, app_key: e.target.value })}
-                      placeholder="Enter bKash App Key"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">App Secret</label>
-                    <input
-                      type={showSecrets ? "text" : "password"}
-                      required
-                      value={bkashSettings.app_secret}
-                      onChange={e => setBkashSettings({ ...bkashSettings, app_secret: e.target.value })}
-                      placeholder="Enter bKash App Secret"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Username & Password */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">bKash API Username</label>
-                    <input
-                      type="text"
-                      required
-                      value={bkashSettings.username}
-                      onChange={e => setBkashSettings({ ...bkashSettings, username: e.target.value })}
-                      placeholder="sandboxTokenizedUser02"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">bKash API Password</label>
-                    <input
-                      type={showSecrets ? "text" : "password"}
-                      required
-                      value={bkashSettings.password}
-                      onChange={e => setBkashSettings({ ...bkashSettings, password: e.target.value })}
-                      placeholder="Enter password"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Merchant Short Code */}
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">Merchant Short Code / Wallet Number</label>
-                  <input
-                    type="text"
-                    value={bkashSettings.merchant_number || ""}
-                    onChange={e => setBkashSettings({ ...bkashSettings, merchant_number: e.target.value })}
-                    placeholder="e.g. 01837586105"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                  />
-                </div>
-
-                {/* Submit Action */}
-                <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                   <button
-                    type="submit"
-                    disabled={isSavingBkash}
-                    className="px-6 py-2.5 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-bold rounded-xl shadow-md shadow-pink-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    type="button"
+                    onClick={handleTestEpsPing}
+                    disabled={isTestingEps}
+                    className="px-5 py-2.5 bg-white hover:bg-emerald-50 text-emerald-700 font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    {isSavingBkash ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                    <span>{isSavingBkash ? "Saving Settings..." : "Save bKash PGW Settings"}</span>
+                    {isTestingEps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-emerald-600" />}
+                    <span>{isTestingEps ? "Testing Ping..." : "Test Connection / Ping"}</span>
                   </button>
                 </div>
-              </form>
-            </div>
+              </div>
 
-            {/* Side Card: Official Sandbox Reference */}
-            <div className="space-y-4">
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
-                <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-[#e2136e]" /> Official Sandbox Credentials
-                </div>
-                <p className="text-slate-500 text-[11.5px] leading-relaxed">
-                  These verified sandbox test credentials can be used anytime to simulate client subscription checkout in development.
-                </p>
-
-                <div className="p-3.5 bg-pink-50/70 rounded-2xl border border-pink-200/80 space-y-2 font-mono text-[11px]">
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Success Wallet 1:</span>
-                    <span className="font-bold text-pink-900">01770618575</span>
+              {/* Test Ping Response Box if triggered */}
+              {epsPingResult && (
+                <div className="p-4 rounded-2xl bg-slate-900 text-white font-mono text-xs border border-slate-800 space-y-2 animate-in fade-in">
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-400 font-bold flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" /> {epsPingResult.message}
+                    </span>
+                    <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
+                      Latency: {epsPingResult.latency_ms}ms
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Success Wallet 2:</span>
-                    <span className="font-bold text-pink-900">01929918378</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Test OTP:</span>
-                    <span className="font-bold text-pink-900">123456</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Test PIN:</span>
-                    <span className="font-bold text-pink-900">12121</span>
-                  </div>
-                  <div className="flex justify-between border-t border-pink-200/60 pt-1.5">
-                    <span className="text-slate-600">Insufficient Bal:</span>
-                    <span className="font-bold text-red-700">01823074817</span>
+                  <div className="text-slate-400 text-[11px]">
+                    Token Preview: <span className="text-emerald-400 font-semibold">{epsPingResult.token_preview}</span>
                   </div>
                 </div>
+              )}
 
-                <div className="pt-2 text-[11px] text-slate-500 space-y-1">
-                  <div className="font-bold text-slate-800">Checkout Mode:</div>
-                  <div className="font-mono text-slate-600">&quot;0011&quot; (URL-based Hosted PGW)</div>
+              {/* Configuration Form Card */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main Form (2 cols) */}
+                <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                        <Key className="w-4 h-4 text-emerald-600" /> API Credentials & Gateway Parameters
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Updates will take effect immediately across all client checkout sessions.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowEpsSecrets(!showEpsSecrets)}
+                      className="text-xs text-slate-500 hover:text-slate-700 font-semibold flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+                    >
+                      {showEpsSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      <span>{showEpsSecrets ? "Hide Secrets" : "Show Secrets"}</span>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveEpsSettings} className="space-y-4 text-xs">
+                    {/* Environment Mode Toggle */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <div className="font-bold text-slate-900">EPS Environment Mode</div>
+                        <div className="text-[11px] text-slate-500">
+                          Toggle to switch between Sandbox developer testing and Live payment capture.
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+                        <button
+                          type="button"
+                          onClick={() => setEpsSettings({
+                            ...epsSettings,
+                            is_sandbox: true,
+                            base_url: "https://sandboxpgapi.eps.com.bd"
+                          })}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${epsSettings.is_sandbox
+                            ? "bg-amber-400 text-slate-950 shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                            }`}
+                        >
+                          Sandbox
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEpsSettings({
+                            ...epsSettings,
+                            is_sandbox: false,
+                            base_url: "https://pgapi.eps.com.bd"
+                          })}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${!epsSettings.is_sandbox
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                            }`}
+                        >
+                          Production Live
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Base URL */}
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">EPS Base API URL</label>
+                      <input
+                        type="text"
+                        required
+                        value={epsSettings.base_url}
+                        onChange={e => setEpsSettings({ ...epsSettings, base_url: e.target.value })}
+                        placeholder="https://sandboxpgapi.eps.com.bd"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    {/* Username & Password */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">EPS Username (Email)</label>
+                        <input
+                          type="text"
+                          required
+                          value={epsSettings.username}
+                          onChange={e => setEpsSettings({ ...epsSettings, username: e.target.value })}
+                          placeholder="Epsdemo@gmail.com"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">EPS Password</label>
+                        <input
+                          type={showEpsSecrets ? "text" : "password"}
+                          required
+                          value={epsSettings.password}
+                          onChange={e => setEpsSettings({ ...epsSettings, password: e.target.value })}
+                          placeholder="Enter password"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Hash Key */}
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">EPS Secret Hash Key (HMAC-SHA512 Secret)</label>
+                      <input
+                        type={showEpsSecrets ? "text" : "password"}
+                        required
+                        value={epsSettings.hash_key}
+                        onChange={e => setEpsSettings({ ...epsSettings, hash_key: e.target.value })}
+                        placeholder="FHZxyzeps56789gfhg678ygu876o="
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    {/* Merchant ID & Store ID */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">Merchant ID</label>
+                        <input
+                          type="text"
+                          required
+                          value={epsSettings.merchant_id}
+                          onChange={e => setEpsSettings({ ...epsSettings, merchant_id: e.target.value })}
+                          placeholder="29e86e70-0ac6-45eb-ba04-9fcb0aaed12a"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">Store ID</label>
+                        <input
+                          type="text"
+                          required
+                          value={epsSettings.store_id}
+                          onChange={e => setEpsSettings({ ...epsSettings, store_id: e.target.value })}
+                          placeholder="d44e705f-9e3a-41de-98b1-1674631637da"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Merchant Number */}
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Merchant Contact / Support Number</label>
+                      <input
+                        type="text"
+                        value={epsSettings.merchant_number || ""}
+                        onChange={e => setEpsSettings({ ...epsSettings, merchant_number: e.target.value })}
+                        placeholder="e.g. 01700000000"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    {/* Submit Action */}
+                    <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                      <button
+                        type="submit"
+                        disabled={isSavingEps}
+                        className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        {isSavingEps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                        <span>{isSavingEps ? "Saving Settings..." : "Save EPS PGW Settings"}</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Side Card: Official Sandbox Reference */}
+                <div className="space-y-4">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
+                    <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-emerald-600" /> EPS Supported Channels
+                    </div>
+                    <p className="text-slate-500 text-[11.5px] leading-relaxed">
+                      EPS allows Bangladeshi clients to pay using multiple payment channels in BDT (৳):
+                    </p>
+
+                    <div className="space-y-2">
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span className="font-bold text-slate-800">Visa / Mastercard / Amex</span>
+                      </div>
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-pink-500"></span>
+                        <span className="font-bold text-slate-800">bKash, Nagad, Rocket, Upay</span>
+                      </div>
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span className="font-bold text-slate-800">Internet & Core Banking</span>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 space-y-2 font-mono text-[11px]">
+                      <div className="font-bold text-emerald-900">Sandbox Test Account:</div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">User:</span>
+                        <span className="font-bold text-emerald-900">Epsdemo@gmail.com</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Auth:</span>
+                        <span className="font-bold text-emerald-900">HMAC-SHA512</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-
-          </div>
+          )}
 
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* TAB: EPS (EASY PAYMENT SYSTEM) CONFIGURATION & CONTROL PLANE */}
+      {/* TAB: GLOBAL AI INFRASTRUCTURE & BENCHMARK */}
       {/* ========================================================================= */}
-      {activeTab === "eps" && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-
-          {/* Top Status & Ping Hero Card */}
-          <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="space-y-2 max-w-xl">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
-                  EPS (Easy Payment System) Engine
-                </span>
-                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${epsSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'
-                  }`}>
-                  {epsSettings.is_sandbox ? 'Sandbox Mode' : 'Live Production'}
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                EPS Payment Gateway Management
-              </h2>
-              <p className="text-xs text-emerald-100/90 leading-relaxed">
-                Configure your official EPS credentials (Cards, MFS, Internet Banking), Merchant ID, Store ID, and Hash Key for multi-channel automated subscription settlement.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-              <button
-                type="button"
-                onClick={handleTestEpsPing}
-                disabled={isTestingEps}
-                className="px-5 py-2.5 bg-white hover:bg-emerald-50 text-emerald-700 font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {isTestingEps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-emerald-600" />}
-                <span>{isTestingEps ? "Testing Ping..." : "Test Connection / Ping"}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Test Ping Response Box if triggered */}
-          {epsPingResult && (
-            <div className="p-4 rounded-2xl bg-slate-900 text-white font-mono text-xs border border-slate-800 space-y-2 animate-in fade-in">
-              <div className="flex justify-between items-center">
-                <span className="text-emerald-400 font-bold flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" /> {epsPingResult.message}
-                </span>
-                <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
-                  Latency: {epsPingResult.latency_ms}ms
-                </span>
-              </div>
-              <div className="text-slate-400 text-[11px]">
-                Token Preview: <span className="text-emerald-400 font-semibold">{epsPingResult.token_preview}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Configuration Form Card */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {/* Main Form (2 cols) */}
-            <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                    <Key className="w-4 h-4 text-emerald-600" /> API Credentials & Gateway Parameters
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Updates will take effect immediately across all client checkout sessions.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowEpsSecrets(!showEpsSecrets)}
-                  className="text-xs text-slate-500 hover:text-slate-700 font-semibold flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
-                >
-                  {showEpsSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  <span>{showEpsSecrets ? "Hide Secrets" : "Show Secrets"}</span>
-                </button>
-              </div>
-
-              <form onSubmit={handleSaveEpsSettings} className="space-y-4 text-xs">
-
-                {/* Environment Mode Toggle */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <div>
-                    <div className="font-bold text-slate-900">Gateway Environment Mode</div>
-                    <div className="text-[11px] text-slate-500">
-                      Toggle to switch between Sandbox developer testing and Live payment capture.
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-                    <button
-                      type="button"
-                      onClick={() => setEpsSettings({
-                        ...epsSettings,
-                        is_sandbox: true,
-                        base_url: "https://sandboxpgapi.eps.com.bd"
-                      })}
-                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${epsSettings.is_sandbox
-                        ? "bg-amber-400 text-slate-950 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                        }`}
-                    >
-                      Sandbox
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEpsSettings({
-                        ...epsSettings,
-                        is_sandbox: false,
-                        base_url: "https://pgapi.eps.com.bd"
-                      })}
-                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${!epsSettings.is_sandbox
-                        ? "bg-emerald-600 text-white shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                        }`}
-                    >
-                      Production Live
-                    </button>
-                  </div>
-                </div>
-
-                {/* Base URL */}
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">EPS Base API URL</label>
-                  <input
-                    type="text"
-                    required
-                    value={epsSettings.base_url}
-                    onChange={e => setEpsSettings({ ...epsSettings, base_url: e.target.value })}
-                    placeholder="https://sandboxpgapi.eps.com.bd"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-
-                {/* Username & Password */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">EPS Username (Email)</label>
-                    <input
-                      type="text"
-                      required
-                      value={epsSettings.username}
-                      onChange={e => setEpsSettings({ ...epsSettings, username: e.target.value })}
-                      placeholder="Epsdemo@gmail.com"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">EPS Password</label>
-                    <input
-                      type={showEpsSecrets ? "text" : "password"}
-                      required
-                      value={epsSettings.password}
-                      onChange={e => setEpsSettings({ ...epsSettings, password: e.target.value })}
-                      placeholder="Enter password"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Hash Key */}
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">EPS Hash Key (Secret for HMAC-SHA512)</label>
-                  <input
-                    type={showEpsSecrets ? "text" : "password"}
-                    required
-                    value={epsSettings.hash_key}
-                    onChange={e => setEpsSettings({ ...epsSettings, hash_key: e.target.value })}
-                    placeholder="FHZxyzeps56789gfhg678ygu876o="
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-
-                {/* Merchant ID & Store ID */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">Merchant ID</label>
-                    <input
-                      type="text"
-                      required
-                      value={epsSettings.merchant_id}
-                      onChange={e => setEpsSettings({ ...epsSettings, merchant_id: e.target.value })}
-                      placeholder="29e86e70-0ac6-45eb-ba04-9fcb0aaed12a"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">Store ID</label>
-                    <input
-                      type="text"
-                      required
-                      value={epsSettings.store_id}
-                      onChange={e => setEpsSettings({ ...epsSettings, store_id: e.target.value })}
-                      placeholder="d44e705f-9e3a-41de-98b1-1674631637da"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Merchant Number */}
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">Merchant Contact / Support Number</label>
-                  <input
-                    type="text"
-                    value={epsSettings.merchant_number || ""}
-                    onChange={e => setEpsSettings({ ...epsSettings, merchant_number: e.target.value })}
-                    placeholder="e.g. 01700000000"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-
-                {/* Submit Action */}
-                <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
-                  <button
-                    type="submit"
-                    disabled={isSavingEps}
-                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    {isSavingEps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                    <span>{isSavingEps ? "Saving Settings..." : "Save EPS PGW Settings"}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Side Card: Official Sandbox Reference */}
-            <div className="space-y-4">
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
-                <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-emerald-600" /> EPS Supported Channels
-                </div>
-                <p className="text-slate-500 text-[11.5px] leading-relaxed">
-                  EPS allows Bangladeshi clients to pay using multiple payment channels in BDT (৳):
-                </p>
-
-                <div className="space-y-2">
-                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span className="font-bold text-slate-800">Visa / Mastercard / Amex</span>
-                  </div>
-                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-pink-500"></span>
-                    <span className="font-bold text-slate-800">bKash, Nagad, Rocket, Upay</span>
-                  </div>
-                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                    <span className="font-bold text-slate-800">Internet & Core Banking</span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 space-y-2 font-mono text-[11px]">
-                  <div className="font-bold text-emerald-900">Sandbox Test Account:</div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">User:</span>
-                    <span className="font-bold text-emerald-900">Epsdemo@gmail.com</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Auth:</span>
-                    <span className="font-bold text-emerald-900">HMAC-SHA512</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      )}
       {activeTab === "infrastructure" && (
         <div className="space-y-6 animate-in fade-in duration-200">
 
           {/* Top 3 KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
               <div className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Active Master Model</div>
-              <div className="text-xl font-black text-indigo-950 font-mono flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-indigo-600" />
-                {aiSettings.master_model || "gemini-2.5-flash"}
+              <div className="text-xl font-black text-indigo-950 font-mono flex items-center gap-2 truncate" title={aiSettings.master_model}>
+                <Cpu className="w-5 h-5 text-indigo-600 shrink-0" />
+                <span className="truncate">{aiSettings.master_model || "google/gemini-2.5-flash"}</span>
               </div>
               <div className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" /> High-Throughput RAG Vector Engine
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
               <div className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Platform API Configuration</div>
               <div className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
                 {aiSettings.api_key ? "Live Connected" : "API Key Required"}
               </div>
-              <div className="text-[11px] text-slate-500 font-mono">
+              <div className="text-[11px] text-slate-500 font-mono truncate">
                 {aiSettings.api_key_masked || "Master AI Pool Active"}
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
               <div className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Rate Limit Policy</div>
               <div className="text-xl font-black text-slate-900 font-mono">{aiSettings.rate_limit_rpm || 120} RPM</div>
               <div className="text-[11px] text-indigo-600 font-bold">Per-Tenant Token Throttling</div>
+            </div>
+          </div>
+
+          {/* Quick Gateway Presets Banner */}
+          <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 p-5 rounded-3xl border border-indigo-100/80 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 className="text-xs font-extrabold text-indigo-950 flex items-center gap-1.5 uppercase tracking-wider">
+                  <Zap className="w-4 h-4 text-indigo-600" /> Gateway Quick Presets (1-Click Auto-Fill)
+                </h4>
+                <p className="text-[11.5px] text-slate-600">
+                  Switch between OpenRouter, Direct Google Gemini, Direct OpenAI, or DeepSeek without manual URL entry.
+                </p>
+              </div>
+              <span className="text-[10.5px] font-bold bg-white text-indigo-700 px-3 py-1 rounded-full border border-indigo-200 shadow-xs shrink-0 self-start">
+                ⚡ Universal OpenAI SDK
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              {[
+                {
+                  name: "OpenRouter",
+                  badge: "390+ Models",
+                  url: "https://openrouter.ai/api/v1",
+                  master: "google/gemini-2.5-flash",
+                  fallback: "google/gemini-2.5-flash-lite",
+                  keyPrefix: "sk-or-v1-...",
+                  border: "border-indigo-300 bg-white text-indigo-900 hover:border-indigo-500"
+                },
+                {
+                  name: "Google Gemini",
+                  badge: "Direct API",
+                  url: "https://generativelanguage.googleapis.com/v1beta/openai/",
+                  master: "gemini-2.5-flash",
+                  fallback: "gemini-1.5-flash",
+                  keyPrefix: "AIzaSy...",
+                  border: "border-blue-200 bg-white text-blue-950 hover:border-blue-400"
+                },
+                {
+                  name: "OpenAI",
+                  badge: "GPT-4o & o3",
+                  url: "https://api.openai.com/v1",
+                  master: "gpt-4o-mini",
+                  fallback: "gpt-4o",
+                  keyPrefix: "sk-proj-...",
+                  border: "border-emerald-200 bg-white text-emerald-950 hover:border-emerald-400"
+                },
+                {
+                  name: "DeepSeek",
+                  badge: "V3 / R1 Lowest Cost",
+                  url: "https://api.deepseek.com/v1",
+                  master: "deepseek-chat",
+                  fallback: "deepseek-reasoner",
+                  keyPrefix: "sk-...",
+                  border: "border-purple-200 bg-white text-purple-950 hover:border-purple-400"
+                },
+                {
+                  name: "Groq High-Speed",
+                  badge: "750+ Tokens/s",
+                  url: "https://api.groq.com/openai/v1",
+                  master: "llama-3.3-70b-versatile",
+                  fallback: "mixtral-8x7b-32768",
+                  keyPrefix: "gsk_...",
+                  border: "border-amber-200 bg-white text-amber-950 hover:border-amber-400"
+                }
+              ].map((p, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setAiSettings({
+                      ...aiSettings,
+                      ai_base_url: p.url,
+                      master_model: p.master,
+                      fallback_model: p.fallback
+                    });
+                    showToast("Preset Applied", `Configured ${p.name} gateway parameters (${p.master})`, "success");
+                    if (p.url.includes("openrouter")) {
+                      loadOpenRouterModels();
+                    }
+                  }}
+                  className={`p-3 rounded-2xl border text-left transition-all hover:shadow-sm cursor-pointer ${p.border} ${aiSettings.ai_base_url?.includes(p.url.replace("https://", "").split("/")[0]) ? "ring-2 ring-indigo-600 font-extrabold" : ""}`}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-xs font-black">{p.name}</span>
+                    <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-slate-100 font-bold text-slate-700">{p.badge}</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono mt-1 truncate">{p.master}</div>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -2531,18 +2702,18 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* Left 2 Cols: Interactive Configuration Form */}
-            <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+            <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-xs space-y-5">
               <div className="flex justify-between items-start border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-indigo-600" /> Global AI Model & API Configuration
+                    <Sliders className="w-4 h-4 text-indigo-600" /> Global AI Model & API Gateway Configuration
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Configure Google Gemini credentials, select LLM models, and tune temperature for all multi-tenant workspaces.
+                    Configure OpenRouter, Gemini, or OpenAI credentials, select active LLMs, and tune generation hyperparameters.
                   </p>
                 </div>
                 <span className="text-[10.5px] font-mono font-bold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200">
-                  Global LLM Engine
+                  Universal Gateway
                 </span>
               </div>
 
@@ -2552,7 +2723,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
                     <label className="block font-bold text-slate-800">
-                      Google Gemini / AI API Key *
+                      AI Gateway API Key *
                     </label>
                     <button
                       type="button"
@@ -2568,7 +2739,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                     required
                     value={aiSettings.api_key || ""}
                     onChange={e => setAiSettings({ ...aiSettings, api_key: e.target.value })}
-                    placeholder="Enter Google Gemini API Key (e.g. AIzaSy... or sk-...)"
+                    placeholder="Enter OpenRouter Key (sk-or-v1-...) or Gemini Key (AIzaSy...)"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-xs"
                   />
                   <p className="text-[10.5px] text-slate-400">
@@ -2578,12 +2749,12 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
 
                 {/* AI Base URL */}
                 <div className="space-y-1.5">
-                  <label className="block font-bold text-slate-800">AI Base URL / OpenAI-Compatible Gateway</label>
+                  <label className="block font-bold text-slate-800">AI Base URL / OpenAI-Compatible Endpoint</label>
                   <input
                     type="text"
                     value={aiSettings.ai_base_url || ""}
                     onChange={e => setAiSettings({ ...aiSettings, ai_base_url: e.target.value })}
-                    placeholder="https://generativelanguage.googleapis.com/v1beta/openai/"
+                    placeholder="https://openrouter.ai/api/v1"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-indigo-500 focus:bg-white transition-all"
                   />
                 </div>
@@ -2594,30 +2765,48 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                     <label className="block font-bold text-slate-800">
                       Primary Master AI Model *
                     </label>
-                    <select
+                    <input
+                      type="text"
                       value={aiSettings.master_model}
                       onChange={e => setAiSettings({ ...aiSettings, master_model: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-bold outline-none focus:border-indigo-500 focus:bg-white transition-all cursor-pointer"
-                    >
-                      <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended — Ultra Fast)</option>
-                      <option value="gemini-2.0-flash">gemini-2.0-flash (Multimodal & Fast)</option>
-                      <option value="gemini-1.5-flash">gemini-1.5-flash (Standard Production)</option>
-                      <option value="gemini-1.5-pro">gemini-1.5-pro (High Reasoning & 2M Context)</option>
-                      <option value="gemini-3.6-flash">gemini-3.6-flash (Vector Engine Preview)</option>
-                    </select>
+                      placeholder="e.g. google/gemini-2.5-flash or openai/gpt-4o-mini"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-bold outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                    />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {["google/gemini-2.5-flash", "deepseek/deepseek-chat", "openai/gpt-4o-mini", "anthropic/claude-3.5-haiku"].map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setAiSettings({ ...aiSettings, master_model: m })}
+                          className={`text-[10px] px-2 py-0.5 rounded-md border font-mono transition-all cursor-pointer ${aiSettings.master_model === m ? "bg-indigo-600 text-white border-indigo-600 font-bold" : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"}`}
+                        >
+                          {m.split("/")[1] || m}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="block font-bold text-slate-800">Fallback Failover Model</label>
-                    <select
-                      value={aiSettings.fallback_model || "gemini-1.5-flash"}
+                    <input
+                      type="text"
+                      value={aiSettings.fallback_model || ""}
                       onChange={e => setAiSettings({ ...aiSettings, fallback_model: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-indigo-500 focus:bg-white transition-all cursor-pointer"
-                    >
-                      <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                      <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                      <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                    </select>
+                      placeholder="e.g. google/gemini-2.5-flash-lite"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                    />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {["google/gemini-2.5-flash-lite", "openai/gpt-4o-mini", "gemini-1.5-flash"].map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setAiSettings({ ...aiSettings, fallback_model: m })}
+                          className={`text-[10px] px-2 py-0.5 rounded-md border font-mono transition-all cursor-pointer ${aiSettings.fallback_model === m ? "bg-slate-800 text-white border-slate-800 font-bold" : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"}`}
+                        >
+                          {m.split("/")[1] || m}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -2695,13 +2884,13 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
             <div className="space-y-5">
 
               {/* AI Connectivity Benchmark Panel */}
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4 text-xs">
                 <div>
                   <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
                     <Terminal className="w-4 h-4 text-indigo-600" /> Live AI Cluster Health Benchmark
                   </h3>
                   <p className="text-slate-500 text-[11.5px] mt-0.5">
-                    Executes an end-to-end prompt test through the primary Google Gemini model cluster using the configured key.
+                    Executes an end-to-end prompt test through the primary model cluster using the configured gateway and key.
                   </p>
                 </div>
 
@@ -2730,7 +2919,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
               </div>
 
               {/* RAG & Token Architecture Reference */}
-              <div className="bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-sm space-y-3 text-xs">
+              <div className="bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-xs space-y-3 text-xs">
                 <div className="font-extrabold text-sm text-indigo-300 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-indigo-400" /> RAG & Multitenancy Engine
                 </div>
@@ -2747,14 +2936,214 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                     <span className="text-indigo-400 font-bold">Up to 2M Tokens</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Metering Engine:</span>
-                    <span className="text-emerald-400 font-bold">Real-time UsageRecord</span>
+                    <span className="text-slate-400">Gateway Protocol:</span>
+                    <span className="text-emerald-400 font-bold">OpenAI Async Standard</span>
                   </div>
                 </div>
               </div>
 
             </div>
 
+          </div>
+
+          {/* Real-Time OpenRouter Live Models Explorer & Pricing Matrix */}
+          <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-xs space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-indigo-600" /> OpenRouter Real-Time Model Explorer & Pricing Matrix
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Live API sync from OpenRouter with real-time prompt/completion pricing ($/1M tokens), context window, and tool-calling validation.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => loadOpenRouterModels()}
+                  disabled={isLoadingModels}
+                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingModels ? "animate-spin" : ""}`} />
+                  <span>Sync Live Models</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Bar & Search */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+              {/* Provider Filter Chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                {[
+                  { id: "all", label: "All Models" },
+                  { id: "tools", label: "⚡ Tool Calling (Recommended)" },
+                  { id: "google", label: "Google" },
+                  { id: "openai", label: "OpenAI" },
+                  { id: "deepseek", label: "DeepSeek" },
+                  { id: "anthropic", label: "Anthropic" },
+                  { id: "meta-llama", label: "Meta Llama" },
+                  { id: "free", label: "🎁 100% Free" }
+                ].map((f) => {
+                  const isActive = f.id === "tools" ? toolsOnlyFilter : (modelProviderFilter === f.id);
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => {
+                        if (f.id === "tools") {
+                          const nextVal = !toolsOnlyFilter;
+                          setToolsOnlyFilter(nextVal);
+                          loadOpenRouterModels(modelProviderFilter, modelSearchQuery, nextVal);
+                        } else {
+                          setModelProviderFilter(f.id);
+                          loadOpenRouterModels(f.id, modelSearchQuery, toolsOnlyFilter);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${isActive ? "bg-indigo-600 text-white shadow-xs" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+                    >
+                      {f.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative min-w-[240px]">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={modelSearchQuery}
+                  onChange={(e) => {
+                    setModelSearchQuery(e.target.value);
+                    loadOpenRouterModels(modelProviderFilter, e.target.value, toolsOnlyFilter);
+                  }}
+                  placeholder="Search 390+ models..."
+                  className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Models Table / Grid */}
+            {isLoadingModels ? (
+              <div className="py-16 text-center text-slate-400 space-y-3">
+                <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-500" />
+                <p className="text-xs font-bold">Fetching 390+ real-time models and live pricing from OpenRouter API...</p>
+              </div>
+            ) : openRouterModels.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 space-y-2 bg-slate-50 rounded-2xl border border-slate-200">
+                <AlertTriangle className="w-6 h-6 mx-auto text-amber-500" />
+                <div className="text-xs font-bold">No matching models found</div>
+                <button
+                  onClick={() => {
+                    setModelSearchQuery("");
+                    setModelProviderFilter("all");
+                    setToolsOnlyFilter(false);
+                    loadOpenRouterModels("all", "", false);
+                  }}
+                  className="text-xs text-indigo-600 font-bold hover:underline cursor-pointer"
+                >
+                  Reset all filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 max-h-[580px] overflow-y-auto pr-1">
+                {openRouterModels.slice(0, 60).map((m: any) => {
+                  const isMaster = aiSettings.master_model === m.id;
+                  const isFallback = aiSettings.fallback_model === m.id;
+
+                  return (
+                    <div
+                      key={m.id}
+                      className={`p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-3 ${isMaster ? "border-indigo-500 bg-indigo-50/40 shadow-xs" : isFallback ? "border-amber-400 bg-amber-50/40" : "border-slate-200 hover:border-slate-300 bg-white"}`}
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                            {m.provider}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {m.supports_tools && (
+                              <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1" title="Supports Native Function Calling">
+                                ⚡ Tools
+                              </span>
+                            )}
+                            {m.is_free && (
+                              <span className="text-[9.5px] font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">
+                                🎁 Free
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-xs font-black text-slate-900 font-mono truncate" title={m.id}>
+                          {m.id}
+                        </div>
+                        <div className="text-[11px] text-slate-600 font-medium line-clamp-1">
+                          {m.name}
+                        </div>
+                      </div>
+
+                      {/* Pricing & Context */}
+                      <div className="pt-2 border-t border-slate-100 space-y-1.5 text-[11px]">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">Prompt / 1M:</span>
+                          <span className="font-bold text-slate-900 font-mono">{m.pricing_prompt}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">Completion / 1M:</span>
+                          <span className="font-bold text-slate-900 font-mono">{m.pricing_completion}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">Context Window:</span>
+                          <span className="font-bold text-slate-700 font-mono">{(m.context_length || 4096).toLocaleString()} tokens</span>
+                        </div>
+                      </div>
+
+                      {/* Quick 1-Click Action Buttons */}
+                      <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const updated = { ...aiSettings, master_model: m.id };
+                            setAiSettings(updated);
+                            showToast("Master Model Activated", `Switched Primary Master Model to ${m.id}`, "success");
+                            try {
+                              await api.updateSuperAdminAISettings(updated);
+                              showToast("Platform Configuration Updated", `Active Master LLM is now ${m.id}`, "success");
+                            } catch (err: any) {
+                              showToast("Notice", "Model selected. Click 'Save AI Model Configuration' to commit.", "info");
+                            }
+                          }}
+                          className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${isMaster ? "bg-indigo-600 text-white shadow-sm" : "bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-800"}`}
+                        >
+                          {isMaster ? <Check className="w-3 h-3" /> : null}
+                          <span>{isMaster ? "Active Master" : "Set as Master"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const updated = { ...aiSettings, fallback_model: m.id };
+                            setAiSettings(updated);
+                            showToast("Fallback Model Activated", `Set ${m.id} as Failover Model`, "info");
+                            try {
+                              await api.updateSuperAdminAISettings(updated);
+                              showToast("Platform Configuration Updated", `Failover Fallback LLM is now ${m.id}`, "success");
+                            } catch (err: any) {
+                              showToast("Notice", "Fallback model selected in form.", "info");
+                            }
+                          }}
+                          className={`px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${isFallback ? "bg-amber-600 text-white shadow-sm" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                        >
+                          {isFallback ? <Check className="w-3 h-3" /> : null}
+                          <span>{isFallback ? "Active Fallback" : "Fallback"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
         </div>

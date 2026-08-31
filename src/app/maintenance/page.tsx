@@ -73,7 +73,7 @@ export default function MaintenancePage() {
             </div>
           )}
           <span className="font-bold text-white text-sm sm:text-base tracking-tight">
-            {currentTheme.platform_name || "AIaaS Enterprise Platform"}
+            {currentTheme.platform_name || "Jobab Chat Platform"}
           </span>
         </div>
 

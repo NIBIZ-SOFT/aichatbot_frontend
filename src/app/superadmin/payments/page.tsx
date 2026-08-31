@@ -4,10 +4,10 @@ import React from "react";
 import AppShell from "../../../components/layout/AppShell";
 import SuperAdminView from "../../../components/views/SuperAdminView";
 
-export default function SuperAdminEpsPage() {
+export default function SuperAdminPaymentsPage() {
   return (
     <AppShell activeNav="payments" requiredRole="super_admin">
-      <SuperAdminView defaultTab="eps" />
+      <SuperAdminView defaultTab="payments" />
     </AppShell>
   );
 }

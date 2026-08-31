@@ -191,6 +191,14 @@ export const api = {
     return apiFetch("/health/ping-db", { method: "POST" });
   },
 
+  async pingAI() {
+    return apiFetch("/health/ping-ai", { method: "POST" });
+  },
+
+  async triggerDatabaseSeed() {
+    return apiFetch("/health/seed-db", { method: "POST" });
+  },
+
   // Auth
   async login(email: string, password: string = "DemoPass123!") {
     return apiFetch("/auth/login", {
@@ -435,7 +443,13 @@ export const api = {
   async createBkashPayment(tier: string, billingCycle: string = "monthly", phoneNumber: string = "01770618575", couponCode?: string) {
     return apiFetch("/payment/bkash/create", {
       method: "POST",
-      body: JSON.stringify({ tier, billing_cycle: billingCycle, phone_number: phoneNumber, coupon_code: couponCode || undefined }),
+      body: JSON.stringify({
+        tier,
+        billing_cycle: billingCycle,
+        phone_number: phoneNumber,
+        coupon_code: couponCode || undefined,
+        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined
+      }),
     });
   },
 
@@ -448,6 +462,23 @@ export const api = {
 
   async queryBkashPayment(paymentId: string) {
     return apiFetch(`/payment/bkash/query/${paymentId}`);
+  },
+
+  async initWalletTopup(amountBdt: number) {
+    return apiFetch("/payment/wallet/topup", {
+      method: "POST",
+      body: JSON.stringify({
+        amount_bdt: amountBdt,
+        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined
+      }),
+    });
+  },
+
+  async executeWalletTopup(paymentId: string) {
+    return apiFetch("/payment/wallet/execute", {
+      method: "POST",
+      body: JSON.stringify({ payment_id: paymentId }),
+    });
   },
 
   // EPS (Easy Payment System) Checkout
@@ -467,6 +498,7 @@ export const api = {
         customer_phone: customerDetails?.phone,
         customer_address: customerDetails?.address,
         coupon_code: couponCode || undefined,
+        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined
       }),
     });
   },
@@ -497,7 +529,10 @@ export const api = {
   async initWalletTopupEps(amountBdt: number) {
     return apiFetch("/payment/wallet/topup-eps", {
       method: "POST",
-      body: JSON.stringify({ amount_bdt: amountBdt }),
+      body: JSON.stringify({
+        amount_bdt: amountBdt,
+        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined
+      }),
     });
   },
 
@@ -640,6 +675,15 @@ export const api = {
     return apiFetch("/superadmin/infrastructure/settings");
   },
 
+  async getOpenRouterModels(params?: { query?: string; provider?: string; tools_only?: boolean }) {
+    const q = new URLSearchParams();
+    if (params?.query) q.set("query", params.query);
+    if (params?.provider) q.set("provider", params.provider);
+    if (params?.tools_only) q.set("tools_only", "true");
+    const qs = q.toString() ? `?${q.toString()}` : "";
+    return apiFetch(`/superadmin/infrastructure/openrouter-models${qs}`);
+  },
+
   async updateSuperAdminAISettings(payload: any) {
     return apiFetch("/superadmin/infrastructure/settings", {
       method: "POST",
@@ -647,9 +691,10 @@ export const api = {
     });
   },
 
-  async testSuperAdminAIPing() {
+  async testSuperAdminAIPing(payload?: { model?: string; base_url?: string; api_key?: string }) {
     return apiFetch("/superadmin/infrastructure/test-ai", {
       method: "POST",
+      body: payload ? JSON.stringify(payload) : undefined,
     });
   },
 
@@ -742,20 +787,6 @@ export const api = {
 
   async getTenantWallet() {
     return apiFetch("/payment/wallet");
-  },
-
-  async initWalletTopup(amountBdt: number) {
-    return apiFetch("/payment/wallet/topup", {
-      method: "POST",
-      body: JSON.stringify({ amount_bdt: amountBdt }),
-    });
-  },
-
-  async executeWalletTopup(paymentId: string) {
-    return apiFetch("/payment/wallet/execute", {
-      method: "POST",
-      body: JSON.stringify({ payment_id: paymentId }),
-    });
   },
 
   async validateCoupon(code: string, planCode: string, amountBdt: number) {

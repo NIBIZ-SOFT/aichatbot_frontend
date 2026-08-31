@@ -1989,19 +1989,19 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
             </div>
 
             {/* Gateway Sub-Tabs Switcher */}
-            <div className="flex items-center gap-2 p-1.5 bg-slate-950/90 rounded-2xl border border-slate-800 shrink-0 w-full lg:w-auto">
+            <div className="flex items-center gap-2 p-1.5 bg-slate-100 rounded-2xl border border-slate-200 shrink-0 w-full lg:w-auto">
               <button
                 type="button"
                 onClick={() => setActivePaymentSubTab("bkash")}
                 className={`flex-1 lg:flex-initial px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   activePaymentSubTab === "bkash"
-                    ? "bg-[#e2136e] text-white shadow-lg shadow-pink-600/30 ring-1 ring-pink-400/50"
-                    : "text-slate-400 hover:text-white hover:bg-slate-900"
+                    ? "bg-[#e2136e] text-white shadow-sm ring-1 ring-pink-400"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
                 }`}
               >
                 <span className="w-4 h-4 rounded-full bg-white text-[#e2136e] flex items-center justify-center text-[10px] font-black">৳</span>
                 <span>bKash Direct PGW</span>
-                <span className={`text-[9px] font-black px-1.5 py-0.2 rounded ${bkashSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'}`}>
+                <span className={`text-[9px] font-black px-1.5 py-0.2 rounded ${bkashSettings.is_sandbox ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'}`}>
                   {bkashSettings.is_sandbox ? 'SANDBOX' : 'LIVE'}
                 </span>
               </button>
@@ -2011,13 +2011,13 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 onClick={() => setActivePaymentSubTab("eps")}
                 className={`flex-1 lg:flex-initial px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   activePaymentSubTab === "eps"
-                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 ring-1 ring-emerald-400/50"
-                    : "text-slate-400 hover:text-white hover:bg-slate-900"
+                    ? "bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
                 }`}
               >
                 <CreditCard className="w-4 h-4 text-white" />
                 <span>EPS (Easy Payment System)</span>
-                <span className={`text-[9px] font-black px-1.5 py-0.2 rounded ${epsSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'}`}>
+                <span className={`text-[9px] font-black px-1.5 py-0.2 rounded ${epsSettings.is_sandbox ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'}`}>
                   {epsSettings.is_sandbox ? 'SANDBOX' : 'LIVE'}
                 </span>
               </button>

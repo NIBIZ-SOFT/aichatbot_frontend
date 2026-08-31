@@ -683,9 +683,10 @@ export const api = {
     });
   },
 
-  async testSuperAdminAIPing() {
+  async testSuperAdminAIPing(payload?: { model?: string; base_url?: string; api_key?: string }) {
     return apiFetch("/superadmin/infrastructure/test-ai", {
       method: "POST",
+      body: payload ? JSON.stringify(payload) : undefined,
     });
   },
 

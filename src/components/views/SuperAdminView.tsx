@@ -499,10 +499,13 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
     setIsTestingAI(true);
     setAiTestResult(null);
     try {
-      const res = await api.testSuperAdminAIPing();
+      const res = await api.testSuperAdminAIPing({
+        model: aiSettings.master_model,
+        base_url: aiSettings.base_url,
+      });
       setAiTestResult(res);
       if (res.status === "online") {
-        showToast("AI Cluster Operational", `Response received in ${res.latency_ms}ms`, "success");
+        showToast("AI Cluster Operational", `Pinged ${res.model} in ${res.latency_ms}ms`, "success");
       } else {
         showToast("AI Ping Warning", res.error || "Degraded latency", "info");
       }
@@ -3101,25 +3104,39 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                       <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => {
-                            setAiSettings({ ...aiSettings, master_model: m.id });
-                            showToast("Master Model Selected", `Set ${m.id} as Primary Master Model. Click 'Save AI Model Configuration' to commit.`, "success");
+                          onClick={async () => {
+                            const updated = { ...aiSettings, master_model: m.id };
+                            setAiSettings(updated);
+                            showToast("Master Model Activated", `Switched Primary Master Model to ${m.id}`, "success");
+                            try {
+                              await api.updateSuperAdminAISettings(updated);
+                              showToast("Platform Configuration Updated", `Active Master LLM is now ${m.id}`, "success");
+                            } catch (err: any) {
+                              showToast("Notice", "Model selected. Click 'Save AI Model Configuration' to commit.", "info");
+                            }
                           }}
-                          className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${isMaster ? "bg-indigo-600 text-white" : "bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-800"}`}
+                          className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${isMaster ? "bg-indigo-600 text-white shadow-sm" : "bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-800"}`}
                         >
                           {isMaster ? <Check className="w-3 h-3" /> : null}
                           <span>{isMaster ? "Active Master" : "Set as Master"}</span>
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
-                            setAiSettings({ ...aiSettings, fallback_model: m.id });
-                            showToast("Fallback Model Selected", `Set ${m.id} as Fallback Model.`, "info");
+                          onClick={async () => {
+                            const updated = { ...aiSettings, fallback_model: m.id };
+                            setAiSettings(updated);
+                            showToast("Fallback Model Activated", `Set ${m.id} as Failover Model`, "info");
+                            try {
+                              await api.updateSuperAdminAISettings(updated);
+                              showToast("Platform Configuration Updated", `Failover Fallback LLM is now ${m.id}`, "success");
+                            } catch (err: any) {
+                              showToast("Notice", "Fallback model selected in form.", "info");
+                            }
                           }}
-                          className={`px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${isFallback ? "bg-amber-600 text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                          className={`px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${isFallback ? "bg-amber-600 text-white shadow-sm" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
                         >
                           {isFallback ? <Check className="w-3 h-3" /> : null}
-                          <span>{isFallback ? "Fallback" : "Fallback"}</span>
+                          <span>{isFallback ? "Active Fallback" : "Fallback"}</span>
                         </button>
                       </div>
                     </div>

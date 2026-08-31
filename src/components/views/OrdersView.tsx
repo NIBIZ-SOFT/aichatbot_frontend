@@ -395,11 +395,13 @@ export default function OrdersView() {
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-1.5 mb-1">
                           <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] border ${
-                            isBkash 
-                              ? "bg-pink-500/10 text-pink-400 border-pink-500/30"
-                              : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                            order.payment_method === "eps"
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                              : isBkash 
+                                ? "bg-pink-500/10 text-pink-400 border-pink-500/30"
+                                : "bg-amber-500/10 text-amber-400 border-amber-500/30"
                           }`}>
-                            {isBkash ? "bKash Online" : "Cash on Delivery"}
+                            {order.payment_method === "eps" ? "EPS Multi-Channel" : isBkash ? "bKash Online" : "Cash on Delivery"}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 text-[10.5px]">
@@ -408,7 +410,7 @@ export default function OrdersView() {
                             {order.payment_status}
                           </span>
                           {order.bkash_trx_id && (
-                            <span className="font-mono text-[9.5px] text-pink-300 truncate max-w-[80px]">({order.bkash_trx_id})</span>
+                            <span className="font-mono text-[9.5px] text-slate-300 truncate max-w-[80px]">({order.bkash_trx_id})</span>
                           )}
                         </div>
                       </td>

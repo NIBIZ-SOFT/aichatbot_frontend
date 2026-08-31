@@ -48,6 +48,18 @@ export default function SettingsView() {
   const [bkashPassword, setBkashPassword] = useState("");
   const [showBkashSecret, setShowBkashSecret] = useState(false);
 
+  // EPS (Easy Payment System) State
+  const [epsEnabled, setEpsEnabled] = useState(false);
+  const [isEpsSandbox, setIsEpsSandbox] = useState(true);
+  const [epsBaseUrl, setEpsBaseUrl] = useState("https://sandboxpgapi.eps.com.bd");
+  const [epsUsername, setEpsUsername] = useState("");
+  const [epsPassword, setEpsPassword] = useState("");
+  const [epsHashKey, setEpsHashKey] = useState("");
+  const [epsMerchantId, setEpsMerchantId] = useState("");
+  const [epsStoreId, setEpsStoreId] = useState("");
+  const [epsMerchantNumber, setEpsMerchantNumber] = useState("");
+  const [showEpsSecret, setShowEpsSecret] = useState(false);
+
   const [smsEnabled, setSmsEnabled] = useState(true);
   const [smsProvider, setSmsProvider] = useState("smsmatrix");
   const [smsApiKey, setSmsApiKey] = useState("");
@@ -91,6 +103,15 @@ export default function SettingsView() {
           setBkashBaseUrl(ecom.bkash_base_url || (ecom.bkash_is_sandbox !== false ? "https://tokenized.sandbox.bka.sh/v1.2.0-beta" : "https://tokenized.pay.bka.sh/v1.2.0-beta"));
           setBkashAppKey(ecom.bkash_app_key_masked || "");
           setBkashUsername(ecom.bkash_username_masked || "");
+
+          setEpsEnabled(ecom.eps_enabled || false);
+          setIsEpsSandbox(ecom.eps_is_sandbox !== undefined ? ecom.eps_is_sandbox : true);
+          setEpsBaseUrl(ecom.eps_base_url || (ecom.eps_is_sandbox !== false ? "https://sandboxpgapi.eps.com.bd" : "https://pgapi.eps.com.bd"));
+          setEpsUsername(ecom.eps_username_masked || "");
+          setEpsMerchantId(ecom.eps_merchant_id_masked || "");
+          setEpsStoreId(ecom.eps_store_id_masked || "");
+          setEpsMerchantNumber(ecom.eps_merchant_number || "");
+
           setSmsEnabled(ecom.sms_notifications_enabled);
           setSmsProvider(ecom.sms_provider || "smsmatrix");
           setSmsSenderId(ecom.sms_sender_id_masked || "PadmaMart");
@@ -117,9 +138,27 @@ export default function SettingsView() {
     showToast("Official Sandbox Loaded", "bKash Tokenized Sandbox credentials applied! Click 'Save Gateways' to activate.", "info");
   };
 
+  const handleFillOfficialEpsSandbox = () => {
+    setIsEpsSandbox(true);
+    setEpsBaseUrl("https://sandboxpgapi.eps.com.bd");
+    setEpsUsername("Epsdemo@gmail.com");
+    setEpsPassword("Epsdemo258@");
+    setEpsHashKey("FHZxyzeps56789gfhg678ygu876o=");
+    setEpsMerchantId("29e86e70-0ac6-45eb-ba04-9fcb0aaed12a");
+    setEpsStoreId("d44e705f-9e3a-41de-98b1-1674631637da");
+    setEpsMerchantNumber("01700000000");
+    setEpsEnabled(true);
+    showToast("Official EPS Sandbox Loaded", "EPS Sandbox credentials applied! Click 'Save Gateways' to activate.", "info");
+  };
+
   const handleToggleEnvironment = (sandbox: boolean) => {
     setIsBkashSandbox(sandbox);
     setBkashBaseUrl(sandbox ? "https://tokenized.sandbox.bka.sh/v1.2.0-beta" : "https://tokenized.pay.bka.sh/v1.2.0-beta");
+  };
+
+  const handleToggleEpsEnvironment = (sandbox: boolean) => {
+    setIsEpsSandbox(sandbox);
+    setEpsBaseUrl(sandbox ? "https://sandboxpgapi.eps.com.bd" : "https://pgapi.eps.com.bd");
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -325,51 +364,86 @@ export default function SettingsView() {
             </div>
           </div>
 
-          {/* 2. Customer Support & Contact */}
+          {/* 2. Public Contact Details */}
           <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-sm space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-800">
-              <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl">
-                <Phone className="w-4 h-4" />
+              <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl">
+                <Globe className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-bold text-sm text-white">Contact & Support Hotline</h3>
-                <p className="text-[11px] text-slate-400">Used by the AI bot to answer hotline and location inquiries.</p>
+                <h3 className="font-bold text-sm text-white">Public Support Contacts</h3>
+                <p className="text-[11px] text-slate-400">Where customers can reach your human support team.</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="block font-bold text-slate-300">Support Hotline Phone</label>
+                <label className="block font-bold text-slate-300">Support Hotline</label>
                 <input
                   type="text"
                   value={supportPhone}
                   onChange={e => setSupportPhone(e.target.value)}
                   placeholder="+880 1700-112233"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono"
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-medium"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block font-bold text-slate-300">Official Support Email</label>
+                <label className="block font-bold text-slate-300">Support Email</label>
                 <input
                   type="email"
                   value={supportEmail}
                   onChange={e => setSupportEmail(e.target.value)}
-                  placeholder="support@padmamart.com.bd"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono"
+                  placeholder="support@yourbrand.com"
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-medium"
                 />
               </div>
 
               <div className="space-y-1 sm:col-span-2">
-                <label className="block font-bold text-slate-300">Physical Office / Store Address</label>
-                <textarea
-                  rows={2}
+                <label className="block font-bold text-slate-300">Official Company Address</label>
+                <input
+                  type="text"
                   value={companyAddress}
                   onChange={e => setCompanyAddress(e.target.value)}
-                  placeholder="House 14, Road 7, Sector 3, Uttara, Dhaka-1230"
+                  placeholder="Sector 3, Uttara, Dhaka - 1230, Bangladesh"
                   className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-medium"
                 />
               </div>
+
+              <div className="space-y-1 sm:col-span-2">
+                <label className="block font-bold text-slate-300">Customer Support Working Hours</label>
+                <input
+                  type="text"
+                  value={workingHours}
+                  onChange={e => setWorkingHours(e.target.value)}
+                  placeholder="9:00 AM - 10:00 PM (Daily)"
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-medium"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Delivery & Courier Partners */}
+          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-800">
+              <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl">
+                <Truck className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-white">Logistics & Courier Delivery Partners</h3>
+                <p className="text-[11px] text-slate-400">Mention courier services your store uses so AI assistants can accurately inform customers.</p>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block font-bold text-slate-300">Active Delivery Couriers</label>
+              <input
+                type="text"
+                value={courierPartners}
+                onChange={e => setCourierPartners(e.target.value)}
+                placeholder="Steadfast Express, RedX, Pathao, Paperfly"
+                className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-medium"
+              />
             </div>
           </div>
 
@@ -377,7 +451,7 @@ export default function SettingsView() {
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-500/25 transition-all"
+              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/25 transition-all"
             >
               {isSaving ? "Saving..." : "Save Business Profile"}
             </button>
@@ -386,18 +460,83 @@ export default function SettingsView() {
       ) : (
         <form onSubmit={handleSaveGateways} className="space-y-6 text-xs">
 
-          {/* bKash Tokenized Merchant Gateway Configuration */}
-          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-sm space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-pink-500/10 text-pink-400 rounded-2xl font-bold text-base flex items-center justify-center">
-                  bKash
+          {/* Scope Isolation Banner */}
+          <div className="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-800/40 flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-indigo-600/20 text-indigo-400 shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-sm text-white">
+                Client Storefront Payment & SMS Gateways
+              </div>
+              <p className="text-[11.5px] text-slate-400 mt-0.5 leading-relaxed">
+                Configure your own merchant credentials for receiving payments from your store shoppers and automated SMS order notifications.
+                Your credentials are encrypted using AES-256 and strictly isolated to your organization.
+              </p>
+            </div>
+          </div>
+
+          {/* 1. Cash on Delivery & Shipping Policy */}
+          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl">
+                  <Truck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                    bKash Tokenized Payment Gateway (v1.2.0-beta)
-                  </h3>
-                  <p className="text-[11px] text-slate-400">Accept automated mobile wallet payments directly inside the CDN live chat widget.</p>
+                  <h3 className="font-bold text-sm text-white">Cash on Delivery (COD) & Nationwide Shipping</h3>
+                  <p className="text-[11px] text-slate-400">Configure standard shipping charges added to customer checkout.</p>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-xs text-slate-400 font-medium">Enable COD:</span>
+                <input
+                  type="checkbox"
+                  checked={codEnabled}
+                  onChange={e => setCodEnabled(e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 rounded bg-slate-950 border-slate-700 cursor-pointer"
+                />
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="block font-bold text-slate-300">Delivery Charge (Inside Dhaka)</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2.5 text-slate-500 font-bold">৳</span>
+                  <input
+                    type="number"
+                    defaultValue={60}
+                    className="w-full pl-8 pr-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block font-bold text-slate-300">Delivery Charge (Outside Dhaka)</label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2.5 text-slate-500 font-bold">৳</span>
+                  <input
+                    type="number"
+                    defaultValue={120}
+                    className="w-full pl-8 pr-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-bold"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. bKash Tokenized Payment Gateway */}
+          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-pink-500/10 text-pink-400 rounded-xl">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-white">bKash Tokenized Direct Checkout</h3>
+                  <p className="text-[11px] text-slate-400">Accept direct tokenized payments in chat via official bKash PGW API.</p>
                 </div>
               </div>
 
@@ -405,18 +544,19 @@ export default function SettingsView() {
                 <button
                   type="button"
                   onClick={handleFillOfficialSandbox}
-                  className="px-3 py-1.5 bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 border border-pink-500/30 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all"
+                  className="px-3 py-1 bg-pink-950/40 hover:bg-pink-900/50 text-pink-400 border border-pink-700/50 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5"
                 >
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>1-Click Fill Sandbox Keys</span>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Fill Sandbox Credentials</span>
                 </button>
-                <label className="flex items-center gap-2 cursor-pointer bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
-                  <span className="text-xs text-slate-300 font-medium">Enable bKash:</span>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <span className="text-xs text-slate-400 font-medium">Enable bKash:</span>
                   <input
                     type="checkbox"
                     checked={bkashEnabled}
                     onChange={e => setBkashEnabled(e.target.checked)}
-                    className="w-4 h-4 text-pink-600 rounded bg-slate-900 border-slate-700 cursor-pointer"
+                    className="w-4 h-4 text-pink-600 rounded bg-slate-950 border-slate-700 cursor-pointer"
                   />
                 </label>
               </div>
@@ -540,7 +680,156 @@ export default function SettingsView() {
             </div>
           </div>
 
-          {/* SMS Notification Gateway */}
+          {/* 3. EPS (Easy Payment System) Gateway */}
+          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-white">EPS (Easy Payment System) Multi-Channel PGW</h3>
+                  <p className="text-[11px] text-slate-400">Accept Credit/Debit Cards (Visa/Master/Amex), MFS, and Internet Banking from shoppers.</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleFillOfficialEpsSandbox}
+                  className="px-3 py-1 bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-700/50 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Fill Sandbox Credentials</span>
+                </button>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <span className="text-xs text-slate-400 font-medium">Enable EPS:</span>
+                  <input
+                    type="checkbox"
+                    checked={epsEnabled}
+                    onChange={e => setEpsEnabled(e.target.checked)}
+                    className="w-4 h-4 text-emerald-600 rounded bg-slate-950 border-slate-700 cursor-pointer"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Environment Toggle & Base URL */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800/80">
+              <div>
+                <label className="block font-bold text-slate-300 mb-1.5">Environment Mode</label>
+                <div className="flex bg-slate-900 p-1 rounded-xl border border-slate-800 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleEpsEnvironment(true)}
+                    className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${isEpsSandbox ? "bg-emerald-600 text-white shadow-sm" : "text-slate-400 hover:text-white"
+                      }`}
+                  >
+                    🧪 Sandbox (Testing)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleEpsEnvironment(false)}
+                    className={`flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all ${!isEpsSandbox ? "bg-teal-600 text-white shadow-sm" : "text-slate-400 hover:text-white"
+                      }`}
+                  >
+                    🚀 Live (Production)
+                  </button>
+                </div>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-300 mb-1.5">EPS API Endpoint URL</label>
+                <input
+                  type="text"
+                  value={epsBaseUrl}
+                  onChange={e => setEpsBaseUrl(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 font-mono text-xs outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            {/* Credentials Form */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="block font-bold text-slate-300">EPS Merchant Username (Email)</label>
+                <input
+                  type="text"
+                  value={epsUsername}
+                  onChange={e => setEpsUsername(e.target.value)}
+                  placeholder="Epsdemo@gmail.com"
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block font-bold text-slate-300">EPS Password</label>
+                <input
+                  type={showEpsSecret ? "text" : "password"}
+                  value={epsPassword}
+                  onChange={e => setEpsPassword(e.target.value)}
+                  placeholder="Enter password"
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono text-xs"
+                />
+              </div>
+
+              <div className="space-y-1 sm:col-span-2">
+                <label className="block font-bold text-slate-300">Secret Hash Key (HMAC-SHA512 Secret)</label>
+                <div className="relative">
+                  <input
+                    type={showEpsSecret ? "text" : "password"}
+                    value={epsHashKey}
+                    onChange={e => setEpsHashKey(e.target.value)}
+                    placeholder="FHZxyzeps56789gfhg678ygu876o="
+                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono text-xs pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEpsSecret(!showEpsSecret)}
+                    className="absolute right-3 top-3 text-slate-500 hover:text-slate-300"
+                  >
+                    {showEpsSecret ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block font-bold text-slate-300">Merchant ID</label>
+                <input
+                  type="text"
+                  value={epsMerchantId}
+                  onChange={e => setEpsMerchantId(e.target.value)}
+                  placeholder="29e86e70-0ac6-45eb-ba04-9fcb0aaed12a"
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block font-bold text-slate-300">Store ID</label>
+                <input
+                  type="text"
+                  value={epsStoreId}
+                  onChange={e => setEpsStoreId(e.target.value)}
+                  placeholder="d44e705f-9e3a-41de-98b1-1674631637da"
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono text-xs"
+                />
+              </div>
+
+              <div className="space-y-1 sm:col-span-2">
+                <label className="block font-bold text-slate-300">Merchant Contact / Support Number</label>
+                <input
+                  type="text"
+                  value={epsMerchantNumber}
+                  onChange={e => setEpsMerchantNumber(e.target.value)}
+                  placeholder="e.g. 01700000000"
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono text-xs"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 4. SMS Notification Gateway */}
           <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2.5">

@@ -191,6 +191,14 @@ export const api = {
     return apiFetch("/health/ping-db", { method: "POST" });
   },
 
+  async pingAI() {
+    return apiFetch("/health/ping-ai", { method: "POST" });
+  },
+
+  async triggerDatabaseSeed() {
+    return apiFetch("/health/seed-db", { method: "POST" });
+  },
+
   // Auth
   async login(email: string, password: string = "DemoPass123!") {
     return apiFetch("/auth/login", {

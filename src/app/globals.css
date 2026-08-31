@@ -178,34 +178,50 @@
   scrollbar-width: none;
 }
 
+/* Sleek Modern Global Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6366f1;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(117, 155, 135, 0.3);
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #00C978;
+  background: #6366f1;
 }
 
 .custom-scrollbar-dark::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 .custom-scrollbar-dark::-webkit-scrollbar-track {
-  background: rgba(8, 13, 10, 0.6);
+  background: rgba(15, 23, 42, 0.6);
 }
 .custom-scrollbar-dark::-webkit-scrollbar-thumb {
-  background: rgba(38, 61, 49, 0.8);
+  background: #334155;
   border-radius: 9999px;
 }
 .custom-scrollbar-dark::-webkit-scrollbar-thumb:hover {
-  background: #00C978;
+  background: #6366f1;
 }
 
 .custom-scrollbar-horizontal {
@@ -214,18 +230,18 @@
   -webkit-overflow-scrolling: touch;
 }
 .custom-scrollbar-horizontal::-webkit-scrollbar {
-  height: 3px;
+  height: 4px;
 }
 .custom-scrollbar-horizontal::-webkit-scrollbar-track {
-  background: rgba(201, 217, 207, 0.4);
+  background: #f1f5f9;
   border-radius: 9999px;
 }
 .custom-scrollbar-horizontal::-webkit-scrollbar-thumb {
-  background: #759B87;
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 .custom-scrollbar-horizontal::-webkit-scrollbar-thumb:hover {
-  background: #00C978;
+  background: #6366f1;
 }
 
 /* Print-optimized corporate tax invoice stylesheet */

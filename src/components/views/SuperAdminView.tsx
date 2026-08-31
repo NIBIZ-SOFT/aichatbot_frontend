@@ -182,21 +182,53 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   const [aiSettings, setAiSettings] = useState<any>({
     api_key: "",
     api_key_masked: "",
-    ai_base_url: "https://generativelanguage.googleapis.com/v1beta/openai/",
-    master_model: "gemini-2.5-flash",
-    fallback_model: "gemini-1.5-flash",
+    ai_base_url: "https://openrouter.ai/api/v1",
+    master_model: "google/gemini-2.5-flash",
+    fallback_model: "google/gemini-2.5-flash-lite",
     embedding_model: "text-embedding-004",
     temperature: 0.3,
     max_tokens: 2048,
     rate_limit_rpm: 120,
     system_prompt_prefix: "You are an enterprise AI customer support specialist.",
     status: "Operational — High Throughput",
-    available_models: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-3.6-flash"]
+    available_models: [
+      "google/gemini-2.5-flash",
+      "google/gemini-2.5-pro",
+      "google/gemini-2.5-flash-lite",
+      "google/gemini-3.7-flash",
+      "deepseek/deepseek-chat",
+      "openai/gpt-4o-mini",
+      "openai/gpt-4o",
+      "anthropic/claude-3.5-haiku",
+      "anthropic/claude-3.5-sonnet",
+      "meta-llama/llama-3.3-70b-instruct"
+    ]
   });
   const [isSavingAI, setIsSavingAI] = useState(false);
   const [showAIKey, setShowAIKey] = useState(false);
   const [isTestingAI, setIsTestingAI] = useState(false);
   const [aiTestResult, setAiTestResult] = useState<any | null>(null);
+
+  // OpenRouter Real-time Model Catalog State
+  const [openRouterModels, setOpenRouterModels] = useState<any[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [modelSearchQuery, setModelSearchQuery] = useState("");
+  const [modelProviderFilter, setModelProviderFilter] = useState("all");
+  const [toolsOnlyFilter, setToolsOnlyFilter] = useState(true);
+
+  const loadOpenRouterModels = async (provider = modelProviderFilter, query = modelSearchQuery, toolsOnly = toolsOnlyFilter) => {
+    setIsLoadingModels(true);
+    try {
+      const res = await api.getOpenRouterModels({ query, provider, tools_only: toolsOnly });
+      if (res && res.models) {
+        setOpenRouterModels(res.models);
+      }
+    } catch (e) {
+      console.error("OpenRouter models fetch error:", e);
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
 
   // Dynamic AI Token & Pricing Engine State
   const [pricingEngineConfig, setPricingEngineConfig] = useState({
@@ -2534,37 +2566,132 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
 
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* TAB: GLOBAL AI INFRASTRUCTURE & BENCHMARK */}
+      {/* ========================================================================= */}
       {activeTab === "infrastructure" && (
         <div className="space-y-6 animate-in fade-in duration-200">
 
           {/* Top 3 KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
               <div className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Active Master Model</div>
-              <div className="text-xl font-black text-indigo-950 font-mono flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-indigo-600" />
-                {aiSettings.master_model || "gemini-2.5-flash"}
+              <div className="text-xl font-black text-indigo-950 font-mono flex items-center gap-2 truncate" title={aiSettings.master_model}>
+                <Cpu className="w-5 h-5 text-indigo-600 shrink-0" />
+                <span className="truncate">{aiSettings.master_model || "google/gemini-2.5-flash"}</span>
               </div>
               <div className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" /> High-Throughput RAG Vector Engine
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
               <div className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Platform API Configuration</div>
               <div className="text-xl font-black text-slate-900 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
                 {aiSettings.api_key ? "Live Connected" : "API Key Required"}
               </div>
-              <div className="text-[11px] text-slate-500 font-mono">
+              <div className="text-[11px] text-slate-500 font-mono truncate">
                 {aiSettings.api_key_masked || "Master AI Pool Active"}
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-2">
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-2">
               <div className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Rate Limit Policy</div>
               <div className="text-xl font-black text-slate-900 font-mono">{aiSettings.rate_limit_rpm || 120} RPM</div>
               <div className="text-[11px] text-indigo-600 font-bold">Per-Tenant Token Throttling</div>
+            </div>
+          </div>
+
+          {/* Quick Gateway Presets Banner */}
+          <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 p-5 rounded-3xl border border-indigo-100/80 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 className="text-xs font-extrabold text-indigo-950 flex items-center gap-1.5 uppercase tracking-wider">
+                  <Zap className="w-4 h-4 text-indigo-600" /> Gateway Quick Presets (1-Click Auto-Fill)
+                </h4>
+                <p className="text-[11.5px] text-slate-600">
+                  Switch between OpenRouter, Direct Google Gemini, Direct OpenAI, or DeepSeek without manual URL entry.
+                </p>
+              </div>
+              <span className="text-[10.5px] font-bold bg-white text-indigo-700 px-3 py-1 rounded-full border border-indigo-200 shadow-xs shrink-0 self-start">
+                ⚡ Universal OpenAI SDK
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              {[
+                {
+                  name: "OpenRouter",
+                  badge: "390+ Models",
+                  url: "https://openrouter.ai/api/v1",
+                  master: "google/gemini-2.5-flash",
+                  fallback: "google/gemini-2.5-flash-lite",
+                  keyPrefix: "sk-or-v1-...",
+                  border: "border-indigo-300 bg-white text-indigo-900 hover:border-indigo-500"
+                },
+                {
+                  name: "Google Gemini",
+                  badge: "Direct API",
+                  url: "https://generativelanguage.googleapis.com/v1beta/openai/",
+                  master: "gemini-2.5-flash",
+                  fallback: "gemini-1.5-flash",
+                  keyPrefix: "AIzaSy...",
+                  border: "border-blue-200 bg-white text-blue-950 hover:border-blue-400"
+                },
+                {
+                  name: "OpenAI",
+                  badge: "GPT-4o & o3",
+                  url: "https://api.openai.com/v1",
+                  master: "gpt-4o-mini",
+                  fallback: "gpt-4o",
+                  keyPrefix: "sk-proj-...",
+                  border: "border-emerald-200 bg-white text-emerald-950 hover:border-emerald-400"
+                },
+                {
+                  name: "DeepSeek",
+                  badge: "V3 / R1 Lowest Cost",
+                  url: "https://api.deepseek.com/v1",
+                  master: "deepseek-chat",
+                  fallback: "deepseek-reasoner",
+                  keyPrefix: "sk-...",
+                  border: "border-purple-200 bg-white text-purple-950 hover:border-purple-400"
+                },
+                {
+                  name: "Groq High-Speed",
+                  badge: "750+ Tokens/s",
+                  url: "https://api.groq.com/openai/v1",
+                  master: "llama-3.3-70b-versatile",
+                  fallback: "mixtral-8x7b-32768",
+                  keyPrefix: "gsk_...",
+                  border: "border-amber-200 bg-white text-amber-950 hover:border-amber-400"
+                }
+              ].map((p, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setAiSettings({
+                      ...aiSettings,
+                      ai_base_url: p.url,
+                      master_model: p.master,
+                      fallback_model: p.fallback
+                    });
+                    showToast("Preset Applied", `Configured ${p.name} gateway parameters (${p.master})`, "success");
+                    if (p.url.includes("openrouter")) {
+                      loadOpenRouterModels();
+                    }
+                  }}
+                  className={`p-3 rounded-2xl border text-left transition-all hover:shadow-sm cursor-pointer ${p.border} ${aiSettings.ai_base_url?.includes(p.url.replace("https://", "").split("/")[0]) ? "ring-2 ring-indigo-600 font-extrabold" : ""}`}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-xs font-black">{p.name}</span>
+                    <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-slate-100 font-bold text-slate-700">{p.badge}</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-mono mt-1 truncate">{p.master}</div>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -2572,18 +2699,18 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {/* Left 2 Cols: Interactive Configuration Form */}
-            <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+            <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-xs space-y-5">
               <div className="flex justify-between items-start border-b border-slate-100 pb-4">
                 <div>
                   <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-indigo-600" /> Global AI Model & API Configuration
+                    <Sliders className="w-4 h-4 text-indigo-600" /> Global AI Model & API Gateway Configuration
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Configure Google Gemini credentials, select LLM models, and tune temperature for all multi-tenant workspaces.
+                    Configure OpenRouter, Gemini, or OpenAI credentials, select active LLMs, and tune generation hyperparameters.
                   </p>
                 </div>
                 <span className="text-[10.5px] font-mono font-bold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-200">
-                  Global LLM Engine
+                  Universal Gateway
                 </span>
               </div>
 
@@ -2593,7 +2720,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
                     <label className="block font-bold text-slate-800">
-                      Google Gemini / AI API Key *
+                      AI Gateway API Key *
                     </label>
                     <button
                       type="button"
@@ -2609,7 +2736,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                     required
                     value={aiSettings.api_key || ""}
                     onChange={e => setAiSettings({ ...aiSettings, api_key: e.target.value })}
-                    placeholder="Enter Google Gemini API Key (e.g. AIzaSy... or sk-...)"
+                    placeholder="Enter OpenRouter Key (sk-or-v1-...) or Gemini Key (AIzaSy...)"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-indigo-500 focus:bg-white transition-all shadow-xs"
                   />
                   <p className="text-[10.5px] text-slate-400">
@@ -2619,12 +2746,12 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
 
                 {/* AI Base URL */}
                 <div className="space-y-1.5">
-                  <label className="block font-bold text-slate-800">AI Base URL / OpenAI-Compatible Gateway</label>
+                  <label className="block font-bold text-slate-800">AI Base URL / OpenAI-Compatible Endpoint</label>
                   <input
                     type="text"
                     value={aiSettings.ai_base_url || ""}
                     onChange={e => setAiSettings({ ...aiSettings, ai_base_url: e.target.value })}
-                    placeholder="https://generativelanguage.googleapis.com/v1beta/openai/"
+                    placeholder="https://openrouter.ai/api/v1"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-indigo-500 focus:bg-white transition-all"
                   />
                 </div>
@@ -2635,30 +2762,48 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                     <label className="block font-bold text-slate-800">
                       Primary Master AI Model *
                     </label>
-                    <select
+                    <input
+                      type="text"
                       value={aiSettings.master_model}
                       onChange={e => setAiSettings({ ...aiSettings, master_model: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-bold outline-none focus:border-indigo-500 focus:bg-white transition-all cursor-pointer"
-                    >
-                      <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended — Ultra Fast)</option>
-                      <option value="gemini-2.0-flash">gemini-2.0-flash (Multimodal & Fast)</option>
-                      <option value="gemini-1.5-flash">gemini-1.5-flash (Standard Production)</option>
-                      <option value="gemini-1.5-pro">gemini-1.5-pro (High Reasoning & 2M Context)</option>
-                      <option value="gemini-3.6-flash">gemini-3.6-flash (Vector Engine Preview)</option>
-                    </select>
+                      placeholder="e.g. google/gemini-2.5-flash or openai/gpt-4o-mini"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-bold outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                    />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {["google/gemini-2.5-flash", "deepseek/deepseek-chat", "openai/gpt-4o-mini", "anthropic/claude-3.5-haiku"].map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setAiSettings({ ...aiSettings, master_model: m })}
+                          className={`text-[10px] px-2 py-0.5 rounded-md border font-mono transition-all cursor-pointer ${aiSettings.master_model === m ? "bg-indigo-600 text-white border-indigo-600 font-bold" : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"}`}
+                        >
+                          {m.split("/")[1] || m}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
                     <label className="block font-bold text-slate-800">Fallback Failover Model</label>
-                    <select
-                      value={aiSettings.fallback_model || "gemini-1.5-flash"}
+                    <input
+                      type="text"
+                      value={aiSettings.fallback_model || ""}
                       onChange={e => setAiSettings({ ...aiSettings, fallback_model: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-indigo-500 focus:bg-white transition-all cursor-pointer"
-                    >
-                      <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                      <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-                      <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                    </select>
+                      placeholder="e.g. google/gemini-2.5-flash-lite"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                    />
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {["google/gemini-2.5-flash-lite", "openai/gpt-4o-mini", "gemini-1.5-flash"].map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setAiSettings({ ...aiSettings, fallback_model: m })}
+                          className={`text-[10px] px-2 py-0.5 rounded-md border font-mono transition-all cursor-pointer ${aiSettings.fallback_model === m ? "bg-slate-800 text-white border-slate-800 font-bold" : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"}`}
+                        >
+                          {m.split("/")[1] || m}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -2736,13 +2881,13 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
             <div className="space-y-5">
 
               {/* AI Connectivity Benchmark Panel */}
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4 text-xs">
                 <div>
                   <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
                     <Terminal className="w-4 h-4 text-indigo-600" /> Live AI Cluster Health Benchmark
                   </h3>
                   <p className="text-slate-500 text-[11.5px] mt-0.5">
-                    Executes an end-to-end prompt test through the primary Google Gemini model cluster using the configured key.
+                    Executes an end-to-end prompt test through the primary model cluster using the configured gateway and key.
                   </p>
                 </div>
 
@@ -2771,7 +2916,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
               </div>
 
               {/* RAG & Token Architecture Reference */}
-              <div className="bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-sm space-y-3 text-xs">
+              <div className="bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-xs space-y-3 text-xs">
                 <div className="font-extrabold text-sm text-indigo-300 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-indigo-400" /> RAG & Multitenancy Engine
                 </div>
@@ -2788,14 +2933,200 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                     <span className="text-indigo-400 font-bold">Up to 2M Tokens</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Metering Engine:</span>
-                    <span className="text-emerald-400 font-bold">Real-time UsageRecord</span>
+                    <span className="text-slate-400">Gateway Protocol:</span>
+                    <span className="text-emerald-400 font-bold">OpenAI Async Standard</span>
                   </div>
                 </div>
               </div>
 
             </div>
 
+          </div>
+
+          {/* Real-Time OpenRouter Live Models Explorer & Pricing Matrix */}
+          <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200 shadow-xs space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-indigo-600" /> OpenRouter Real-Time Model Explorer & Pricing Matrix
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Live API sync from OpenRouter with real-time prompt/completion pricing ($/1M tokens), context window, and tool-calling validation.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => loadOpenRouterModels()}
+                  disabled={isLoadingModels}
+                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingModels ? "animate-spin" : ""}`} />
+                  <span>Sync Live Models</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Bar & Search */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+              {/* Provider Filter Chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                {[
+                  { id: "all", label: "All Models" },
+                  { id: "tools", label: "⚡ Tool Calling (Recommended)" },
+                  { id: "google", label: "Google" },
+                  { id: "openai", label: "OpenAI" },
+                  { id: "deepseek", label: "DeepSeek" },
+                  { id: "anthropic", label: "Anthropic" },
+                  { id: "meta-llama", label: "Meta Llama" },
+                  { id: "free", label: "🎁 100% Free" }
+                ].map((f) => {
+                  const isActive = f.id === "tools" ? toolsOnlyFilter : (modelProviderFilter === f.id);
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => {
+                        if (f.id === "tools") {
+                          const nextVal = !toolsOnlyFilter;
+                          setToolsOnlyFilter(nextVal);
+                          loadOpenRouterModels(modelProviderFilter, modelSearchQuery, nextVal);
+                        } else {
+                          setModelProviderFilter(f.id);
+                          loadOpenRouterModels(f.id, modelSearchQuery, toolsOnlyFilter);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer shrink-0 ${isActive ? "bg-indigo-600 text-white shadow-xs" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+                    >
+                      {f.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative min-w-[240px]">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={modelSearchQuery}
+                  onChange={(e) => {
+                    setModelSearchQuery(e.target.value);
+                    loadOpenRouterModels(modelProviderFilter, e.target.value, toolsOnlyFilter);
+                  }}
+                  placeholder="Search 390+ models..."
+                  className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Models Table / Grid */}
+            {isLoadingModels ? (
+              <div className="py-16 text-center text-slate-400 space-y-3">
+                <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-500" />
+                <p className="text-xs font-bold">Fetching 390+ real-time models and live pricing from OpenRouter API...</p>
+              </div>
+            ) : openRouterModels.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 space-y-2 bg-slate-50 rounded-2xl border border-slate-200">
+                <AlertTriangle className="w-6 h-6 mx-auto text-amber-500" />
+                <div className="text-xs font-bold">No matching models found</div>
+                <button
+                  onClick={() => {
+                    setModelSearchQuery("");
+                    setModelProviderFilter("all");
+                    setToolsOnlyFilter(false);
+                    loadOpenRouterModels("all", "", false);
+                  }}
+                  className="text-xs text-indigo-600 font-bold hover:underline cursor-pointer"
+                >
+                  Reset all filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 max-h-[580px] overflow-y-auto pr-1">
+                {openRouterModels.slice(0, 60).map((m: any) => {
+                  const isMaster = aiSettings.master_model === m.id;
+                  const isFallback = aiSettings.fallback_model === m.id;
+
+                  return (
+                    <div
+                      key={m.id}
+                      className={`p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-3 ${isMaster ? "border-indigo-500 bg-indigo-50/40 shadow-xs" : isFallback ? "border-amber-400 bg-amber-50/40" : "border-slate-200 hover:border-slate-300 bg-white"}`}
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                            {m.provider}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {m.supports_tools && (
+                              <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1" title="Supports Native Function Calling">
+                                ⚡ Tools
+                              </span>
+                            )}
+                            {m.is_free && (
+                              <span className="text-[9.5px] font-black px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">
+                                🎁 Free
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-xs font-black text-slate-900 font-mono truncate" title={m.id}>
+                          {m.id}
+                        </div>
+                        <div className="text-[11px] text-slate-600 font-medium line-clamp-1">
+                          {m.name}
+                        </div>
+                      </div>
+
+                      {/* Pricing & Context */}
+                      <div className="pt-2 border-t border-slate-100 space-y-1.5 text-[11px]">
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">Prompt / 1M:</span>
+                          <span className="font-bold text-slate-900 font-mono">{m.pricing_prompt}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">Completion / 1M:</span>
+                          <span className="font-bold text-slate-900 font-mono">{m.pricing_completion}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-500">Context Window:</span>
+                          <span className="font-bold text-slate-700 font-mono">{(m.context_length || 4096).toLocaleString()} tokens</span>
+                        </div>
+                      </div>
+
+                      {/* Quick 1-Click Action Buttons */}
+                      <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAiSettings({ ...aiSettings, master_model: m.id });
+                            showToast("Master Model Selected", `Set ${m.id} as Primary Master Model. Click 'Save AI Model Configuration' to commit.`, "success");
+                          }}
+                          className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${isMaster ? "bg-indigo-600 text-white" : "bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-800"}`}
+                        >
+                          {isMaster ? <Check className="w-3 h-3" /> : null}
+                          <span>{isMaster ? "Active Master" : "Set as Master"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAiSettings({ ...aiSettings, fallback_model: m.id });
+                            showToast("Fallback Model Selected", `Set ${m.id} as Fallback Model.`, "info");
+                          }}
+                          className={`px-2.5 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 ${isFallback ? "bg-amber-600 text-white" : "bg-slate-100 hover:bg-slate-200 text-slate-700"}`}
+                        >
+                          {isFallback ? <Check className="w-3 h-3" /> : null}
+                          <span>{isFallback ? "Fallback" : "Fallback"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
         </div>

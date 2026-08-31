@@ -667,6 +667,15 @@ export const api = {
     return apiFetch("/superadmin/infrastructure/settings");
   },
 
+  async getOpenRouterModels(params?: { query?: string; provider?: string; tools_only?: boolean }) {
+    const q = new URLSearchParams();
+    if (params?.query) q.set("query", params.query);
+    if (params?.provider) q.set("provider", params.provider);
+    if (params?.tools_only) q.set("tools_only", "true");
+    const qs = q.toString() ? `?${q.toString()}` : "";
+    return apiFetch(`/superadmin/infrastructure/openrouter-models${qs}`);
+  },
+
   async updateSuperAdminAISettings(payload: any) {
     return apiFetch("/superadmin/infrastructure/settings", {
       method: "POST",

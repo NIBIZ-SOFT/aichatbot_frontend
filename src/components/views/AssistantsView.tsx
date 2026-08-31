@@ -334,10 +334,23 @@ export default function AssistantsView() {
                     onChange={e => setModelName(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 bg-white font-medium text-slate-900 cursor-pointer"
                   >
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Ultra Fast)</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (Advanced Reasoning)</option>
-                    <option value="gemini-2.0-flash">Gemini 2.0 Flash (Next-Gen)</option>
-                    <option value="gemini-3.6-flash">Gemini 3.6 Flash (Enterprise Web2API)</option>
+                    <optgroup label="OpenRouter Universal Gateway (Recommended)">
+                      <option value="google/gemini-2.5-flash">Google Gemini 2.5 Flash (⚡ Fast & Tools)</option>
+                      <option value="google/gemini-2.5-pro">Google Gemini 2.5 Pro (2M Context)</option>
+                      <option value="google/gemini-2.5-flash-lite">Google Gemini 2.5 Flash Lite (Budget)</option>
+                      <option value="deepseek/deepseek-chat">DeepSeek V3 / Chat (Ultra Low Cost)</option>
+                      <option value="openai/gpt-4o-mini">OpenAI GPT-4o Mini (High Reliability)</option>
+                      <option value="openai/gpt-4o">OpenAI GPT-4o Flagship</option>
+                      <option value="anthropic/claude-3.5-haiku">Claude 3.5 Haiku (High Speed)</option>
+                      <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet (Deep Reasoning)</option>
+                      <option value="meta-llama/llama-3.3-70b-instruct">Meta Llama 3.3 70B</option>
+                    </optgroup>
+                    <optgroup label="Direct Google Gemini API">
+                      <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                      <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                      <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    </optgroup>
                   </select>
                 </div>
                 <div>

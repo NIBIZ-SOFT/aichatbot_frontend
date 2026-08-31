@@ -34,6 +34,7 @@ export default function WebsitesView() {
     allow_instant_checkout: true,
     cod_enabled: true,
     bkash_enabled: true,
+    eps_enabled: true,
     delivery_charge_inside_dhaka: 60,
     delivery_charge_outside_dhaka: 120,
   });
@@ -369,6 +370,20 @@ export default function WebsitesView() {
                           type="checkbox"
                           checked={ecomConfig.bkash_enabled}
                           onChange={e => setEcomConfig({ ...ecomConfig, bkash_enabled: e.target.checked })}
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
+                        />
+                      </div>
+
+                      {/* EPS Multi-Channel Online */}
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">EPS Online Payment</div>
+                          <div className="text-[11px] text-slate-500">Cards, NetBanking, Nagad, Rocket</div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={ecomConfig.eps_enabled}
+                          onChange={e => setEcomConfig({ ...ecomConfig, eps_enabled: e.target.checked })}
                           className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
                         />
                       </div>

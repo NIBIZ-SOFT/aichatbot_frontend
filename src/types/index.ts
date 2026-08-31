@@ -103,6 +103,7 @@ export interface Website {
     allow_instant_checkout?: boolean;
     cod_enabled?: boolean;
     bkash_enabled?: boolean;
+    eps_enabled?: boolean;
     delivery_charge_inside_dhaka?: number;
     delivery_charge_outside_dhaka?: number;
   };
@@ -128,6 +129,7 @@ export interface Product {
   stock_quantity: number;
   stock_status: 'in_stock' | 'out_of_stock' | 'pre_order' | string;
   images: string[];
+  features?: string[];
   description?: string | null;
   specifications: Record<string, any>;
   tags: string[];
@@ -168,7 +170,7 @@ export interface Order {
   id: string;
   order_number: string;
   tenant_id: string;
-  website_id?: string | null;
+  website_id: string;
   conversation_id?: string | null;
   customer_name: string;
   customer_phone: string;
@@ -176,10 +178,19 @@ export interface Order {
   delivery_address: string;
   delivery_city: string;
   delivery_charge: number;
-  items_json: OrderItem[];
+  items_json: Array<{
+    product_id: string;
+    title: string;
+    unit_price: number;
+    quantity: number;
+    line_total: number;
+    selected_size?: string | null;
+    selected_color?: string | null;
+    image_url?: string | null;
+  }>;
   subtotal_amount: number;
   total_amount: number;
-  payment_method: 'cash_on_delivery' | 'bkash' | string;
+  payment_method: 'cash_on_delivery' | 'bkash' | 'eps' | string;
   payment_status: 'unpaid' | 'paid' | 'refunded' | string;
   bkash_trx_id?: string | null;
   order_status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | string;
@@ -197,6 +208,13 @@ export interface EcommerceSettings {
   bkash_base_url?: string;
   bkash_app_key_masked?: string | null;
   bkash_username_masked?: string | null;
+  eps_enabled?: boolean;
+  eps_is_sandbox?: boolean;
+  eps_base_url?: string;
+  eps_username_masked?: string | null;
+  eps_merchant_id_masked?: string | null;
+  eps_store_id_masked?: string | null;
+  eps_merchant_number?: string | null;
   delivery_charge_inside_dhaka: number;
   delivery_charge_outside_dhaka: number;
   sms_notifications_enabled: boolean;

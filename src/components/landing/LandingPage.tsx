@@ -135,7 +135,7 @@ export default function LandingPage() {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const calculatePrice = (monthly: number, annual?: number) => {
@@ -288,7 +288,7 @@ export default function LandingPage() {
         }}
       >
         <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
-          
+
           {/* Logo & Platform Name */}
           <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group min-w-0">
             {currentTheme.logo_url ? (
@@ -303,7 +303,7 @@ export default function LandingPage() {
             )}
             <div className="min-w-0">
               <div className="font-extrabold text-white text-sm sm:text-base tracking-tight flex items-center gap-1.5 truncate">
-                <span className="truncate">{currentTheme.platform_name || "Enterprise AIaaS"}</span>
+                <span className="truncate">{currentTheme.platform_name || "Jobab Chat"}</span>
                 <span
                   className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold uppercase tracking-wide border text-white shrink-0"
                   style={{
@@ -454,7 +454,7 @@ export default function LandingPage() {
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-6">
-          
+
           {/* Top Pill */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-semibold backdrop-blur-md"
             style={{
@@ -579,7 +579,7 @@ export default function LandingPage() {
 
               {/* 2-Column Split: Customer Chat on Left & Live Inbox Agent on Right */}
               <div className={`grid grid-cols-1 md:grid-cols-12 gap-6 pt-4 items-start ${isFullscreen ? "flex-1 min-h-0" : ""}`}>
-                
+
                 {/* LEFT: Customer Live Web Widget View */}
                 <div className={`md:col-span-6 bg-slate-950/80 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3 flex flex-col justify-between ${isFullscreen ? "h-full" : "h-[430px]"}`}>
                   <div className="flex-1 min-h-0 flex flex-col">
@@ -603,11 +603,10 @@ export default function LandingPage() {
                       {simMessages.map((msg, idx) => (
                         <div key={idx} className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}>
                           <div
-                            className={`max-w-[92%] p-3 rounded-2xl text-xs shadow-sm ${
-                              msg.sender === "user"
+                            className={`max-w-[92%] p-3 rounded-2xl text-xs shadow-sm ${msg.sender === "user"
                                 ? "text-white font-medium rounded-br-xs"
                                 : "bg-slate-900/90 text-slate-200 border border-slate-700/80 rounded-bl-xs shadow-md"
-                            }`}
+                              }`}
                             style={msg.sender === "user" ? { backgroundColor: currentTheme.primary_color } : {}}
                           >
                             {msg.sender === "user" ? (
@@ -622,9 +621,8 @@ export default function LandingPage() {
                               </div>
                             )}
                             {/* WhatsApp Style Time & Status inside Bubble */}
-                            <div className={`flex items-center justify-end gap-1.5 text-[9.5px] mt-1.5 pt-1 border-t ${
-                              msg.sender === "user" ? "border-white/20 text-white/80" : "border-slate-800/80 text-slate-400"
-                            }`}>
+                            <div className={`flex items-center justify-end gap-1.5 text-[9.5px] mt-1.5 pt-1 border-t ${msg.sender === "user" ? "border-white/20 text-white/80" : "border-slate-800/80 text-slate-400"
+                              }`}>
                               <span>{msg.time || "Just now"}</span>
                               {msg.sender === "user" && (
                                 <span className="text-[10px] text-emerald-300 font-mono font-bold">✓✓</span>
@@ -769,7 +767,7 @@ export default function LandingPage() {
       <section className="py-12 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            
+
             <div className="space-y-1">
               <div
                 className="text-3xl sm:text-4xl font-black tracking-tight"
@@ -831,7 +829,7 @@ export default function LandingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
+
           {/* Pillar 1: Web Widget */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3 hover:shadow-md transition-shadow relative overflow-hidden">
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full absolute top-4 right-4">
@@ -908,7 +906,7 @@ export default function LandingPage() {
       {/* ========================================================================= */}
       <section id="features" className="py-20 bg-slate-900 text-white border-y border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          
+
           <div className="text-center space-y-3 max-w-3xl mx-auto">
             <div className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center justify-center gap-1.5">
               <Cpu className="w-4 h-4" /> Enterprise AI Architecture
@@ -935,11 +933,10 @@ export default function LandingPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveFeatureTab(tab.id as any)}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                    isActive
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${isActive
                       ? "text-white shadow-md"
                       : "bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800"
-                  }`}
+                    }`}
                   style={isActive ? { backgroundColor: currentTheme.primary_color } : {}}
                 >
                   <Icon className="w-4 h-4" />
@@ -1129,7 +1126,7 @@ export default function LandingPage() {
       {/* ========================================================================= */}
       <section id="calculator" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm space-y-8 max-w-4xl mx-auto">
-          
+
           <div className="text-center space-y-2">
             <div className="text-xs font-bold uppercase tracking-wider text-blue-600 flex items-center justify-center gap-1.5">
               <Calculator className="w-4 h-4" /> ROI & Cost Savings Calculator
@@ -1227,17 +1224,15 @@ export default function LandingPage() {
           <div className="inline-flex items-center p-1 bg-slate-200 rounded-xl text-xs font-bold mt-4 flex-wrap justify-center gap-1">
             <button
               onClick={() => setBillingCycle("monthly")}
-              className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${
-                billingCycle === "monthly" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${billingCycle === "monthly" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               Monthly Billing
             </button>
             <button
               onClick={() => setBillingCycle("annual")}
-              className={`px-4 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                billingCycle === "annual" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
-              }`}
+              className={`px-4 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${billingCycle === "annual" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                }`}
             >
               <span>Annual Billing</span>
               <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded font-extrabold">SAVE 15%</span>
@@ -1245,9 +1240,8 @@ export default function LandingPage() {
             {isPaygEnabled && (
               <button
                 onClick={() => setBillingCycle("custom")}
-                className={`px-4 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                  billingCycle === "custom" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`px-4 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${billingCycle === "custom" ? "bg-white text-slate-900 shadow-xs" : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                 <span>⚡ Pay-As-You-Go / Custom Builder</span>
@@ -1259,7 +1253,7 @@ export default function LandingPage() {
         {/* Dynamic View: Custom Builder vs Standard Tier Cards */}
         {billingCycle === "custom" ? (
           <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 bg-slate-50/80 p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
-            
+
             {/* Left Column: Interactive Resource Sliders */}
             <div className="lg:col-span-7 space-y-6">
               <div>
@@ -1393,7 +1387,7 @@ export default function LandingPage() {
 
             {/* Right Column: Dynamic Quote & Prepaid AI Wallet */}
             <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
-              
+
               {/* Card 1: Custom Plan Quote */}
               <div
                 className="bg-white p-6 sm:p-7 rounded-3xl border shadow-lg space-y-5"
@@ -1422,7 +1416,7 @@ export default function LandingPage() {
                   if (customModules.custom_branding) modCost += 1500;
                   if (customModules.sms_notifications) modCost += 1000;
                   if (customModules.dedicated_sla) modCost += 3500;
-                  
+
                   const monthlySubtotal = Math.round((base + tokenCost + seatCost + websiteCost + docsCost + modCost) / 10) * 10;
                   const annualRate = Math.round((monthlySubtotal * 0.85) / 10) * 10;
                   const finalDisplayPrice = customAnnual ? annualRate : monthlySubtotal;
@@ -1498,11 +1492,10 @@ export default function LandingPage() {
                     <button
                       key={amt}
                       onClick={() => setWalletTopupPreset(amt)}
-                      className={`py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
-                        walletTopupPreset === amt
+                      className={`py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${walletTopupPreset === amt
                           ? "bg-emerald-500 text-white border-emerald-400 shadow-sm"
                           : "bg-slate-800/80 text-slate-300 border-slate-700 hover:border-slate-500"
-                      }`}
+                        }`}
                     >
                       ৳{amt}
                     </button>
@@ -1533,7 +1526,7 @@ export default function LandingPage() {
               const displayPrice = calculatePrice(monthlyPrice, annualPrice);
               const annualSavings = (monthlyPrice * 12) - (annualPrice * 12);
               const isHighlighted = plan.is_popular || (plan.badge_text && plan.badge_text.toLowerCase().includes("popular"));
-              
+
               // Build features list dynamically
               let featuresList: string[] = [];
               if (Array.isArray(plan.features) && plan.features.length > 0) {
@@ -1549,9 +1542,8 @@ export default function LandingPage() {
               return (
                 <div
                   key={plan.code || plan.id || plan.name}
-                  className={`bg-white p-7 rounded-3xl border shadow-sm space-y-6 flex flex-col justify-between transition-all relative ${
-                    isHighlighted ? "shadow-xl hover:shadow-2xl" : "border-slate-200 hover:border-slate-300"
-                  }`}
+                  className={`bg-white p-7 rounded-3xl border shadow-sm space-y-6 flex flex-col justify-between transition-all relative ${isHighlighted ? "shadow-xl hover:shadow-2xl" : "border-slate-200 hover:border-slate-300"
+                    }`}
                   style={
                     isHighlighted
                       ? { borderColor: currentTheme.primary_color, borderWidth: "2px" }
@@ -1609,11 +1601,10 @@ export default function LandingPage() {
                       setSelectedPlanTier(plan.code || plan.id);
                       setShowPricingModal(true);
                     }}
-                    className={`w-full py-2.5 font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer ${
-                      isHighlighted
+                    className={`w-full py-2.5 font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer ${isHighlighted
                         ? "text-white hover:opacity-95 shadow-md"
                         : "bg-slate-900 hover:bg-slate-800 text-white"
-                    }`}
+                      }`}
                     style={isHighlighted ? { backgroundColor: currentTheme.primary_color } : {}}
                   >
                     Choose {plan.name}
@@ -1630,7 +1621,7 @@ export default function LandingPage() {
       {/* ========================================================================= */}
       <section id="faq" className="py-20 bg-white border-t border-slate-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          
+
           <div className="text-center space-y-2">
             <div className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center justify-center gap-1.5">
               <HelpCircle className="w-4 h-4 text-blue-600" /> Got Questions?
@@ -1747,7 +1738,7 @@ export default function LandingPage() {
                 AI
               </div>
             )}
-            <span className="font-bold text-white">{currentTheme.platform_name || "Enterprise AIaaS"}</span>
+            <span className="font-bold text-white">{currentTheme.platform_name || "Jobab Chat"}</span>
             <span>• {currentTheme.footer_text || "© 2026 All Rights Reserved"}</span>
           </div>
 

@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAuth, DEMO_ACCOUNTS, DemoAccount } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { useToast } from "../../context/ToastContext";
-import { 
-  Building2, Shield, User, Key, ArrowRight, 
+import {
+  Building2, Shield, User, Key, ArrowRight,
   CheckCircle2, Bot, Users, Globe, Lock, ShieldCheck,
   Eye, EyeOff, Terminal, ChevronDown, ChevronUp, AlertCircle, Layers
 } from "lucide-react";
@@ -66,7 +66,7 @@ export default function LoginScreen() {
       className="min-h-screen w-full text-slate-100 flex flex-col justify-between font-sans antialiased transition-colors"
       style={{ backgroundColor: currentTheme.dark_surface }}
     >
-      
+
       {/* Top Header */}
       <header
         className="px-4 sm:px-10 py-3.5 sm:py-4 flex items-center justify-between border-b backdrop-blur-md sticky top-0 z-30 transition-colors gap-2 sm:gap-4"
@@ -95,7 +95,7 @@ export default function LoginScreen() {
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={() => setShowPricingModal(true)}
@@ -125,7 +125,7 @@ export default function LoginScreen() {
 
       {/* Main Authentication Centerpiece */}
       <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 max-w-5xl mx-auto w-full my-auto">
-        
+
         {/* Core Login Card */}
         <div
           className="w-full max-w-md border rounded-2xl p-5 sm:p-8 shadow-2xl relative overflow-hidden transition-colors"
@@ -134,7 +134,7 @@ export default function LoginScreen() {
             borderColor: currentTheme.dark_border
           }}
         >
-          
+
           {/* Form Title & Subtitle */}
           <div className="text-center mb-5 space-y-1">
             <h2 className="text-xl font-bold text-white tracking-tight">Sign In to Workspace</h2>
@@ -152,36 +152,32 @@ export default function LoginScreen() {
                 <button
                   type="button"
                   onClick={() => { setEmail("admin@gmail.com"); setPassword("12345678"); }}
-                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
-                    email === "admin@gmail.com" ? "bg-amber-500/20 border-amber-500 text-amber-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
-                  }`}
+                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${email === "admin@gmail.com" ? "bg-amber-500/20 border-amber-500 text-amber-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                    }`}
                 >
                   <span className="truncate font-semibold">🛡️ Super Admin</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setEmail("ecommerceclient1@gmail.com"); setPassword("12345678"); }}
-                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
-                    email === "ecommerceclient1@gmail.com" ? "bg-indigo-500/20 border-indigo-500 text-indigo-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
-                  }`}
+                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${email === "ecommerceclient1@gmail.com" ? "bg-indigo-500/20 border-indigo-500 text-indigo-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                    }`}
                 >
                   <span className="truncate font-semibold">🛍️ E-Comm 1 (Padma)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setEmail("erpclient1@gmail.com"); setPassword("12345678"); }}
-                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
-                    email === "erpclient1@gmail.com" ? "bg-blue-500/20 border-blue-500 text-blue-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
-                  }`}
+                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${email === "erpclient1@gmail.com" ? "bg-blue-500/20 border-blue-500 text-blue-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                    }`}
                 >
                   <span className="truncate font-semibold">🏢 ERP 1 (Apex)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setEmail("ecommerceclient2@gmail.com"); setPassword("12345678"); }}
-                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${
-                    email === "ecommerceclient2@gmail.com" ? "bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
-                  }`}
+                  className={`p-1.5 rounded-lg border text-left font-medium transition-all flex items-center justify-between cursor-pointer ${email === "ecommerceclient2@gmail.com" ? "bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-xs" : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                    }`}
                 >
                   <span className="truncate font-semibold">🖥️ E-Comm 2 (Horizon)</span>
                 </button>
@@ -298,7 +294,7 @@ export default function LoginScreen() {
               <Building2 className="w-3.5 h-3.5" style={{ color: currentTheme.primary_color }} />
               View Pricing & Self-Serve Setup
             </button>
-            
+
             <div className="pt-1 text-[11px] text-slate-500 flex items-center justify-center gap-1.5">
               <Lock className="w-3 h-3 text-slate-500" />
               <span>Encrypted Session • Multi-Tenant Isolation</span>
@@ -316,7 +312,7 @@ export default function LoginScreen() {
               borderColor: currentTheme.dark_border
             }}
           >
-            
+
             <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => setShowDebugDrawer(!showDebugDrawer)}>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/40 flex items-center gap-1">
@@ -351,19 +347,18 @@ export default function LoginScreen() {
                         >
                           {acc.name}
                         </span>
-                        <span className={`text-[9.5px] px-2 py-0.2 rounded-full font-medium ${
-                          acc.role === 'super_admin' 
+                        <span className={`text-[9.5px] px-2 py-0.2 rounded-full font-medium ${acc.role === 'super_admin'
                             ? 'bg-amber-950/60 text-amber-300 border border-amber-800/40'
                             : acc.role === 'tenant_owner'
-                            ? 'bg-blue-950/60 text-blue-300 border border-blue-800/40'
-                            : acc.role === 'support_agent' && acc.department.includes('Tech')
-                            ? 'bg-cyan-950/60 text-cyan-300 border border-cyan-800/40'
-                            : acc.role === 'support_agent'
-                            ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40'
-                            : acc.role === 'sales_agent'
-                            ? 'bg-teal-950/60 text-teal-300 border border-teal-800/40'
-                            : 'bg-slate-800 text-slate-300'
-                        }`}>
+                              ? 'bg-blue-950/60 text-blue-300 border border-blue-800/40'
+                              : acc.role === 'support_agent' && acc.department.includes('Tech')
+                                ? 'bg-cyan-950/60 text-cyan-300 border border-cyan-800/40'
+                                : acc.role === 'support_agent'
+                                  ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40'
+                                  : acc.role === 'sales_agent'
+                                    ? 'bg-teal-950/60 text-teal-300 border border-teal-800/40'
+                                    : 'bg-slate-800 text-slate-300'
+                          }`}>
                           {acc.department}
                         </span>
                       </div>
@@ -405,7 +400,7 @@ export default function LoginScreen() {
           borderColor: currentTheme.dark_border
         }}
       >
-        {currentTheme.footer_text || "Enterprise AIaaS Platform • Multi-Tenant PostgreSQL 18 & Google Gemini AI • ISO/IEC 27001 Security Standard"}
+        {currentTheme.footer_text || "Jobab Chat Platform • Multi-Tenant PostgreSQL 18 & Google Gemini AI • ISO/IEC 27001 Security Standard"}
       </footer>
     </div>
   );

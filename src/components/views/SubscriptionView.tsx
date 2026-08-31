@@ -336,7 +336,7 @@ export default function SubscriptionView() {
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto pb-16 font-sans antialiased">
-      
+
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
         <div>
@@ -369,7 +369,7 @@ export default function SubscriptionView() {
       {/* 1. Live Active Subscription & Resource Quota Pulse */}
       {subscription && (
         <div className="bg-[#080D0A] text-white p-6 sm:p-7 rounded-2xl border border-[#1A2922] shadow-sm space-y-6 relative overflow-hidden">
-          
+
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#17271F] pb-5">
             <div>
               <div className="text-[11px] font-mono text-[#759B87] uppercase tracking-wider font-semibold">
@@ -395,7 +395,7 @@ export default function SubscriptionView() {
 
           {/* 3 Live Resource Quota Gauges */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-            
+
             {/* AI Tokens Meter */}
             <div className="bg-[#0F1713] p-4 rounded-xl border border-[#1A2922] space-y-2">
               <div className="flex justify-between items-center text-[#759B87]">
@@ -409,9 +409,8 @@ export default function SubscriptionView() {
               </div>
               <div className="w-full bg-[#080D0A] rounded-full h-1.5 overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all ${
-                    subscription.usage_percent > 90 ? 'bg-rose-500' : subscription.usage_percent > 70 ? 'bg-amber-500' : 'bg-[#00C978]'
-                  }`}
+                  className={`h-full rounded-full transition-all ${subscription.usage_percent > 90 ? 'bg-rose-500' : subscription.usage_percent > 70 ? 'bg-amber-500' : 'bg-[#00C978]'
+                    }`}
                   style={{ width: `${Math.min(100, Math.max(5, subscription.usage_percent))}%` }}
                 />
               </div>
@@ -527,9 +526,8 @@ export default function SubscriptionView() {
                     {wallet.recent_transactions.slice(0, 5).map((tx: any) => (
                       <tr key={tx.id} className="hover:bg-slate-50/50">
                         <td className="py-2.5">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            tx.transaction_type === "topup" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${tx.transaction_type === "topup" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
+                            }`}>
                             {tx.transaction_type.toUpperCase()}
                           </span>
                         </td>
@@ -561,17 +559,15 @@ export default function SubscriptionView() {
         <div className="bg-[#F4F7F5] border border-[#CBD7D0] p-1 rounded-xl flex items-center gap-1 text-xs font-semibold">
           <button
             onClick={() => setIsAnnual(false)}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-              !isAnnual ? "bg-white text-[#0F1713] shadow-sm font-bold border border-[#CBD7D0]" : "text-[#4F7863] hover:text-[#0F1713]"
-            }`}
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${!isAnnual ? "bg-white text-[#0F1713] shadow-sm font-bold border border-[#CBD7D0]" : "text-[#4F7863] hover:text-[#0F1713]"
+              }`}
           >
             Monthly Billing
           </button>
           <button
             onClick={() => setIsAnnual(true)}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-              isAnnual ? "bg-white text-[#0F1713] shadow-sm font-bold border border-[#CBD7D0]" : "text-[#4F7863] hover:text-[#0F1713]"
-            }`}
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${isAnnual ? "bg-white text-[#0F1713] shadow-sm font-bold border border-[#CBD7D0]" : "text-[#4F7863] hover:text-[#0F1713]"
+              }`}
           >
             <span>Annual (15% OFF)</span>
             <span className="text-[9.5px] bg-[#00C978]/15 text-[#008750] px-1.5 py-0.2 rounded-full font-bold">SAVE</span>
@@ -588,23 +584,22 @@ export default function SubscriptionView() {
           const pName = p.name.toLowerCase();
 
           const isCurrent = (currentPlanCode && (pId === currentPlanCode || pName === currentPlanCode)) ||
-                            pName === currentPlanTier ||
-                            pId === currentPlanTier ||
-                            currentPlanTier.includes(pId) ||
-                            pName.includes(currentPlanTier);
+            pName === currentPlanTier ||
+            pId === currentPlanTier ||
+            currentPlanTier.includes(pId) ||
+            pName.includes(currentPlanTier);
 
           const displayPrice = isAnnual ? p.annualPrice : p.monthlyPrice;
 
           return (
             <div
               key={p.id}
-              className={`p-6 rounded-2xl border flex flex-col justify-between transition-all relative ${
-                isCurrent
+              className={`p-6 rounded-2xl border flex flex-col justify-between transition-all relative ${isCurrent
                   ? "bg-[#080D0A] text-white border-[#1A2922] shadow-xl ring-2 ring-[#00C978]"
                   : p.badge
-                  ? "bg-white text-[#0F1713] border-[#00C978]/40 shadow-sm hover:border-[#00C978]"
-                  : "bg-white text-[#0F1713] border-[#CBD7D0] shadow-sm hover:border-[#00C978]/50"
-              }`}
+                    ? "bg-white text-[#0F1713] border-[#00C978]/40 shadow-sm hover:border-[#00C978]"
+                    : "bg-white text-[#0F1713] border-[#CBD7D0] shadow-sm hover:border-[#00C978]/50"
+                }`}
             >
               {/* Badge */}
               {p.badge && !isCurrent && (
@@ -940,7 +935,7 @@ export default function SubscriptionView() {
       {viewingInvoice && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
           <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-3xl w-full p-6 sm:p-10 my-auto animate-in fade-in zoom-in-95 text-xs text-slate-800 font-sans space-y-6">
-            
+
             {/* Modal Actions Bar (hidden on print) */}
             <div className="flex justify-between items-center pb-4 border-b border-slate-100 no-print">
               <div className="flex items-center gap-2">
@@ -969,7 +964,7 @@ export default function SubscriptionView() {
 
             {/* Printable Formal Tax Invoice Container */}
             <div id="printable-tax-invoice" className="space-y-6 bg-white">
-              
+
               {/* 1. TOP HEADER: Issuer (Platform Super Admin) vs Invoice Meta */}
               <div className="flex flex-col sm:flex-row justify-between items-start gap-6 pb-6 border-b-2 border-slate-900">
                 {/* ISSUER DETAILS (Platform Super Admin Official Information) */}
@@ -989,7 +984,7 @@ export default function SubscriptionView() {
                         {currentTheme.platform_name || "N.I. BIZ Soft Platform"}
                       </h2>
                       <div className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">
-                        Enterprise AIaaS & Autonomous Chat Provider
+                        Jobab Chat & Autonomous Chat Provider
                       </div>
                     </div>
                   </div>
@@ -1209,11 +1204,10 @@ export default function SubscriptionView() {
                   <button
                     type="button"
                     onClick={() => setTopupGateway("bkash")}
-                    className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      topupGateway === "bkash"
+                    className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${topupGateway === "bkash"
                         ? "border-[#e2136e] bg-pink-50 text-[#e2136e] ring-1 ring-pink-500"
                         : "border-slate-200 hover:border-slate-300 text-slate-700"
-                    }`}
+                      }`}
                   >
                     <span className="w-4 h-4 rounded-full bg-[#e2136e] text-white flex items-center justify-center text-[10px] font-black">৳</span>
                     <span>bKash Direct</span>
@@ -1222,11 +1216,10 @@ export default function SubscriptionView() {
                   <button
                     type="button"
                     onClick={() => setTopupGateway("eps")}
-                    className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      topupGateway === "eps"
+                    className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${topupGateway === "eps"
                         ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600"
                         : "border-slate-200 hover:border-slate-300 text-slate-700"
-                    }`}
+                      }`}
                   >
                     <CreditCard className="w-4 h-4 text-emerald-600" />
                     <span>EPS Gateway</span>
@@ -1242,11 +1235,10 @@ export default function SubscriptionView() {
                       key={amt}
                       type="button"
                       onClick={() => setTopupAmount(amt)}
-                      className={`py-2 rounded-xl text-xs font-bold font-mono border transition-all cursor-pointer ${
-                        topupAmount === amt
+                      className={`py-2 rounded-xl text-xs font-bold font-mono border transition-all cursor-pointer ${topupAmount === amt
                           ? (topupGateway === "eps" ? "bg-emerald-600 text-white border-emerald-600" : "bg-pink-600 text-white border-pink-600 shadow-xs")
                           : "bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300"
-                      }`}
+                        }`}
                     >
                       ৳{amt.toLocaleString()}
                     </button>
@@ -1279,9 +1271,8 @@ export default function SubscriptionView() {
               <button
                 onClick={() => handleTopupWallet(topupAmount)}
                 disabled={isInitiatingTopup || topupAmount < 100}
-                className={`w-full py-3 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
-                  topupGateway === "eps" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-[#E2136E] hover:bg-[#C90E60]"
-                }`}
+                className={`w-full py-3 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${topupGateway === "eps" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-[#E2136E] hover:bg-[#C90E60]"
+                  }`}
               >
                 {isInitiatingTopup ? (
                   <>

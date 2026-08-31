@@ -5,7 +5,7 @@ import { ToastProvider } from "../context/ToastContext";
 import { ThemeProvider } from "../context/ThemeContext";
 
 export const metadata: Metadata = {
-  title: "Enterprise AIaaS SaaS Platform",
+  title: "Jobab Chat SaaS Platform",
   description: "AI-Powered Customer Communication & Live Support Inbox",
 };
 

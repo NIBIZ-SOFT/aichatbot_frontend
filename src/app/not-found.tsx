@@ -62,7 +62,7 @@ export default function NotFound() {
 
       {/* Main 404 Centerpiece Card */}
       <main className="max-w-2xl mx-auto w-full my-auto text-center space-y-8 relative z-10 py-12">
-        
+
         {/* Animated Glow Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-mono font-bold tracking-wider uppercase border border-rose-500/30 bg-rose-500/10 text-rose-300 animate-pulse">
           <span className="h-2 w-2 rounded-full bg-rose-500"></span>
@@ -155,7 +155,7 @@ export default function NotFound() {
 
       {/* Footer */}
       <footer className="text-center text-[11px] text-slate-500 relative z-10 max-w-6xl mx-auto w-full pt-6 border-t border-slate-800/60 flex flex-col sm:flex-row justify-between items-center gap-2">
-        <span>{currentTheme.footer_text || "Enterprise AIaaS Platform • ISO/IEC 27001 Certified"}</span>
+        <span>{currentTheme.footer_text || "Jobab Chat Platform • ISO/IEC 27001 Certified"}</span>
         <div className="flex items-center gap-3">
           <Link href="/login" className="hover:text-slate-300 transition-colors">Sign In</Link>
           <span>•</span>

@@ -29,12 +29,12 @@ export const DEFAULT_THEME_PRESETS: ThemeConfig[] = [
     preset_id: "ocean_sapphire",
     name: "Ocean Sapphire & Slate",
     badge: "Linear & Stripe Style",
-    platform_name: "Enterprise AIaaS",
+    platform_name: "Jobab Chat",
     platform_tagline: "Autonomous Customer Communication & Sales Cloud",
     logo_url: "https://iili.io/CsuMe3l.png",
     favicon_url: "https://iili.io/CsuMe3l.png",
     widget_avatar_url: "",
-    footer_text: "© 2026 Enterprise AIaaS Platform • Multi-Tenant PostgreSQL 18 & Enterprise Neural AI",
+    footer_text: "© 2026 Jobab Chat Platform • Multi-Tenant PostgreSQL 18 & Enterprise Neural AI",
     support_email: "support@enterprise.example",
     primary_color: "#2563EB",
     primary_hover: "#1D4ED8",
@@ -174,8 +174,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Dynamic Favicon Update: Uses favicon_url if provided, otherwise automatically falls back to logo_url variable
-    const effectiveFavicon = (theme.favicon_url && theme.favicon_url.trim()) 
-      || (theme.logo_url && theme.logo_url.trim()) 
+    const effectiveFavicon = (theme.favicon_url && theme.favicon_url.trim())
+      || (theme.logo_url && theme.logo_url.trim())
       || "https://iili.io/CsuMe3l.png";
 
     if (effectiveFavicon && typeof document !== "undefined") {
@@ -253,12 +253,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           const remoteTheme: ThemeConfig = {
             preset_id: res.theme.preset_id || "ocean_sapphire",
             name: res.theme.name || "Active Theme",
-            platform_name: res.theme.platform_name || "Enterprise AIaaS",
+            platform_name: res.theme.platform_name || "Jobab Chat",
             platform_tagline: res.theme.platform_tagline || "Autonomous Customer Communication & Sales Cloud",
             logo_url: res.theme.logo_url || "",
             favicon_url: res.theme.favicon_url || "",
             widget_avatar_url: res.theme.widget_avatar_url || "",
-            footer_text: res.theme.footer_text || "© 2026 Enterprise AIaaS Platform • Multi-Tenant PostgreSQL 18 & Enterprise Neural AI",
+            footer_text: res.theme.footer_text || "© 2026 Jobab Chat Platform • Multi-Tenant PostgreSQL 18 & Enterprise Neural AI",
             support_email: res.theme.support_email || "support@enterprise.example",
             primary_color: res.theme.primary_color || "#2563EB",
             primary_hover: res.theme.primary_hover || "#1D4ED8",
@@ -296,7 +296,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         channel.postMessage({ type: "THEME_UPDATED", theme });
         channel.close();
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const saveTheme = async (theme: ThemeConfig): Promise<boolean> => {

@@ -297,25 +297,48 @@ export default function SettingsView() {
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl mx-auto space-y-6 font-sans">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-        <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/20">
-              <Settings className="w-5 h-5" />
-            </div>
-            <span>Store & Organization Settings</span>
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Manage your store branding, online payment channels (bKash & EPS), and automated SMS gateways.
-          </p>
-        </div>
+      {/* Modern High-Impact Header Card */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 p-6 sm:p-7 shadow-xl">
+        {/* Ambient subtle glow */}
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-1/3 -mb-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-indigo-950/60 text-indigo-300 border border-indigo-800/40">
-            <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Multi-Tenant Isolated</span>
-          </span>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="flex items-start sm:items-center gap-4">
+            <div className="p-3.5 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/30 shrink-0">
+              <Settings className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  Store & Organization Settings
+                </h1>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-xs">
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Multi-Tenant Isolated</span>
+                </span>
+              </div>
+              <p className="text-sm text-slate-300 font-medium leading-relaxed max-w-2xl">
+                Configure your store branding, online payment channels (<span className="text-pink-400 font-bold">bKash</span> & <span className="text-emerald-400 font-bold">EPS</span>), and automated SMS gateways with tenant data isolation.
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Gateway Status Indicator */}
+          <div className="flex items-center gap-3 shrink-0 bg-slate-950/80 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-slate-800 shadow-inner">
+            <div className="flex flex-col">
+              <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider">Gateway Status</span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs font-bold text-slate-200 font-mono">
+                  {bkashEnabled || epsEnabled ? "Online PGW Active" : "COD Active"}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

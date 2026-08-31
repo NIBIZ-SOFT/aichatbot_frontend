@@ -99,9 +99,21 @@ export default function LandingPage() {
       .catch((err) => console.warn("Could not fetch public plans for landing page:", err));
   }, []);
 
-  // Platform Super Admin Live Chat Widget CDN injection
+  // Platform Super Admin / Owner Live Chat Widget CDN injection
   useEffect(() => {
     const scriptId = "platform-superadmin-chat-widget";
+
+    const initWidget = () => {
+      if ((window as any).EnterpriseChatWidget && typeof (window as any).EnterpriseChatWidget.init === "function") {
+        (window as any).EnterpriseChatWidget.init({
+          widgetKey: "wgt_platform_live_support",
+          apiUrl: API_BASE_URL,
+          primaryColor: "#4F46E5",
+          position: "bottom-right"
+        });
+      }
+    };
+
     if (!document.getElementById(scriptId)) {
       const script = document.createElement("script");
       script.id = scriptId;
@@ -111,7 +123,12 @@ export default function LandingPage() {
       script.setAttribute("data-primary-color", "#4F46E5");
       script.setAttribute("data-position", "bottom-right");
       script.async = true;
+      script.onload = () => {
+        initWidget();
+      };
       document.body.appendChild(script);
+    } else {
+      initWidget();
     }
 
     return () => {

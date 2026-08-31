@@ -10,8 +10,12 @@ import {
   ArrowRight, ShieldCheck, Zap, Globe, Cpu,
   TrendingUp, Users, Smartphone, ShoppingBag,
   CreditCard, Check, ChevronDown, ChevronUp,
-  Menu, X, Send, Phone, RefreshCw, Star
+  Menu, X, Send, Phone, RefreshCw, Star,
+  Building2, Headphones, Activity, GraduationCap,
+  Briefcase, Database, HelpCircle
 } from "lucide-react";
+
+type IndustryTab = "b2b" | "helpline" | "erp" | "ecommerce";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -21,13 +25,14 @@ export default function LandingPage() {
   const [selectedPlanTier, setSelectedPlanTier] = useState<string>("growth");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [activeIndustry, setActiveIndustry] = useState<IndustryTab>("b2b");
 
   // Dynamic Subscription Plans State loaded from PostgreSQL database
   const [dbPlans, setDbPlans] = useState<any[]>([
     {
       code: "starter",
       name: "Starter",
-      description: "Ideal for early-stage online shops and local businesses in Bangladesh.",
+      description: "Perfect for single website businesses, B2B startups, and local service providers.",
       monthly_price_bdt: 4990,
       annual_price_bdt: 4240,
       monthly_token_limit: 500000,
@@ -36,18 +41,18 @@ export default function LandingPage() {
       max_knowledge_docs: 50,
       features: [
         "500,000 AI Tokens / month",
-        "1 Connected Website Widget",
-        "2 Support Staff Seats",
-        "50 Knowledge Docs & URLs",
-        "bKash & COD Direct Checkout",
-        "Automated Order SMS Alerts"
+        "1 Connected Website or Portal Widget",
+        "2 Human Support Seats",
+        "50 Knowledge Docs & URL Crawls",
+        "Automated Lead Capture & CRM Sync",
+        "bKash & COD Checkout (Optional)"
       ],
       is_popular: false
     },
     {
       code: "growth",
       name: "Growth",
-      description: "For fast-growing storefronts needing high-volume AI and live agent handover.",
+      description: "For scaling companies needing multi-portal AI, department queues & human agent handover.",
       badge_text: "Most Popular",
       monthly_price_bdt: 19990,
       annual_price_bdt: 16990,
@@ -57,19 +62,19 @@ export default function LandingPage() {
       max_knowledge_docs: 250,
       features: [
         "2,500,000 AI Tokens / month",
-        "5 Connected Website Widgets",
-        "10 Support Staff Seats",
-        "250 Knowledge Docs & URLs",
-        "bKash & EPS Multi-Channel PGW",
+        "5 Connected Website / ERP Portals",
+        "10 Human Support Seats",
+        "250 Knowledge Docs & URL Crawls",
         "Live Human Agent Handover Inbox",
-        "Real-Time Customer Sentiment Tracking"
+        "Department Queues (Sales / Support / Tech)",
+        "bKash & EPS Multi-Channel Billing"
       ],
       is_popular: true
     },
     {
       code: "enterprise",
       name: "Enterprise",
-      description: "Complete custom AI solution for enterprise retailers & multi-brand chains.",
+      description: "Complete custom AI solution for ERP integration, healthcare, and corporate helplines.",
       monthly_price_bdt: 49990,
       annual_price_bdt: 42490,
       monthly_token_limit: 10000000,
@@ -78,12 +83,12 @@ export default function LandingPage() {
       max_knowledge_docs: 1000,
       features: [
         "10,000,000 AI Tokens / month",
-        "Unlimited Connected Websites",
-        "25 Support Staff Seats",
-        "1,000 Knowledge Docs & URLs",
-        "Custom Branding & White-Label",
-        "Role-Based Department Routing",
-        "Dedicated 24/7 Account Support"
+        "Unlimited Connected Portals & Sites",
+        "25 Human Support Seats",
+        "1,000 Knowledge Docs & URL Crawls",
+        "Full White-Label & Custom Domain",
+        "Custom ERP Webhooks & Database APIs",
+        "Dedicated 24/7 Account Manager & SLA"
       ],
       is_popular: false
     }
@@ -131,26 +136,70 @@ export default function LandingPage() {
     setShowPricingModal(true);
   };
 
+  // Industry Simulation Scenarios
+  const industryDemos = {
+    b2b: {
+      title: "B2B SaaS & Corporate Services",
+      subtitle: "Lead Qualification, Demo Scheduling & Pricing Inquiries",
+      chat: [
+        { sender: "user", text: "We need custom pricing and ERP API integration for 85 team members." },
+        { sender: "ai", text: "Hello! Our Enterprise plan covers unlimited users, custom ERP webhooks, and 99.99% SLA. May I have your company name and email to send the technical proposal?" },
+        { sender: "user", text: "Apex Tech Ltd, ctotech@apextech.com.bd." },
+        { sender: "ai", text: "Thank you! Lead qualified and routed to our Senior Solutions Engineer. You'll receive the proposal within 15 minutes." }
+      ]
+    },
+    helpline: {
+      title: "24/7 Helpline & Healthcare Support",
+      subtitle: "Instant Patient Inquiries, Doctor Schedules & Test Reports",
+      chat: [
+        { sender: "user", text: "ডায়াগনস্টিক রিপোর্ট সংগ্রহের সময় এবং ডক্টর অ্যাপয়েন্টমেন্ট শিডিউল জানতে চাই।" },
+        { sender: "ai", text: "আমাদের রিপোর্ট ডেলিভারি কাউন্টার প্রতিদিন সকাল ৮টা থেকে রাত ১০টা পর্যন্ত খোলা থাকে। আপনার টেস্ট আইডি নম্বরটি দিলে এখনই স্ট্যাটাস চেক করে দিচ্ছি।" },
+        { sender: "user", text: "টেস্ট আইডি: LAB-99214" },
+        { sender: "ai", text: "✅ আপনার রিপোর্ট প্রস্তুত রয়েছে। আপনি অনলাইন থেকে ডাউনলোড করতে পারেন অথবা ৩নং কাউন্টারে সংগ্রহ করতে পারেন।" }
+      ]
+    },
+    erp: {
+      title: "ERP & Operations Self-Service",
+      subtitle: "Client Account Status, Ticket Queries & Internal Policies",
+      chat: [
+        { sender: "user", text: "What is the status of our shipment batch #BATCH-4401 and invoice balance?" },
+        { sender: "ai", text: "Batch #BATCH-4401 has cleared customs and is scheduled for warehouse dispatch tomorrow at 10:00 AM. Outstanding balance: ৳45,000 BDT." },
+        { sender: "user", text: "Please connect me to accounts for payment clearance." },
+        { sender: "ai", text: "Connecting you to Mr. Tanvir from Accounts Department (Seat #4)... Live agent connected!" }
+      ]
+    },
+    ecommerce: {
+      title: "E-Commerce & Online Storefronts",
+      subtitle: "In-Chat Product Catalog, Orders & bKash / EPS Checkout",
+      chat: [
+        { sender: "user", text: "আপনাদের প্রিমিয়াম পাঞ্জাবি কালেকশনটা একটু দেখাবেন?" },
+        { sender: "ai", text: "অবশ্যই! আমাদের প্রিমিয়াম কটন পাঞ্জাবি কালেকশন (৳2,190) স্টকে রয়েছে। আপনি এখান থেকেই ১-ক্লিকে বিকাশ বা ক্যাশ অন ডেলিভারিতে অর্ডার করতে পারবেন।" },
+        { sender: "user", text: "সাইজ L বিকাশ দিয়ে অর্ডার করবো।" },
+        { sender: "ai", text: "✅ অর্ডার #ORD-882910 কনফার্ম হয়েছে! bKash পেমেন্ট লিংক ও SMS আপনার মোবাইলে পাঠানো হয়েছে।" }
+      ]
+    }
+  };
+
   const faqs = [
     {
-      q: "How does the AI assistant answer customer inquiries?",
-      a: "The AI automatically reads your product catalog, website URLs, and FAQ documents stored in our secure vector database (pgvector). When a customer asks in Bengali, Banglish, or English, it answers instantly with verified details."
+      q: "Is Jobab.chat only for e-commerce, or can other industries use it?",
+      a: "Jobab.chat is a universal conversational AI platform designed for all sectors. It is actively used by B2B corporate firms (for lead capture & demos), ERP systems (for client self-service), Healthcare & Clinics (for appointments & test inquiries), Educational Academies (for admissions), and E-Commerce stores (for product orders & payment settlements)."
     },
     {
-      q: "Can customers place orders and pay directly in the chat widget?",
-      a: "Yes! Customers can view product carousels with prices, select sizes, and checkout via Cash on Delivery, bKash Direct Checkout, or EPS Multi-Channel (Cards, Nagad, Rocket, Internet Banking) with automated verification."
+      q: "How does the AI train on our specific business knowledge?",
+      a: "Simply upload your PDF manuals, policy docs, employee handbooks, FAQ spreadsheets, or paste website URLs. Our PostgreSQL vector database (pgvector) indexes your data and enables the AI to answer accurately in Bengali, English, or Banglish."
     },
     {
-      q: "How long does it take to integrate onto our website?",
-      a: "Less than 2 minutes. Simply copy our 1-line JavaScript snippet and paste it before the </body> tag of your website. It works seamlessly with WordPress, Shopify, custom HTML, React, and Next.js."
+      q: "Can the AI route conversations to different human departments?",
+      a: "Yes! With our Live Support Inbox, conversations can be assigned to specialized department queues (e.g., Sales, Technical Support, Accounts, or Customer Care). When complex issues arise, human agents can take over the chat in 1 click."
     },
     {
-      q: "What happens if the AI cannot answer a complex question?",
-      a: "The conversation is instantly routed to your Live Support Inbox. Your human agents receive a real-time notification and can take over the chat with 1 click."
+      q: "How easy is it to install on our website, portal, or ERP?",
+      a: "It takes less than 2 minutes. Copy our 1-line JavaScript snippet and paste it into your website, client portal, or ERP HTML. It works with WordPress, Shopify, Next.js, React, Laravel, or custom web portals."
     },
     {
-      q: "Is my business data and payment credentials secure?",
-      a: "Absolutely. Every tenant operates in a dedicated, isolated environment. All merchant passwords, API keys, and hash keys are encrypted with AES-256 and never shared with other tenants or platform logs."
+      q: "How is our company data protected?",
+      a: "Every tenant is strictly multi-tenant isolated. Your business knowledge, customer conversations, and API keys are protected with AES-256 encryption and isolated database partitions. No data is ever shared across organizations."
     }
   ];
 
@@ -170,12 +219,13 @@ export default function LandingPage() {
               <span className="font-bold text-slate-900 text-lg tracking-tight leading-none">
                 Jobab<span className="text-indigo-600">.chat</span>
               </span>
-              <span className="text-[10px] text-slate-500 font-medium tracking-wide">AI-Powered Commerce</span>
+              <span className="text-[10px] text-slate-500 font-medium tracking-wide">Universal AI Support & Operations</span>
             </div>
           </Link>
 
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-600">
+            <a href="#industries" className="hover:text-indigo-600 transition-colors">Solutions</a>
             <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
             <a href="#how-it-works" className="hover:text-indigo-600 transition-colors">How It Works</a>
             <a href="#pricing" className="hover:text-indigo-600 transition-colors">Pricing</a>
@@ -211,6 +261,13 @@ export default function LandingPage() {
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-b border-slate-200 px-4 py-4 space-y-3">
+            <a
+              href="#industries"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-sm font-semibold text-slate-700 hover:text-indigo-600 py-1"
+            >
+              Solutions
+            </a>
             <a
               href="#features"
               onClick={() => setMobileMenuOpen(false)}
@@ -269,18 +326,18 @@ export default function LandingPage() {
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-xs font-bold shadow-xs">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                <span>AI-Powered Customer Service & Sales Desk</span>
+                <span>Conversational AI for B2B, Helplines, ERP & Retail</span>
               </div>
 
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
                 Automate Support & <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600">
-                  Drive Sales with AI
+                  Operations with Smart AI
                 </span>
               </h1>
 
               <p className="text-sm sm:text-base text-slate-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Connect your website in 2 minutes. Answer customer questions instantly in Bengali & English, showcase products in-chat, and accept bKash & card payments automatically.
+                Empower your business with 24/7 autonomous customer service in Bengali & English. Handle customer queries, qualify B2B leads, automate ERP self-service, and take orders seamlessly.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-2">
@@ -292,29 +349,52 @@ export default function LandingPage() {
                   <ArrowRight className="w-4 h-4" />
                 </button>
                 <a
-                  href="#how-it-works"
+                  href="#industries"
                   className="w-full sm:w-auto px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-700 font-bold text-sm rounded-xl border border-slate-200 shadow-xs transition-colors text-center"
                 >
-                  See How It Works
+                  Explore Industry Solutions
                 </a>
               </div>
 
               {/* Trust Badges */}
               <div className="pt-6 border-t border-slate-200 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs text-slate-500 font-medium">
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> No coding required
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> 1-Line Embed on Any Website
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> 1-Line JavaScript Embed
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Multi-Agent Human Handover
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Official bKash & EPS PGW
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> 100% Tenant Data Isolation
                 </span>
               </div>
             </div>
 
-            {/* Hero Right Mockup: Clean Live Chat Simulator */}
-            <div className="lg:col-span-5">
+            {/* Hero Right Mockup: Multi-Industry Interactive Demo */}
+            <div className="lg:col-span-5 space-y-3">
+              {/* Industry Selector Tabs */}
+              <div className="flex items-center justify-center lg:justify-start gap-1.5 overflow-x-auto pb-1">
+                {[
+                  { id: "b2b", label: "🏢 B2B & SaaS" },
+                  { id: "helpline", label: "📞 24/7 Helpline" },
+                  { id: "erp", label: "⚙️ ERP Self-Service" },
+                  { id: "ecommerce", label: "🛍️ E-Commerce" },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveIndustry(tab.id as IndustryTab)}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer whitespace-nowrap ${
+                      activeIndustry === tab.id
+                        ? "bg-indigo-600 text-white shadow-xs"
+                        : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
               <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden max-w-md mx-auto">
                 {/* Chatbox Header */}
                 <div className="bg-indigo-600 p-4 text-white flex items-center justify-between">
@@ -323,69 +403,34 @@ export default function LandingPage() {
                       <Bot className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm">Padma Mart Live AI</h4>
+                      <h4 className="font-bold text-sm">{industryDemos[activeIndustry].title}</h4>
                       <p className="text-[11px] text-indigo-100 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        Online • Instant Answers
+                        Online • Multi-Channel AI Assistant
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs bg-white/10 px-2 py-0.5 rounded-md font-mono text-[10px]">v2.0</span>
+                  <span className="text-xs bg-white/10 px-2 py-0.5 rounded-md font-mono text-[10px]">Active</span>
                 </div>
 
                 {/* Chat Messages */}
-                <div className="p-4 space-y-3.5 bg-slate-50/80 text-xs min-h-[340px]">
-                  {/* Message 1 (User) */}
-                  <div className="flex flex-col items-end">
-                    <div className="bg-indigo-600 text-white p-3 rounded-2xl rounded-br-none max-w-[85%] leading-relaxed">
-                      আপনাদের প্রিমিয়াম পাঞ্জাবি কালেকশনটা একটু দেখাবেন?
-                    </div>
-                  </div>
-
-                  {/* Message 2 (AI Response with Product Card) */}
-                  <div className="flex flex-col items-start space-y-2">
-                    <div className="bg-white text-slate-800 border border-slate-200 p-3 rounded-2xl rounded-bl-none max-w-[90%] shadow-xs leading-relaxed">
-                      অবশ্যই! আমাদের প্রিমিয়াম কটন পাঞ্জাবি কালেকশনটি নিচে দেওয়া হলো। আপনি সরাসরি এখান থেকেই অর্ডার করতে পারবেন:
-                    </div>
-
-                    {/* Product Card */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-xs w-full space-y-2">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=200&auto=format&fit=crop&q=80"
-                          alt="Panjabi"
-                          className="w-14 h-14 rounded-lg object-cover bg-slate-100 border border-slate-200 shrink-0"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="font-bold text-slate-900 text-xs truncate">Men's Premium Cotton Panjabi</div>
-                          <div className="text-emerald-700 font-bold text-xs mt-0.5">৳2,190 BDT</div>
-                          <div className="text-[10px] text-slate-500">Sizes: M, L, XL • In Stock</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                        <button
-                          type="button"
-                          className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] transition-colors"
-                        >
-                          ১-ক্লিকে অর্ডার করুন
-                        </button>
+                <div className="p-4 space-y-3 bg-slate-50/80 text-xs min-h-[320px]">
+                  {industryDemos[activeIndustry].chat.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
+                    >
+                      <div
+                        className={`p-3 rounded-2xl max-w-[88%] leading-relaxed ${
+                          msg.sender === "user"
+                            ? "bg-indigo-600 text-white rounded-br-none"
+                            : "bg-white text-slate-800 border border-slate-200 rounded-bl-none shadow-xs"
+                        }`}
+                      >
+                        {msg.text}
                       </div>
                     </div>
-                  </div>
-
-                  {/* Message 3 (User Order Action) */}
-                  <div className="flex flex-col items-end">
-                    <div className="bg-indigo-600 text-white p-2.5 rounded-2xl rounded-br-none max-w-[85%]">
-                      সাইজ L বিকাশ দিয়ে পেমেন্ট করবো।
-                    </div>
-                  </div>
-
-                  {/* Message 4 (AI Confirmation) */}
-                  <div className="flex flex-col items-start">
-                    <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 p-2.5 rounded-2xl rounded-bl-none max-w-[90%] font-medium">
-                      ✅ অর্ডার #ORD-882910 কনফার্ম হয়েছে! bKash পেমেন্ট লিংক ও SMS আপনার মোবাইলে পাঠানো হয়েছে।
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
                 {/* Chat Composer Mock */}
@@ -393,7 +438,7 @@ export default function LandingPage() {
                   <input
                     type="text"
                     disabled
-                    placeholder="Type your message..."
+                    placeholder={`Ask about ${industryDemos[activeIndustry].subtitle.toLowerCase()}...`}
                     className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 outline-none"
                   />
                   <div className="p-2 bg-indigo-600 text-white rounded-xl">
@@ -407,51 +452,62 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. Core Features Section */}
-      <section id="features" className="py-16 sm:py-24 bg-white border-y border-slate-200">
+      {/* 3. Multi-Industry Solutions Section */}
+      <section id="industries" className="py-16 sm:py-24 bg-white border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
           <div className="text-center max-w-2xl mx-auto space-y-2">
-            <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Built for Fast Commerce</h2>
+            <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Universal Solutions</h2>
             <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Everything Your Business Needs to Grow
+              Engineered for Every Business Sector
             </h3>
             <p className="text-xs sm:text-sm text-slate-500">
-              Powerful features engineered to eliminate waiting times and maximize conversions.
+              One unified AI platform that adapts to your unique workflows and operational needs.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            {/* Pillar 1 */}
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3.5 hover:border-indigo-200 hover:bg-white transition-all shadow-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Card 1: B2B & SaaS */}
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3 hover:border-indigo-300 hover:bg-white transition-all shadow-xs">
               <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
-                <Bot className="w-5 h-5" />
+                <Building2 className="w-5 h-5" />
               </div>
-              <h4 className="text-base font-bold text-slate-900">24/7 Smart AI Support</h4>
+              <h4 className="text-base font-bold text-slate-900">B2B & SaaS Companies</h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Answers questions in Bengali, English, and Banglish. Retrieves accurate answers from your documents, product specs, and return policies.
+                Qualify incoming leads automatically, answer RFP/pricing inquiries, and schedule discovery demos directly into your CRM.
               </p>
             </div>
 
-            {/* Pillar 2 */}
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3.5 hover:border-indigo-200 hover:bg-white transition-all shadow-xs">
+            {/* Card 2: 24/7 Helpline & Healthcare */}
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3 hover:border-indigo-300 hover:bg-white transition-all shadow-xs">
               <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
+                <Headphones className="w-5 h-5" />
+              </div>
+              <h4 className="text-base font-bold text-slate-900">Helplines & Healthcare</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Instant patient and caller resolution. Provide diagnostic lab report status, doctor consultation timings, and clinic locations.
+              </p>
+            </div>
+
+            {/* Card 3: ERP & Business Operations */}
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3 hover:border-indigo-300 hover:bg-white transition-all shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center">
+                <Database className="w-5 h-5" />
+              </div>
+              <h4 className="text-base font-bold text-slate-900">ERP & Enterprise Portals</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Enable 24/7 self-service for clients and staff. Look up shipment batches, invoice summaries, policy documents, and ticket status.
+              </p>
+            </div>
+
+            {/* Card 4: E-Commerce & Retail */}
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3 hover:border-indigo-300 hover:bg-white transition-all shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E2136E] border border-pink-100 flex items-center justify-center">
                 <ShoppingBag className="w-5 h-5" />
               </div>
-              <h4 className="text-base font-bold text-slate-900">Direct In-Chat Ordering</h4>
+              <h4 className="text-base font-bold text-slate-900">E-Commerce & Retail</h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Visitors can browse product pictures, select sizes or colors, and place orders directly without ever leaving the chat widget.
-              </p>
-            </div>
-
-            {/* Pillar 3 */}
-            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3.5 hover:border-indigo-200 hover:bg-white transition-all shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-pink-50 text-[#E2136E] border border-pink-100 flex items-center justify-center">
-                <CreditCard className="w-5 h-5" />
-              </div>
-              <h4 className="text-base font-bold text-slate-900">bKash & EPS Gateways</h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Automated instant payment verification for bKash Tokenized Checkout, Cards, MFS, and internet banking with instant SMS alerts.
+                Visual in-chat product cards, size selection, 1-click order checkout with automated bKash, EPS cards, and SMS delivery alerts.
               </p>
             </div>
           </div>
@@ -459,217 +515,262 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. How It Works Section */}
-      <section id="how-it-works" className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      {/* 4. Core Features Section */}
+      <section id="features" className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Simple Onboarding</h2>
+          <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Platform Capabilities</h2>
           <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Live on Your Website in 3 Steps
+            Designed for Real Operational Excellence
           </h3>
           <p className="text-xs sm:text-sm text-slate-500">
-            No complex setup or engineering needed. Get started in minutes.
+            Enterprise-grade capabilities built on PostgreSQL pgvector, modern LLMs, and real-time WebSockets.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
-            <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
-              1
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3.5">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
+              <Bot className="w-5 h-5" />
             </div>
-            <h4 className="text-sm font-bold text-slate-900">Add Products & Knowledge</h4>
+            <h4 className="text-base font-bold text-slate-900">Bilingual Bengali & English AI</h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Upload your product catalog, store FAQs, and business policies into your dashboard.
+              Understands complex Bengali, Banglish, and English inquiries with high accuracy. Retrieves verified information from your knowledge base with zero hallucinations.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
-            <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
-              2
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3.5">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
+              <Users className="w-5 h-5" />
             </div>
-            <h4 className="text-sm font-bold text-slate-900">Paste 1-Line Embed Code</h4>
+            <h4 className="text-base font-bold text-slate-900">Multi-Agent Live Support Inbox</h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Copy your unique widget script tag and paste it onto WordPress, Shopify, or custom HTML.
+              When human touch is required, conversations seamlessly transfer to your staff. Includes department queues, internal whispering notes, and real-time typing indicators.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
-            <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
-              3
+          <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3.5">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
+              <CreditCard className="w-5 h-5" />
             </div>
-            <h4 className="text-sm font-bold text-slate-900">Convert Visitors Automatically</h4>
+            <h4 className="text-base font-bold text-slate-900">bKash & Multi-Channel PGW</h4>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Your AI assistant will start engaging customers, answering questions, and taking orders 24/7.
+              Native integration with bKash Tokenized Checkout and EPS (Easy Payment System) for Cards, Nagad, Rocket, and Internet Banking with automated SMS receipts.
             </p>
           </div>
         </div>
       </section>
 
-      {/* 5. Pricing Section */}
-      <section id="pricing" className="py-16 sm:py-24 bg-white border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Transparent Pricing</h2>
+      {/* 5. How It Works Section */}
+      <section id="how-it-works" className="py-16 sm:py-24 bg-white border-y border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Instant Deployment</h2>
             <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Predictable Plans for Every Stage
+              Live on Your Portal in 3 Steps
             </h3>
             <p className="text-xs sm:text-sm text-slate-500">
-              Choose the package that fits your storefront. All plans include full e-commerce support.
+              No machine learning engineers or complex DevOps required.
             </p>
+          </div>
 
-            {/* Monthly / Annual Toggle */}
-            <div className="inline-flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 mt-2">
-              <button
-                type="button"
-                onClick={() => setBillingCycle("monthly")}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  billingCycle === "monthly"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Monthly Billing
-              </button>
-              <button
-                type="button"
-                onClick={() => setBillingCycle("annual")}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  billingCycle === "annual"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <span>Annual Billing</span>
-                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full">
-                  15% OFF
-                </span>
-              </button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs space-y-3">
+              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
+                1
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">Upload Knowledge & Services</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Upload your company PDFs, product catalogs, FAQ documents, or paste your website URLs to train your AI in seconds.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs space-y-3">
+              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
+                2
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">Paste 1-Line Embed Snippet</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Copy your unique CDN script tag and embed it into your WordPress site, custom ERP portal, or web app before &lt;/body&gt;.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200/80 shadow-xs space-y-3">
+              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
+                3
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">Automate Inquiries & Leads 24/7</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Your AI assistant will start resolving inquiries, capturing leads, and routing complex cases to your human agents in real-time.
+              </p>
             </div>
           </div>
-
-          {/* Pricing Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch pt-4">
-            {dbPlans.map((plan) => {
-              const isPopular = plan.is_popular;
-              const price = billingCycle === "annual" ? (plan.annual_price_bdt || Math.round(plan.monthly_price_bdt * 0.85)) : plan.monthly_price_bdt;
-
-              return (
-                <div
-                  key={plan.code}
-                  className={`p-6 sm:p-7 rounded-3xl border flex flex-col justify-between transition-all ${
-                    isPopular
-                      ? "bg-white border-indigo-600 shadow-xl ring-2 ring-indigo-600/20 relative"
-                      : "bg-white border-slate-200 shadow-xs hover:border-slate-300"
-                  }`}
-                >
-                  {isPopular && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[11px] font-bold px-3 py-0.5 rounded-full shadow-sm">
-                      Most Popular Choice
-                    </div>
-                  )}
-
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="text-lg font-bold text-slate-900">{plan.name}</h4>
-                      <p className="text-xs text-slate-500 mt-1 min-h-[32px]">{plan.description}</p>
-                    </div>
-
-                    <div className="pt-2">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-black text-slate-900 font-mono">
-                          ৳{price.toLocaleString()}
-                        </span>
-                        <span className="text-xs text-slate-500 font-medium">/ month</span>
-                      </div>
-                      {billingCycle === "annual" && (
-                        <div className="text-[10.5px] text-emerald-700 font-semibold mt-0.5">
-                          Billed annually (৳{(price * 12).toLocaleString()} / yr)
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-100 space-y-2.5 text-xs text-slate-700">
-                      <div className="font-semibold text-slate-900 text-[11px] uppercase tracking-wider">Features included:</div>
-                      {plan.features?.map((f: string, idx: number) => (
-                        <div key={idx} className="flex items-start gap-2">
-                          <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                          <span>{f}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-6">
-                    <button
-                      type="button"
-                      onClick={() => handleOpenPlan(plan.code)}
-                      className={`w-full py-3 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                        isPopular
-                          ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/30"
-                          : "bg-slate-900 hover:bg-slate-800 text-white"
-                      }`}
-                    >
-                      <span>Choose {plan.name}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
         </div>
       </section>
 
-      {/* 6. FAQ Section */}
-      <section id="faq" className="py-16 sm:py-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="text-center space-y-2">
-          <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Questions & Answers</h2>
+      {/* 6. Pricing Section */}
+      <section id="pricing" className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Transparent Plans</h2>
           <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Frequently Asked Questions
+            Predictable Pricing for Every Business Scale
           </h3>
+          <p className="text-xs sm:text-sm text-slate-500">
+            Choose the right capacity for your organization. All packages include full multi-channel AI capabilities.
+          </p>
+
+          {/* Monthly / Annual Toggle */}
+          <div className="inline-flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 mt-2">
+            <button
+              type="button"
+              onClick={() => setBillingCycle("monthly")}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                billingCycle === "monthly"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              Monthly Billing
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle("annual")}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                billingCycle === "annual"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span>Annual Billing</span>
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full">
+                15% OFF
+              </span>
+            </button>
+          </div>
         </div>
 
-        <div className="space-y-3">
-          {faqs.map((faq, idx) => {
-            const isOpen = openFaq === idx;
+        {/* Pricing Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch pt-4">
+          {dbPlans.map((plan) => {
+            const isPopular = plan.is_popular;
+            const price = billingCycle === "annual" ? (plan.annual_price_bdt || Math.round(plan.monthly_price_bdt * 0.85)) : plan.monthly_price_bdt;
+
             return (
               <div
-                key={idx}
-                className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs transition-all"
+                key={plan.code}
+                className={`p-6 sm:p-7 rounded-3xl border flex flex-col justify-between transition-all ${
+                  isPopular
+                    ? "bg-white border-indigo-600 shadow-xl ring-2 ring-indigo-600/20 relative"
+                    : "bg-white border-slate-200 shadow-xs hover:border-slate-300"
+                }`}
               >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(isOpen ? null : idx)}
-                  className="w-full p-4 sm:p-5 text-left font-bold text-slate-900 text-sm flex items-center justify-between gap-4 cursor-pointer"
-                >
-                  <span>{faq.q}</span>
-                  {isOpen ? (
-                    <ChevronUp className="w-4 h-4 text-indigo-600 shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
-                  )}
-                </button>
-                {isOpen && (
-                  <div className="px-4 sm:px-5 pb-5 text-xs text-slate-600 leading-relaxed border-t border-slate-100 pt-3">
-                    {faq.a}
+                {isPopular && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[11px] font-bold px-3 py-0.5 rounded-full shadow-sm">
+                    Most Popular Choice
                   </div>
                 )}
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-lg font-bold text-slate-900">{plan.name}</h4>
+                    <p className="text-xs text-slate-500 mt-1 min-h-[32px]">{plan.description}</p>
+                  </div>
+
+                  <div className="pt-2">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black text-slate-900 font-mono">
+                        ৳{price.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium">/ month</span>
+                    </div>
+                    {billingCycle === "annual" && (
+                      <div className="text-[10.5px] text-emerald-700 font-semibold mt-0.5">
+                        Billed annually (৳{(price * 12).toLocaleString()} / yr)
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100 space-y-2.5 text-xs text-slate-700">
+                    <div className="font-semibold text-slate-900 text-[11px] uppercase tracking-wider">Features included:</div>
+                    {plan.features?.map((f: string, idx: number) => (
+                      <div key={idx} className="flex items-start gap-2">
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <span>{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-6">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenPlan(plan.code)}
+                    className={`w-full py-3 rounded-xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                      isPopular
+                        ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/30"
+                        : "bg-slate-900 hover:bg-slate-800 text-white"
+                    }`}
+                  >
+                    <span>Choose {plan.name}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             );
           })}
         </div>
       </section>
 
-      {/* 7. Bottom Call to Action Banner */}
+      {/* 7. FAQ Section */}
+      <section id="faq" className="py-16 sm:py-24 bg-white border-t border-slate-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Questions & Answers</h2>
+            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              Frequently Asked Questions
+            </h3>
+          </div>
+
+          <div className="space-y-3">
+            {faqs.map((faq, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden shadow-xs transition-all"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    className="w-full p-4 sm:p-5 text-left font-bold text-slate-900 text-sm flex items-center justify-between gap-4 cursor-pointer"
+                  >
+                    <span>{faq.q}</span>
+                    {isOpen ? (
+                      <ChevronUp className="w-4 h-4 text-indigo-600 shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                    )}
+                  </button>
+                  {isOpen && (
+                    <div className="px-4 sm:px-5 pb-5 text-xs text-slate-600 leading-relaxed border-t border-slate-200/80 pt-3 bg-white">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 8. Bottom Call to Action Banner */}
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-indigo-600 rounded-3xl p-8 sm:p-12 text-white text-center space-y-6 shadow-xl shadow-indigo-600/20">
           <div className="max-w-2xl mx-auto space-y-2">
             <h3 className="text-2xl sm:text-4xl font-black tracking-tight">
-              Ready to Supercharge Your Storefront?
+              Ready to Modernize Your Customer & Client Support?
             </h3>
             <p className="text-xs sm:text-sm text-indigo-100">
-              Join hundreds of modern e-commerce stores automating customer support and order checkouts.
+              Join leading B2B companies, healthcare clinics, ERP providers, and online retailers automating operations with Jobab.chat.
             </p>
           </div>
 
@@ -690,7 +791,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 8. Simple Clean Footer */}
+      {/* 9. Simple Clean Footer */}
       <footer className="bg-white border-t border-slate-200 py-8 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -702,6 +803,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-6">
+            <a href="#industries" className="hover:text-slate-800">Solutions</a>
             <a href="#features" className="hover:text-slate-800">Features</a>
             <a href="#pricing" className="hover:text-slate-800">Pricing</a>
             <a href="#faq" className="hover:text-slate-800">FAQ</a>

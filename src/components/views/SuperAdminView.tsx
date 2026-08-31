@@ -592,7 +592,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
     setPlanFormData({
       code: `custom_tier_${Math.floor(Math.random() * 900 + 100)}`,
       name: "New Campaign Offer",
-      description: "Custom promotional AIaaS package for Bangladeshi startups and businesses.",
+      description: "Custom promotional Jobab Chat package for Bangladeshi startups and businesses.",
       badge_text: "LIMITED OFFER",
       monthly_price_bdt: 9990,
       annual_price_bdt: 8490,

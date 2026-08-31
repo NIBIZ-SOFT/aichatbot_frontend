@@ -300,7 +300,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight leading-tight">
-                  Buy AIaaS Package & Start Workspace
+                  Choose Jobab Chat Plan & Launch Workspace
                 </h2>
                 <p className="text-[11px] text-slate-500 hidden sm:block">
                   Instant multi-tenant PostgreSQL provisioning & bKash checkout

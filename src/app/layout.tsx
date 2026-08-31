@@ -5,8 +5,8 @@ import { ToastProvider } from "../context/ToastContext";
 import { ThemeProvider } from "../context/ThemeContext";
 
 export const metadata: Metadata = {
-  title: "Jobab Chat SaaS Platform",
-  description: "AI-Powered Customer Communication & Live Support Inbox",
+  title: "Jobab Chat — AI-Powered Customer Communication & Sales Platform",
+  description: "Next-generation AI Customer Communication, Live Support Inbox & Automated Commerce Platform",
 };
 
 export default function RootLayout({

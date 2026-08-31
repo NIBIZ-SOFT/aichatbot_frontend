@@ -294,7 +294,7 @@ export default function PricingPage() {
           )}
           <div>
             <div className="font-bold text-white text-sm tracking-tight">
-              {currentTheme.platform_name || "AIaaS Platform"} Workspace
+              {currentTheme.platform_name || "Jobab Chat Platform"} Workspace
             </div>
             <div className="text-[10px] text-slate-400 font-normal hidden sm:block">
               {currentTheme.platform_tagline || "Self-Serve Instant Multi-Tenant Setup"}

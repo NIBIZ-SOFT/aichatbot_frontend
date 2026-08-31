@@ -124,7 +124,7 @@ function BkashCallbackContent() {
                 bKash Tokenized Checkout
               </div>
               <h1 className="text-lg font-black text-white">
-                PADMA AI-AS-A-SERVICE
+                JOBAB CHAT PLATFORM
               </h1>
             </div>
           </div>

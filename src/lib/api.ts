@@ -435,7 +435,13 @@ export const api = {
   async createBkashPayment(tier: string, billingCycle: string = "monthly", phoneNumber: string = "01770618575", couponCode?: string) {
     return apiFetch("/payment/bkash/create", {
       method: "POST",
-      body: JSON.stringify({ tier, billing_cycle: billingCycle, phone_number: phoneNumber, coupon_code: couponCode || undefined }),
+      body: JSON.stringify({
+        tier,
+        billing_cycle: billingCycle,
+        phone_number: phoneNumber,
+        coupon_code: couponCode || undefined,
+        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined
+      }),
     });
   },
 
@@ -448,6 +454,23 @@ export const api = {
 
   async queryBkashPayment(paymentId: string) {
     return apiFetch(`/payment/bkash/query/${paymentId}`);
+  },
+
+  async initWalletTopup(amountBdt: number) {
+    return apiFetch("/payment/wallet/topup", {
+      method: "POST",
+      body: JSON.stringify({
+        amount_bdt: amountBdt,
+        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined
+      }),
+    });
+  },
+
+  async executeWalletTopup(paymentId: string) {
+    return apiFetch("/payment/wallet/execute", {
+      method: "POST",
+      body: JSON.stringify({ payment_id: paymentId }),
+    });
   },
 
   // EPS (Easy Payment System) Checkout
@@ -467,6 +490,7 @@ export const api = {
         customer_phone: customerDetails?.phone,
         customer_address: customerDetails?.address,
         coupon_code: couponCode || undefined,
+        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined
       }),
     });
   },
@@ -497,7 +521,10 @@ export const api = {
   async initWalletTopupEps(amountBdt: number) {
     return apiFetch("/payment/wallet/topup-eps", {
       method: "POST",
-      body: JSON.stringify({ amount_bdt: amountBdt }),
+      body: JSON.stringify({
+        amount_bdt: amountBdt,
+        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined
+      }),
     });
   },
 
@@ -742,20 +769,6 @@ export const api = {
 
   async getTenantWallet() {
     return apiFetch("/payment/wallet");
-  },
-
-  async initWalletTopup(amountBdt: number) {
-    return apiFetch("/payment/wallet/topup", {
-      method: "POST",
-      body: JSON.stringify({ amount_bdt: amountBdt }),
-    });
-  },
-
-  async executeWalletTopup(paymentId: string) {
-    return apiFetch("/payment/wallet/execute", {
-      method: "POST",
-      body: JSON.stringify({ payment_id: paymentId }),
-    });
   },
 
   async validateCoupon(code: string, planCode: string, amountBdt: number) {

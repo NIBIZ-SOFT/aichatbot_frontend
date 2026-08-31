@@ -50,7 +50,7 @@ interface MetricsData {
   platform_uptime_percent: number;
 }
 
-export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "bkash" | "eps" | "infrastructure" | "audit" | "theme";
+export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "payments" | "bkash" | "eps" | "infrastructure" | "audit" | "theme";
 
 interface SuperAdminViewProps {
   defaultTab?: SuperAdminTabType;
@@ -63,11 +63,16 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
 
   // Active Tab state (initialized from prop or route)
   const [activeTab, setActiveTab] = useState<SuperAdminTabType>(defaultTab);
+  const [activePaymentSubTab, setActivePaymentSubTab] = useState<"bkash" | "eps">(
+    defaultTab === "eps" ? "eps" : "bkash"
+  );
 
   // Sync tab when prop changes
   useEffect(() => {
     if (defaultTab) {
       setActiveTab(defaultTab);
+      if (defaultTab === "eps") setActivePaymentSubTab("eps");
+      if (defaultTab === "bkash") setActivePaymentSubTab("bkash");
     }
   }, [defaultTab]);
 
@@ -915,23 +920,13 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
             </button>
 
             <button
-              onClick={() => handleTabClick("bkash")}
-              className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "bkash"
-                ? "bg-[#e2136e] text-white shadow-md shadow-pink-600/30"
+              onClick={() => handleTabClick("payments")}
+              className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "payments" || activeTab === "bkash" || activeTab === "eps"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
                 : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                 }`}
             >
-              <CreditCard className="w-4 h-4 text-pink-400" /> bKash PGW
-            </button>
-
-            <button
-              onClick={() => handleTabClick("eps")}
-              className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "eps"
-                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                }`}
-            >
-              <CreditCard className="w-4 h-4 text-emerald-400" /> EPS PGW Gateway
+              <CreditCard className="w-4 h-4 text-emerald-400" /> Payment Gateways Setup
             </button>
 
             <button
@@ -1967,529 +1962,575 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       )}
 
       {/* ========================================================================= */}
-      {/* TAB: BKASH PAYMENT GATEWAY CONFIGURATION & CONTROL PLANE */}
+      {/* TAB: UNIFIED PLATFORM PAYMENT GATEWAYS SETUP (bKash & EPS) */}
       {/* ========================================================================= */}
-      {activeTab === "bkash" && (
+      {(activeTab === "payments" || activeTab === "bkash" || activeTab === "eps") && (
         <div className="space-y-6 animate-in fade-in duration-200">
 
-          {/* Top Status & Ping Hero Card */}
-          <div className="bg-gradient-to-r from-[#e2136e] via-[#c00f5c] to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="space-y-2 max-w-xl">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
-                  bKash Tokenized Checkout (v1.2.0-beta)
-                </span>
-                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${bkashSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'
-                  }`}>
-                  {bkashSettings.is_sandbox ? 'Sandbox Mode' : 'Live Production'}
-                </span>
+          {/* Platform Owner Gateway Scope Header & Sub-Switcher Card */}
+          <div className="bg-slate-900 border border-slate-800 p-6 sm:p-7 rounded-3xl shadow-xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/30 shadow-inner">
+                <CreditCard className="w-6 h-6 text-indigo-400" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                bKash Payment Gateway Management
-              </h2>
-              <p className="text-xs text-pink-100/90 leading-relaxed">
-                Configure your official bKash credentials, merchant parameters, and toggle between Sandbox simulation and live payment collection for all client subscriptions.
-              </p>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-black text-white">
+                    Platform Owner Payment Gateways Setup
+                  </h2>
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    Master SaaS Billing Only
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                  Configure central gateway credentials for collecting client subscription package purchases and AI prepaid wallet recharges. (Strictly isolated from tenant client customer-facing store checkouts).
+                </p>
+              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            {/* Gateway Sub-Tabs Switcher */}
+            <div className="flex items-center gap-2 p-1.5 bg-slate-950/90 rounded-2xl border border-slate-800 shrink-0 w-full lg:w-auto">
               <button
                 type="button"
-                onClick={handleTestBkashPing}
-                disabled={isTestingBkash}
-                className="px-5 py-2.5 bg-white hover:bg-pink-50 text-[#e2136e] font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                onClick={() => setActivePaymentSubTab("bkash")}
+                className={`flex-1 lg:flex-initial px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  activePaymentSubTab === "bkash"
+                    ? "bg-[#e2136e] text-white shadow-lg shadow-pink-600/30 ring-1 ring-pink-400/50"
+                    : "text-slate-400 hover:text-white hover:bg-slate-900"
+                }`}
               >
-                {isTestingBkash ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-[#e2136e]" />}
-                <span>{isTestingBkash ? "Testing Ping..." : "Test Connection / Ping"}</span>
+                <span className="w-4 h-4 rounded-full bg-white text-[#e2136e] flex items-center justify-center text-[10px] font-black">৳</span>
+                <span>bKash Direct PGW</span>
+                <span className={`text-[9px] font-black px-1.5 py-0.2 rounded ${bkashSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'}`}>
+                  {bkashSettings.is_sandbox ? 'SANDBOX' : 'LIVE'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActivePaymentSubTab("eps")}
+                className={`flex-1 lg:flex-initial px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  activePaymentSubTab === "eps"
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 ring-1 ring-emerald-400/50"
+                    : "text-slate-400 hover:text-white hover:bg-slate-900"
+                }`}
+              >
+                <CreditCard className="w-4 h-4 text-white" />
+                <span>EPS (Easy Payment System)</span>
+                <span className={`text-[9px] font-black px-1.5 py-0.2 rounded ${epsSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'}`}>
+                  {epsSettings.is_sandbox ? 'SANDBOX' : 'LIVE'}
+                </span>
               </button>
             </div>
           </div>
 
-          {/* Test Ping Response Box if triggered */}
-          {bkashPingResult && (
-            <div className="p-4 rounded-2xl bg-slate-900 text-white font-mono text-xs border border-slate-800 space-y-2 animate-in fade-in">
-              <div className="flex justify-between items-center">
-                <span className="text-emerald-400 font-bold flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" /> {bkashPingResult.message}
-                </span>
-                <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
-                  Latency: {bkashPingResult.latency_ms}ms
-                </span>
+          {/* SUB-VIEW 1: bKash PGW Configuration */}
+          {activePaymentSubTab === "bkash" && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Top Status & Ping Hero Card */}
+              <div className="bg-gradient-to-r from-[#e2136e] via-[#c00f5c] to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-2 max-w-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
+                      bKash Tokenized Checkout (v1.2.0-beta)
+                    </span>
+                    <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${bkashSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'}`}>
+                      {bkashSettings.is_sandbox ? 'Sandbox Mode' : 'Live Production'}
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                    bKash Payment Gateway Management
+                  </h2>
+                  <p className="text-xs text-pink-100/90 leading-relaxed">
+                    Configure your official bKash credentials, merchant parameters, and toggle between Sandbox simulation and live payment collection for all client subscriptions.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleTestBkashPing}
+                    disabled={isTestingBkash}
+                    className="px-5 py-2.5 bg-white hover:bg-pink-50 text-[#e2136e] font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {isTestingBkash ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-[#e2136e]" />}
+                    <span>{isTestingBkash ? "Testing Ping..." : "Test Connection / Ping"}</span>
+                  </button>
+                </div>
               </div>
-              <div className="text-slate-400 text-[11px]">
-                Token Preview: <span className="text-pink-400 font-semibold">{bkashPingResult.token_preview}</span>
+
+              {/* Test Ping Response Box if triggered */}
+              {bkashPingResult && (
+                <div className="p-4 rounded-2xl bg-slate-900 text-white font-mono text-xs border border-slate-800 space-y-2 animate-in fade-in">
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-400 font-bold flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" /> {bkashPingResult.message}
+                    </span>
+                    <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
+                      Latency: {bkashPingResult.latency_ms}ms
+                    </span>
+                  </div>
+                  <div className="text-slate-400 text-[11px]">
+                    Token Preview: <span className="text-pink-400 font-semibold">{bkashPingResult.token_preview}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Configuration Form Card */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main Form (2 cols) */}
+                <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                        <Key className="w-4 h-4 text-[#e2136e]" /> API Credentials & Gateway Parameters
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Updates will take effect immediately across all client checkout sessions.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSecrets(!showSecrets)}
+                      className="text-xs text-slate-500 hover:text-slate-700 font-semibold flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+                    >
+                      {showSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      <span>{showSecrets ? "Hide Secrets" : "Show Secrets"}</span>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveBkashSettings} className="space-y-4 text-xs">
+                    {/* Environment Mode Toggle */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <div className="font-bold text-slate-900">Gateway Environment Mode</div>
+                        <div className="text-[11px] text-slate-500">
+                          Toggle to switch between Sandbox developer testing and Live payment capture.
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+                        <button
+                          type="button"
+                          onClick={() => setBkashSettings({
+                            ...bkashSettings,
+                            is_sandbox: true,
+                            base_url: "https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized"
+                          })}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${bkashSettings.is_sandbox
+                            ? "bg-amber-400 text-slate-950 shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                            }`}
+                        >
+                          Sandbox
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setBkashSettings({
+                            ...bkashSettings,
+                            is_sandbox: false,
+                            base_url: "https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized"
+                          })}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${!bkashSettings.is_sandbox
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                            }`}
+                        >
+                          Production Live
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Base URL */}
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">bKash Base API URL</label>
+                      <input
+                        type="text"
+                        required
+                        value={bkashSettings.base_url}
+                        onChange={e => setBkashSettings({ ...bkashSettings, base_url: e.target.value })}
+                        placeholder="https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    {/* App Key & App Secret */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">App Key</label>
+                        <input
+                          type="text"
+                          required
+                          value={bkashSettings.app_key}
+                          onChange={e => setBkashSettings({ ...bkashSettings, app_key: e.target.value })}
+                          placeholder="Enter bKash App Key"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">App Secret</label>
+                        <input
+                          type={showSecrets ? "text" : "password"}
+                          required
+                          value={bkashSettings.app_secret}
+                          onChange={e => setBkashSettings({ ...bkashSettings, app_secret: e.target.value })}
+                          placeholder="Enter bKash App Secret"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Username & Password */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">bKash API Username</label>
+                        <input
+                          type="text"
+                          required
+                          value={bkashSettings.username}
+                          onChange={e => setBkashSettings({ ...bkashSettings, username: e.target.value })}
+                          placeholder="sandboxTokenizedUser02"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">bKash API Password</label>
+                        <input
+                          type={showSecrets ? "text" : "password"}
+                          required
+                          value={bkashSettings.password}
+                          onChange={e => setBkashSettings({ ...bkashSettings, password: e.target.value })}
+                          placeholder="Enter password"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Merchant Short Code */}
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Merchant Short Code / Wallet Number</label>
+                      <input
+                        type="text"
+                        value={bkashSettings.merchant_number || ""}
+                        onChange={e => setBkashSettings({ ...bkashSettings, merchant_number: e.target.value })}
+                        placeholder="e.g. 01837586105"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    {/* Submit Action */}
+                    <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                      <button
+                        type="submit"
+                        disabled={isSavingBkash}
+                        className="px-6 py-2.5 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-bold rounded-xl shadow-md shadow-pink-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        {isSavingBkash ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                        <span>{isSavingBkash ? "Saving Settings..." : "Save bKash PGW Settings"}</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Side Card: Official Sandbox Reference */}
+                <div className="space-y-4">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
+                    <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <Smartphone className="w-4 h-4 text-[#e2136e]" /> Official Sandbox Credentials
+                    </div>
+                    <p className="text-slate-500 text-[11.5px] leading-relaxed">
+                      These verified sandbox test credentials can be used anytime to simulate client subscription checkout in development.
+                    </p>
+
+                    <div className="p-3.5 bg-pink-50/70 rounded-2xl border border-pink-200/80 space-y-2 font-mono text-[11px]">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Success Wallet 1:</span>
+                        <span className="font-bold text-pink-900">01770618575</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Success Wallet 2:</span>
+                        <span className="font-bold text-pink-900">01929918378</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">PIN:</span>
+                        <span className="font-bold text-pink-900">12345</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">OTP:</span>
+                        <span className="font-bold text-pink-900">123456</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 text-[11px] text-slate-500 space-y-1">
+                      <div className="font-bold text-slate-800">Checkout Mode:</div>
+                      <div className="font-mono text-slate-600">&quot;0011&quot; (URL-based Hosted PGW)</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Configuration Form Card */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {/* Main Form (2 cols) */}
-            <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                    <Key className="w-4 h-4 text-[#e2136e]" /> API Credentials & Gateway Parameters
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Updates will take effect immediately across all client checkout sessions.
+          {/* SUB-VIEW 2: EPS PGW Configuration */}
+          {activePaymentSubTab === "eps" && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Top Status & Ping Hero Card */}
+              <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-2 max-w-xl">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
+                      EPS (Easy Payment System) Engine
+                    </span>
+                    <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${epsSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'}`}>
+                      {epsSettings.is_sandbox ? 'Sandbox Mode' : 'Live Production'}
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                    EPS Payment Gateway Management
+                  </h2>
+                  <p className="text-xs text-emerald-100/90 leading-relaxed">
+                    Configure your official EPS credentials (Cards, MFS, Internet Banking), Merchant ID, Store ID, and Hash Key for multi-channel automated subscription settlement.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowSecrets(!showSecrets)}
-                  className="text-xs text-slate-500 hover:text-slate-700 font-semibold flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
-                >
-                  {showSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  <span>{showSecrets ? "Hide Secrets" : "Show Secrets"}</span>
-                </button>
-              </div>
 
-              <form onSubmit={handleSaveBkashSettings} className="space-y-4 text-xs">
-
-                {/* Environment Mode Toggle */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <div>
-                    <div className="font-bold text-slate-900">Gateway Environment Mode</div>
-                    <div className="text-[11px] text-slate-500">
-                      Toggle to switch between Sandbox developer testing and Live payment capture.
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-                    <button
-                      type="button"
-                      onClick={() => setBkashSettings({
-                        ...bkashSettings,
-                        is_sandbox: true,
-                        base_url: "https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized"
-                      })}
-                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${bkashSettings.is_sandbox
-                        ? "bg-amber-400 text-slate-950 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                        }`}
-                    >
-                      Sandbox
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBkashSettings({
-                        ...bkashSettings,
-                        is_sandbox: false,
-                        base_url: "https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized"
-                      })}
-                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${!bkashSettings.is_sandbox
-                        ? "bg-emerald-600 text-white shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                        }`}
-                    >
-                      Production Live
-                    </button>
-                  </div>
-                </div>
-
-                {/* Base URL */}
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">bKash Base API URL</label>
-                  <input
-                    type="text"
-                    required
-                    value={bkashSettings.base_url}
-                    onChange={e => setBkashSettings({ ...bkashSettings, base_url: e.target.value })}
-                    placeholder="https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                  />
-                </div>
-
-                {/* App Key & App Secret */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">App Key</label>
-                    <input
-                      type="text"
-                      required
-                      value={bkashSettings.app_key}
-                      onChange={e => setBkashSettings({ ...bkashSettings, app_key: e.target.value })}
-                      placeholder="Enter bKash App Key"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">App Secret</label>
-                    <input
-                      type={showSecrets ? "text" : "password"}
-                      required
-                      value={bkashSettings.app_secret}
-                      onChange={e => setBkashSettings({ ...bkashSettings, app_secret: e.target.value })}
-                      placeholder="Enter bKash App Secret"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Username & Password */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">bKash API Username</label>
-                    <input
-                      type="text"
-                      required
-                      value={bkashSettings.username}
-                      onChange={e => setBkashSettings({ ...bkashSettings, username: e.target.value })}
-                      placeholder="sandboxTokenizedUser02"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">bKash API Password</label>
-                    <input
-                      type={showSecrets ? "text" : "password"}
-                      required
-                      value={bkashSettings.password}
-                      onChange={e => setBkashSettings({ ...bkashSettings, password: e.target.value })}
-                      placeholder="Enter password"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Merchant Short Code */}
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">Merchant Short Code / Wallet Number</label>
-                  <input
-                    type="text"
-                    value={bkashSettings.merchant_number || ""}
-                    onChange={e => setBkashSettings({ ...bkashSettings, merchant_number: e.target.value })}
-                    placeholder="e.g. 01837586105"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-pink-500 focus:bg-white transition-all"
-                  />
-                </div>
-
-                {/* Submit Action */}
-                <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                   <button
-                    type="submit"
-                    disabled={isSavingBkash}
-                    className="px-6 py-2.5 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-bold rounded-xl shadow-md shadow-pink-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    type="button"
+                    onClick={handleTestEpsPing}
+                    disabled={isTestingEps}
+                    className="px-5 py-2.5 bg-white hover:bg-emerald-50 text-emerald-700 font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    {isSavingBkash ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                    <span>{isSavingBkash ? "Saving Settings..." : "Save bKash PGW Settings"}</span>
+                    {isTestingEps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-emerald-600" />}
+                    <span>{isTestingEps ? "Testing Ping..." : "Test Connection / Ping"}</span>
                   </button>
                 </div>
-              </form>
-            </div>
+              </div>
 
-            {/* Side Card: Official Sandbox Reference */}
-            <div className="space-y-4">
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
-                <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-[#e2136e]" /> Official Sandbox Credentials
-                </div>
-                <p className="text-slate-500 text-[11.5px] leading-relaxed">
-                  These verified sandbox test credentials can be used anytime to simulate client subscription checkout in development.
-                </p>
-
-                <div className="p-3.5 bg-pink-50/70 rounded-2xl border border-pink-200/80 space-y-2 font-mono text-[11px]">
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Success Wallet 1:</span>
-                    <span className="font-bold text-pink-900">01770618575</span>
+              {/* Test Ping Response Box if triggered */}
+              {epsPingResult && (
+                <div className="p-4 rounded-2xl bg-slate-900 text-white font-mono text-xs border border-slate-800 space-y-2 animate-in fade-in">
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-400 font-bold flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" /> {epsPingResult.message}
+                    </span>
+                    <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
+                      Latency: {epsPingResult.latency_ms}ms
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Success Wallet 2:</span>
-                    <span className="font-bold text-pink-900">01929918378</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Test OTP:</span>
-                    <span className="font-bold text-pink-900">123456</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Test PIN:</span>
-                    <span className="font-bold text-pink-900">12121</span>
-                  </div>
-                  <div className="flex justify-between border-t border-pink-200/60 pt-1.5">
-                    <span className="text-slate-600">Insufficient Bal:</span>
-                    <span className="font-bold text-red-700">01823074817</span>
+                  <div className="text-slate-400 text-[11px]">
+                    Token Preview: <span className="text-emerald-400 font-semibold">{epsPingResult.token_preview}</span>
                   </div>
                 </div>
+              )}
 
-                <div className="pt-2 text-[11px] text-slate-500 space-y-1">
-                  <div className="font-bold text-slate-800">Checkout Mode:</div>
-                  <div className="font-mono text-slate-600">&quot;0011&quot; (URL-based Hosted PGW)</div>
+              {/* Configuration Form Card */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main Form (2 cols) */}
+                <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                    <div>
+                      <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                        <Key className="w-4 h-4 text-emerald-600" /> API Credentials & Gateway Parameters
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Updates will take effect immediately across all client checkout sessions.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowEpsSecrets(!showEpsSecrets)}
+                      className="text-xs text-slate-500 hover:text-slate-700 font-semibold flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+                    >
+                      {showEpsSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      <span>{showEpsSecrets ? "Hide Secrets" : "Show Secrets"}</span>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveEpsSettings} className="space-y-4 text-xs">
+                    {/* Environment Mode Toggle */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <div className="font-bold text-slate-900">EPS Environment Mode</div>
+                        <div className="text-[11px] text-slate-500">
+                          Toggle to switch between Sandbox developer testing and Live payment capture.
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+                        <button
+                          type="button"
+                          onClick={() => setEpsSettings({
+                            ...epsSettings,
+                            is_sandbox: true,
+                            base_url: "https://sandboxpgapi.eps.com.bd"
+                          })}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${epsSettings.is_sandbox
+                            ? "bg-amber-400 text-slate-950 shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                            }`}
+                        >
+                          Sandbox
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEpsSettings({
+                            ...epsSettings,
+                            is_sandbox: false,
+                            base_url: "https://pgapi.eps.com.bd"
+                          })}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${!epsSettings.is_sandbox
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                            }`}
+                        >
+                          Production Live
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Base URL */}
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">EPS Base API URL</label>
+                      <input
+                        type="text"
+                        required
+                        value={epsSettings.base_url}
+                        onChange={e => setEpsSettings({ ...epsSettings, base_url: e.target.value })}
+                        placeholder="https://sandboxpgapi.eps.com.bd"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    {/* Username & Password */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">EPS Username (Email)</label>
+                        <input
+                          type="text"
+                          required
+                          value={epsSettings.username}
+                          onChange={e => setEpsSettings({ ...epsSettings, username: e.target.value })}
+                          placeholder="Epsdemo@gmail.com"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">EPS Password</label>
+                        <input
+                          type={showEpsSecrets ? "text" : "password"}
+                          required
+                          value={epsSettings.password}
+                          onChange={e => setEpsSettings({ ...epsSettings, password: e.target.value })}
+                          placeholder="Enter password"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Hash Key */}
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">EPS Secret Hash Key (HMAC-SHA512 Secret)</label>
+                      <input
+                        type={showEpsSecrets ? "text" : "password"}
+                        required
+                        value={epsSettings.hash_key}
+                        onChange={e => setEpsSettings({ ...epsSettings, hash_key: e.target.value })}
+                        placeholder="FHZxyzeps56789gfhg678ygu876o="
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    {/* Merchant ID & Store ID */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">Merchant ID</label>
+                        <input
+                          type="text"
+                          required
+                          value={epsSettings.merchant_id}
+                          onChange={e => setEpsSettings({ ...epsSettings, merchant_id: e.target.value })}
+                          placeholder="29e86e70-0ac6-45eb-ba04-9fcb0aaed12a"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-800 mb-1">Store ID</label>
+                        <input
+                          type="text"
+                          required
+                          value={epsSettings.store_id}
+                          onChange={e => setEpsSettings({ ...epsSettings, store_id: e.target.value })}
+                          placeholder="d44e705f-9e3a-41de-98b1-1674631637da"
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Merchant Number */}
+                    <div>
+                      <label className="block font-bold text-slate-800 mb-1">Merchant Contact / Support Number</label>
+                      <input
+                        type="text"
+                        value={epsSettings.merchant_number || ""}
+                        onChange={e => setEpsSettings({ ...epsSettings, merchant_number: e.target.value })}
+                        placeholder="e.g. 01700000000"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                      />
+                    </div>
+
+                    {/* Submit Action */}
+                    <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                      <button
+                        type="submit"
+                        disabled={isSavingEps}
+                        className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                      >
+                        {isSavingEps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                        <span>{isSavingEps ? "Saving Settings..." : "Save EPS PGW Settings"}</span>
+                      </button>
+                    </div>
+                  </form>
                 </div>
-              </div>
-            </div>
 
-          </div>
+                {/* Side Card: Official Sandbox Reference */}
+                <div className="space-y-4">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
+                    <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-emerald-600" /> EPS Supported Channels
+                    </div>
+                    <p className="text-slate-500 text-[11.5px] leading-relaxed">
+                      EPS allows Bangladeshi clients to pay using multiple payment channels in BDT (৳):
+                    </p>
 
-        </div>
-      )}
+                    <div className="space-y-2">
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span className="font-bold text-slate-800">Visa / Mastercard / Amex</span>
+                      </div>
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-pink-500"></span>
+                        <span className="font-bold text-slate-800">bKash, Nagad, Rocket, Upay</span>
+                      </div>
+                      <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span className="font-bold text-slate-800">Internet & Core Banking</span>
+                      </div>
+                    </div>
 
-      {/* ========================================================================= */}
-      {/* TAB: EPS (EASY PAYMENT SYSTEM) CONFIGURATION & CONTROL PLANE */}
-      {/* ========================================================================= */}
-      {activeTab === "eps" && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-
-          {/* Top Status & Ping Hero Card */}
-          <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="space-y-2 max-w-xl">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
-                  EPS (Easy Payment System) Engine
-                </span>
-                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${epsSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'
-                  }`}>
-                  {epsSettings.is_sandbox ? 'Sandbox Mode' : 'Live Production'}
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                EPS Payment Gateway Management
-              </h2>
-              <p className="text-xs text-emerald-100/90 leading-relaxed">
-                Configure your official EPS credentials (Cards, MFS, Internet Banking), Merchant ID, Store ID, and Hash Key for multi-channel automated subscription settlement.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-              <button
-                type="button"
-                onClick={handleTestEpsPing}
-                disabled={isTestingEps}
-                className="px-5 py-2.5 bg-white hover:bg-emerald-50 text-emerald-700 font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {isTestingEps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-emerald-600" />}
-                <span>{isTestingEps ? "Testing Ping..." : "Test Connection / Ping"}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Test Ping Response Box if triggered */}
-          {epsPingResult && (
-            <div className="p-4 rounded-2xl bg-slate-900 text-white font-mono text-xs border border-slate-800 space-y-2 animate-in fade-in">
-              <div className="flex justify-between items-center">
-                <span className="text-emerald-400 font-bold flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" /> {epsPingResult.message}
-                </span>
-                <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
-                  Latency: {epsPingResult.latency_ms}ms
-                </span>
-              </div>
-              <div className="text-slate-400 text-[11px]">
-                Token Preview: <span className="text-emerald-400 font-semibold">{epsPingResult.token_preview}</span>
+                    <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 space-y-2 font-mono text-[11px]">
+                      <div className="font-bold text-emerald-900">Sandbox Test Account:</div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">User:</span>
+                        <span className="font-bold text-emerald-900">Epsdemo@gmail.com</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Auth:</span>
+                        <span className="font-bold text-emerald-900">HMAC-SHA512</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
-
-          {/* Configuration Form Card */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {/* Main Form (2 cols) */}
-            <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-              <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                    <Key className="w-4 h-4 text-emerald-600" /> API Credentials & Gateway Parameters
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Updates will take effect immediately across all client checkout sessions.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowEpsSecrets(!showEpsSecrets)}
-                  className="text-xs text-slate-500 hover:text-slate-700 font-semibold flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
-                >
-                  {showEpsSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  <span>{showEpsSecrets ? "Hide Secrets" : "Show Secrets"}</span>
-                </button>
-              </div>
-
-              <form onSubmit={handleSaveEpsSettings} className="space-y-4 text-xs">
-
-                {/* Environment Mode Toggle */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <div>
-                    <div className="font-bold text-slate-900">Gateway Environment Mode</div>
-                    <div className="text-[11px] text-slate-500">
-                      Toggle to switch between Sandbox developer testing and Live payment capture.
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-                    <button
-                      type="button"
-                      onClick={() => setEpsSettings({
-                        ...epsSettings,
-                        is_sandbox: true,
-                        base_url: "https://sandboxpgapi.eps.com.bd"
-                      })}
-                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${epsSettings.is_sandbox
-                        ? "bg-amber-400 text-slate-950 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                        }`}
-                    >
-                      Sandbox
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEpsSettings({
-                        ...epsSettings,
-                        is_sandbox: false,
-                        base_url: "https://pgapi.eps.com.bd"
-                      })}
-                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${!epsSettings.is_sandbox
-                        ? "bg-emerald-600 text-white shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                        }`}
-                    >
-                      Production Live
-                    </button>
-                  </div>
-                </div>
-
-                {/* Base URL */}
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">EPS Base API URL</label>
-                  <input
-                    type="text"
-                    required
-                    value={epsSettings.base_url}
-                    onChange={e => setEpsSettings({ ...epsSettings, base_url: e.target.value })}
-                    placeholder="https://sandboxpgapi.eps.com.bd"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-
-                {/* Username & Password */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">EPS Username (Email)</label>
-                    <input
-                      type="text"
-                      required
-                      value={epsSettings.username}
-                      onChange={e => setEpsSettings({ ...epsSettings, username: e.target.value })}
-                      placeholder="Epsdemo@gmail.com"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">EPS Password</label>
-                    <input
-                      type={showEpsSecrets ? "text" : "password"}
-                      required
-                      value={epsSettings.password}
-                      onChange={e => setEpsSettings({ ...epsSettings, password: e.target.value })}
-                      placeholder="Enter password"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Hash Key */}
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">EPS Hash Key (Secret for HMAC-SHA512)</label>
-                  <input
-                    type={showEpsSecrets ? "text" : "password"}
-                    required
-                    value={epsSettings.hash_key}
-                    onChange={e => setEpsSettings({ ...epsSettings, hash_key: e.target.value })}
-                    placeholder="FHZxyzeps56789gfhg678ygu876o="
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-
-                {/* Merchant ID & Store ID */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">Merchant ID</label>
-                    <input
-                      type="text"
-                      required
-                      value={epsSettings.merchant_id}
-                      onChange={e => setEpsSettings({ ...epsSettings, merchant_id: e.target.value })}
-                      placeholder="29e86e70-0ac6-45eb-ba04-9fcb0aaed12a"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-800 mb-1">Store ID</label>
-                    <input
-                      type="text"
-                      required
-                      value={epsSettings.store_id}
-                      onChange={e => setEpsSettings({ ...epsSettings, store_id: e.target.value })}
-                      placeholder="d44e705f-9e3a-41de-98b1-1674631637da"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Merchant Number */}
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">Merchant Contact / Support Number</label>
-                  <input
-                    type="text"
-                    value={epsSettings.merchant_number || ""}
-                    onChange={e => setEpsSettings({ ...epsSettings, merchant_number: e.target.value })}
-                    placeholder="e.g. 01700000000"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
-                  />
-                </div>
-
-                {/* Submit Action */}
-                <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
-                  <button
-                    type="submit"
-                    disabled={isSavingEps}
-                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    {isSavingEps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                    <span>{isSavingEps ? "Saving Settings..." : "Save EPS PGW Settings"}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* Side Card: Official Sandbox Reference */}
-            <div className="space-y-4">
-              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
-                <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-emerald-600" /> EPS Supported Channels
-                </div>
-                <p className="text-slate-500 text-[11.5px] leading-relaxed">
-                  EPS allows Bangladeshi clients to pay using multiple payment channels in BDT (৳):
-                </p>
-
-                <div className="space-y-2">
-                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span className="font-bold text-slate-800">Visa / Mastercard / Amex</span>
-                  </div>
-                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-pink-500"></span>
-                    <span className="font-bold text-slate-800">bKash, Nagad, Rocket, Upay</span>
-                  </div>
-                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                    <span className="font-bold text-slate-800">Internet & Core Banking</span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 space-y-2 font-mono text-[11px]">
-                  <div className="font-bold text-emerald-900">Sandbox Test Account:</div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">User:</span>
-                    <span className="font-bold text-emerald-900">Epsdemo@gmail.com</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Auth:</span>
-                    <span className="font-bold text-emerald-900">HMAC-SHA512</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
 
         </div>
       )}

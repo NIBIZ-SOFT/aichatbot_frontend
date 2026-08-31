@@ -12,6 +12,7 @@ import {
   Printer, Award
 } from "lucide-react";
 import { api } from "../../lib/api";
+import PaymentMethodModal from "../payment/PaymentMethodModal";
 
 interface SubscriptionDetails {
   id: string;
@@ -71,10 +72,12 @@ export default function SubscriptionView() {
   const [wallet, setWallet] = useState<any | null>(null);
   const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
   const [topupAmount, setTopupAmount] = useState<number>(1000);
+  const [topupGateway, setTopupGateway] = useState<"bkash" | "eps">("bkash");
   const [isInitiatingTopup, setIsInitiatingTopup] = useState(false);
 
   // Plan Upgrade / Change Modal State
   const [selectedPlanForChange, setSelectedPlanForChange] = useState<any | null>(null);
+  const [selectedCheckoutPlan, setSelectedCheckoutPlan] = useState<any | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("bKash Direct Merchant");
   const [isChangingPlan, setIsChangingPlan] = useState(false);
   const [isInitiatingBkash, setIsInitiatingBkash] = useState<string | null>(null);
@@ -82,35 +85,32 @@ export default function SubscriptionView() {
   const handleTopupWallet = async (amount: number) => {
     setIsInitiatingTopup(true);
     try {
-      const session = await api.initWalletTopup(amount);
-      if (session && session.paymentID) {
-        await api.executeWalletTopup(session.paymentID);
-        showToast("Wallet Credited!", `৳${amount.toLocaleString()} added to your AI Prepaid Balance!`, "success");
-        setIsTopupModalOpen(false);
-        loadData();
+      if (topupGateway === "eps") {
+        const session = await api.initWalletTopupEps(amount);
+        if (session && session.redirectURL) {
+          showToast("Redirecting to EPS", "Launching secure EPS Checkout Portal for Wallet Top-Up...", "info");
+          window.location.href = session.redirectURL;
+        } else {
+          showToast("EPS Gateway", "Failed to connect with EPS checkout.", "error");
+        }
+      } else {
+        const session = await api.initWalletTopup(amount);
+        if (session && session.paymentID) {
+          await api.executeWalletTopup(session.paymentID);
+          showToast("Wallet Credited!", `৳${amount.toLocaleString()} added to your AI Prepaid Balance!`, "success");
+          setIsTopupModalOpen(false);
+          loadData();
+        }
       }
     } catch (err: any) {
-      showToast("Top-Up Failed", err.message || "Failed to process bKash recharge.", "error");
+      showToast("Top-Up Failed", err.message || "Failed to process recharge.", "error");
     } finally {
       setIsInitiatingTopup(false);
     }
   };
 
-  const handlePayWithBkash = async (plan: any) => {
-    try {
-      setIsInitiatingBkash(plan.id);
-      const cycle = isAnnual ? "annual" : "monthly";
-      const session = await api.createBkashPayment(plan.id, cycle, "01770618575", appliedCoupon?.code);
-      if (session && session.bkashURL) {
-        window.location.href = session.bkashURL;
-      } else {
-        showToast("bKash Gateway", "Failed to connect with official bKash checkout.", "error");
-      }
-    } catch (err: any) {
-      showToast("bKash Error", err.message || "Failed to initiate bKash payment.", "error");
-    } finally {
-      setIsInitiatingBkash(null);
-    }
+  const handleOpenCheckout = (plan: any) => {
+    setSelectedCheckoutPlan(plan);
   };
 
   // Invoice Receipt Modal State
@@ -274,10 +274,10 @@ export default function SubscriptionView() {
     e.preventDefault();
     if (!selectedPlanForChange) return;
 
-    if (selectedPaymentMethod.toLowerCase().includes("bkash")) {
+    if (selectedPaymentMethod.toLowerCase().includes("bkash") || selectedPaymentMethod.toLowerCase().includes("eps")) {
       const planToBuy = selectedPlanForChange;
       setSelectedPlanForChange(null);
-      await handlePayWithBkash(planToBuy);
+      setSelectedCheckoutPlan(planToBuy);
       return;
     }
 
@@ -684,22 +684,12 @@ export default function SubscriptionView() {
                   </button>
                 ) : (
                   <button
-                    disabled={isInitiatingBkash === p.id}
-                    onClick={() => handlePayWithBkash(p)}
-                    className="w-full py-2.5 rounded-xl font-semibold text-xs bg-[#e2136e] hover:bg-[#c00f5c] text-white shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    onClick={() => handleOpenCheckout(p)}
+                    className="w-full py-2.5 rounded-xl font-bold text-xs bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    {isInitiatingBkash === p.id ? (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Connecting to bKash...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="h-4 w-4 rounded-full bg-white text-[#e2136e] flex items-center justify-center text-[10.5px] font-black">৳</span>
-                        <span>Pay with bKash</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </>
-                    )}
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span>Choose Plan (bKash / EPS)</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
@@ -720,18 +710,20 @@ export default function SubscriptionView() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div className="p-3.5 rounded-2xl bg-pink-50/60 border border-pink-200/80 font-bold text-pink-900 flex items-center gap-2.5">
-            <div className="h-6 w-6 rounded-full bg-pink-600 text-white flex items-center justify-center text-[10px]">৳</div>
+            <div className="h-6 w-6 rounded-full bg-[#e2136e] text-white flex items-center justify-center text-[10px] font-black">৳</div>
             <div>
-              <div>bKash Direct</div>
-              <div className="text-[10px] text-pink-700 font-normal">Merchant Auto-Debit</div>
+              <div>bKash Direct PGW</div>
+              <div className="text-[10px] text-pink-700 font-normal">Tokenized Checkout</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/80 font-bold text-amber-900 flex items-center gap-2.5">
-            <div className="h-6 w-6 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px]">৳</div>
+          <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 font-bold text-emerald-900 flex items-center gap-2.5">
+            <div className="h-6 w-6 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+              <CreditCard className="w-3.5 h-3.5" />
+            </div>
             <div>
-              <div>Nagad Pay</div>
-              <div className="text-[10px] text-amber-700 font-normal">Instant QR Checkout</div>
+              <div>EPS Easy Payment</div>
+              <div className="text-[10px] text-emerald-700 font-normal">Multi-Channel PGW</div>
             </div>
           </div>
 
@@ -739,15 +731,15 @@ export default function SubscriptionView() {
             <CreditCard className="w-5 h-5 text-indigo-600" />
             <div>
               <div>Cards (Visa/Master)</div>
-              <div className="text-[10px] text-indigo-700 font-normal">SSLCommerz / Shurjopay</div>
+              <div className="text-[10px] text-indigo-700 font-normal">Debit & Credit Cards</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-slate-800 flex items-center gap-2.5">
-            <Building2 className="w-5 h-5 text-slate-600" />
+          <div className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/80 font-bold text-amber-900 flex items-center gap-2.5">
+            <div className="h-6 w-6 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px]">৳</div>
             <div>
-              <div>Corporate Bank Wire</div>
-              <div className="text-[10px] text-slate-500 font-normal">BRAC / City Bank</div>
+              <div>Nagad, Rocket, Upay</div>
+              <div className="text-[10px] text-amber-700 font-normal">Via EPS Gateway</div>
             </div>
           </div>
         </div>
@@ -1187,18 +1179,18 @@ export default function SubscriptionView() {
         </div>
       )}
 
-      {/* 4. bKash Prepaid Wallet Top-Up Modal */}
+      {/* 4. Multi-Gateway Prepaid Wallet Top-Up Modal */}
       {isTopupModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 p-6 sm:p-7 space-y-6 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-pink-50 flex items-center justify-center font-black text-pink-600 text-xs">
-                  bKash
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center font-black text-indigo-600 text-xs">
+                  <Zap className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="text-base font-black text-slate-900">Recharge AI Prepaid Wallet</h3>
-                  <p className="text-[11px] text-slate-500">Instant credit addition via official bKash Merchant Gateway</p>
+                  <p className="text-[11px] text-slate-500">Instant credit addition via bKash or EPS Gateway</p>
                 </div>
               </div>
               <button
@@ -1210,6 +1202,38 @@ export default function SubscriptionView() {
             </div>
 
             <div className="space-y-4">
+              {/* Payment Gateway Toggle */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">Select Payment Gateway</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTopupGateway("bkash")}
+                    className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                      topupGateway === "bkash"
+                        ? "border-[#e2136e] bg-pink-50 text-[#e2136e] ring-1 ring-pink-500"
+                        : "border-slate-200 hover:border-slate-300 text-slate-700"
+                    }`}
+                  >
+                    <span className="w-4 h-4 rounded-full bg-[#e2136e] text-white flex items-center justify-center text-[10px] font-black">৳</span>
+                    <span>bKash Direct</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTopupGateway("eps")}
+                    className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                      topupGateway === "eps"
+                        ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600"
+                        : "border-slate-200 hover:border-slate-300 text-slate-700"
+                    }`}
+                  >
+                    <CreditCard className="w-4 h-4 text-emerald-600" />
+                    <span>EPS Gateway</span>
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1.5">Select Top-Up Amount (BDT)</label>
                 <div className="grid grid-cols-4 gap-2 mb-3">
@@ -1220,8 +1244,8 @@ export default function SubscriptionView() {
                       onClick={() => setTopupAmount(amt)}
                       className={`py-2 rounded-xl text-xs font-bold font-mono border transition-all cursor-pointer ${
                         topupAmount === amt
-                          ? "bg-pink-600 text-white border-pink-600 shadow-xs"
-                          : "bg-slate-50 text-slate-700 border-slate-200 hover:border-pink-300"
+                          ? (topupGateway === "eps" ? "bg-emerald-600 text-white border-emerald-600" : "bg-pink-600 text-white border-pink-600 shadow-xs")
+                          : "bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300"
                       }`}
                     >
                       ৳{amt.toLocaleString()}
@@ -1238,14 +1262,14 @@ export default function SubscriptionView() {
                     value={topupAmount}
                     onChange={(e) => setTopupAmount(Number(e.target.value))}
                     placeholder="Enter custom amount..."
-                    className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-pink-500"
+                    className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
 
-              <div className="p-3 bg-pink-50/60 rounded-xl border border-pink-100 text-[11px] text-pink-900 space-y-1">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-700 space-y-1">
                 <div className="font-bold flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-pink-600" /> Secure Tokenized bKash Checkout
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Instant Account Credit
                 </div>
                 <div className="text-slate-600">
                   Your funds are immediately credited to your AI balance and deducted at ৳1.50 per 10k AI tokens used.
@@ -1255,16 +1279,18 @@ export default function SubscriptionView() {
               <button
                 onClick={() => handleTopupWallet(topupAmount)}
                 disabled={isInitiatingTopup || topupAmount < 100}
-                className="w-full py-3 bg-[#E2136E] hover:bg-[#C90E60] text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className={`w-full py-3 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
+                  topupGateway === "eps" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-[#E2136E] hover:bg-[#C90E60]"
+                }`}
               >
                 {isInitiatingTopup ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Processing bKash Payment...</span>
+                    <span>Processing Payment...</span>
                   </>
                 ) : (
                   <>
-                    <span>Proceed to Pay ৳{topupAmount.toLocaleString()} via bKash</span>
+                    <span>Proceed to Pay ৳{topupAmount.toLocaleString()} via {topupGateway === "eps" ? "EPS" : "bKash"}</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -1272,6 +1298,23 @@ export default function SubscriptionView() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Multi-Gateway Subscription Purchase Modal */}
+      {selectedCheckoutPlan && (
+        <PaymentMethodModal
+          plan={selectedCheckoutPlan}
+          isAnnual={isAnnual}
+          couponCode={appliedCoupon?.code}
+          discountAmount={appliedCoupon?.discount_amount_bdt || 0}
+          payerEmail={user?.email}
+          payerName={user?.full_name}
+          onClose={() => setSelectedCheckoutPlan(null)}
+          onSuccess={() => {
+            setSelectedCheckoutPlan(null);
+            loadData();
+          }}
+        />
       )}
 
     </div>

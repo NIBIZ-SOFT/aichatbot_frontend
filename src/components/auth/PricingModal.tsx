@@ -201,8 +201,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
     return true;
   };
 
-  const handleStartBkashPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleStartPayment = async (gateway: "bkash" | "eps" = "bkash") => {
     if (!validateForm()) return;
     try {
       setIsLoading(true);
@@ -218,14 +217,33 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
         }));
       }
 
-      const session = await api.createBkashPayment(selectedTier, "monthly", "01770618575", appliedCoupon?.code);
-      if (session && session.bkashURL) {
-        window.location.href = session.bkashURL;
+      if (gateway === "eps") {
+        const session = await api.createEpsPayment(
+          selectedTier,
+          "monthly",
+          {
+            name: adminName || orgName + " Admin",
+            email: adminEmail,
+            phone: "01700000000",
+            address: "Dhaka, Bangladesh"
+          },
+          appliedCoupon?.code
+        );
+        if (session && session.redirectURL) {
+          window.location.href = session.redirectURL;
+        } else {
+          showToast("EPS Gateway", "Failed to connect with EPS checkout.", "error");
+        }
       } else {
-        showToast("bKash Gateway", "Failed to connect with official bKash checkout.", "error");
+        const session = await api.createBkashPayment(selectedTier, "monthly", "01770618575", appliedCoupon?.code);
+        if (session && session.bkashURL) {
+          window.location.href = session.bkashURL;
+        } else {
+          showToast("bKash Gateway", "Failed to connect with official bKash checkout.", "error");
+        }
       }
     } catch (err: any) {
-      showToast("bKash Error", err.message || "Failed to initiate bKash payment.", "error");
+      showToast("Payment Error", err.message || "Failed to initiate payment gateway.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -499,7 +517,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                 </div>
 
                 {/* Form Fields */}
-                <form id="pricing-modal-form" onSubmit={handleStartBkashPayment} className="space-y-3 text-xs">
+                <form id="pricing-modal-form" onSubmit={(e) => { e.preventDefault(); handleStartPayment("bkash"); }} className="space-y-3 text-xs">
                   {/* Business Model / Archetype Selector */}
                   <div>
                     <label className="block font-bold text-slate-700 mb-1.5">Business Model / Industry Type *</label>
@@ -662,11 +680,22 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                 <span className="sm:hidden">Trial</span>
               </button>
 
+              {/* Pay with EPS Gateway Button */}
+              <button
+                type="button"
+                disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                onClick={() => handleStartPayment("eps")}
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Pay with EPS</span>
+              </button>
+
               {/* Pay with bKash PGW Button */}
               <button
-                type="submit"
-                form="pricing-modal-form"
+                type="button"
                 disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                onClick={() => handleStartPayment("bkash")}
                 className="px-4 py-2 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-bold rounded-xl text-xs shadow-md shadow-pink-600/20 transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
               >
                 <span className="h-4 w-4 rounded-full bg-white text-[#e2136e] flex items-center justify-center text-[10px] font-black">৳</span>

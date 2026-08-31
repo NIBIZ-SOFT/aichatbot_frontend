@@ -450,6 +450,64 @@ export const api = {
     return apiFetch(`/payment/bkash/query/${paymentId}`);
   },
 
+  // EPS (Easy Payment System) Checkout
+  async createEpsPayment(
+    tier: string,
+    billingCycle: string = "monthly",
+    customerDetails?: { name?: string; email?: string; phone?: string; address?: string },
+    couponCode?: string
+  ) {
+    return apiFetch("/payment/eps/create", {
+      method: "POST",
+      body: JSON.stringify({
+        tier,
+        billing_cycle: billingCycle,
+        customer_name: customerDetails?.name,
+        customer_email: customerDetails?.email,
+        customer_phone: customerDetails?.phone,
+        customer_address: customerDetails?.address,
+        coupon_code: couponCode || undefined,
+      }),
+    });
+  },
+
+  async executeEpsPayment(
+    merchantTransactionId: string,
+    tier: string,
+    billingCycle: string = "monthly",
+    couponCode?: string,
+    payerEmail?: string
+  ) {
+    return apiFetch("/payment/eps/execute", {
+      method: "POST",
+      body: JSON.stringify({
+        merchant_transaction_id: merchantTransactionId,
+        tier,
+        billing_cycle: billingCycle,
+        coupon_code: couponCode || undefined,
+        payer_email: payerEmail || undefined,
+      }),
+    });
+  },
+
+  async queryEpsPayment(merchantTransactionId: string) {
+    return apiFetch(`/payment/eps/query/${merchantTransactionId}`);
+  },
+
+  async initWalletTopupEps(amountBdt: number) {
+    return apiFetch("/payment/wallet/topup-eps", {
+      method: "POST",
+      body: JSON.stringify({ amount_bdt: amountBdt }),
+    });
+  },
+
+  async executeWalletTopupEps(merchantTransactionId: string) {
+    return apiFetch("/payment/wallet/execute-eps", {
+      method: "POST",
+      body: JSON.stringify({ merchant_transaction_id: merchantTransactionId }),
+    });
+  },
+
   // Team (Strict Multi-Tenant Isolated with Seat Limits)
   async getTeamMembers() {
     return apiFetch("/team/members");
@@ -615,6 +673,24 @@ export const api = {
 
   async testSuperAdminBkashConnection() {
     return apiFetch("/superadmin/bkash/test-connection", {
+      method: "POST",
+    });
+  },
+
+  // Platform Super Admin EPS PGW Management
+  async getSuperAdminEpsSettings() {
+    return apiFetch("/superadmin/eps/settings");
+  },
+
+  async updateSuperAdminEpsSettings(payload: any) {
+    return apiFetch("/superadmin/eps/settings", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async testSuperAdminEpsConnection() {
+    return apiFetch("/superadmin/eps/test-connection", {
       method: "POST",
     });
   },

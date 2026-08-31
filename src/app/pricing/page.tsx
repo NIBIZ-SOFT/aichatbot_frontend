@@ -179,8 +179,7 @@ export default function PricingPage() {
     return true;
   };
 
-  const handleStartBkashPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleStartPayment = async (gateway: "bkash" | "eps" = "bkash") => {
     if (!validateForm()) return;
     try {
       setIsLoading(true);
@@ -196,14 +195,34 @@ export default function PricingPage() {
       }
 
       const cycle = isAnnual ? "annual" : "monthly";
-      const session = await api.createBkashPayment(selectedTier, cycle, "01770618575", appliedCoupon?.code);
-      if (session && session.bkashURL) {
-        window.location.href = session.bkashURL;
+
+      if (gateway === "eps") {
+        const session = await api.createEpsPayment(
+          selectedTier,
+          cycle,
+          {
+            name: adminName || orgName + " Admin",
+            email: adminEmail,
+            phone: "01700000000",
+            address: "Dhaka, Bangladesh"
+          },
+          appliedCoupon?.code
+        );
+        if (session && session.redirectURL) {
+          window.location.href = session.redirectURL;
+        } else {
+          showToast("EPS Gateway", "Failed to connect with EPS checkout.", "error");
+        }
       } else {
-        showToast("bKash Gateway", "Failed to connect with official bKash checkout.", "error");
+        const session = await api.createBkashPayment(selectedTier, cycle, "01770618575", appliedCoupon?.code);
+        if (session && session.bkashURL) {
+          window.location.href = session.bkashURL;
+        } else {
+          showToast("bKash Gateway", "Failed to connect with official bKash checkout.", "error");
+        }
       }
     } catch (err: any) {
-      showToast("bKash Error", err.message || "Failed to initiate bKash payment.", "error");
+      showToast("Payment Error", err.message || "Failed to initiate payment gateway.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -584,16 +603,28 @@ export default function PricingPage() {
                 </div>
 
                 {/* Checkout CTAs */}
-                <div className="space-y-2 pt-2">
-                  <button
-                    type="submit"
-                    disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
-                    className="w-full py-3.5 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-black rounded-2xl text-xs shadow-lg shadow-pink-600/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <span className="h-5 w-5 rounded-full bg-white text-[#e2136e] flex items-center justify-center text-[11px] font-black">৳</span>
-                    <span>Pay with bKash (৳{finalPrice.toLocaleString()} BDT)</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                <div className="space-y-2.5 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                      onClick={() => handleStartPayment("bkash")}
+                      className="py-3 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-black rounded-xl text-xs shadow-md shadow-pink-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span className="h-4 w-4 rounded-full bg-white text-[#e2136e] flex items-center justify-center text-[10px] font-black">৳</span>
+                      <span>Pay with bKash</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                      onClick={() => handleStartPayment("eps")}
+                      className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      <span>Pay with EPS</span>
+                    </button>
+                  </div>
 
                   <button
                     type="button"

@@ -50,7 +50,7 @@ interface MetricsData {
   platform_uptime_percent: number;
 }
 
-export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "bkash" | "infrastructure" | "audit" | "theme";
+export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "bkash" | "eps" | "infrastructure" | "audit" | "theme";
 
 interface SuperAdminViewProps {
   defaultTab?: SuperAdminTabType;
@@ -146,6 +146,23 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   const [isTestingBkash, setIsTestingBkash] = useState(false);
   const [bkashPingResult, setBkashPingResult] = useState<any | null>(null);
   const [showSecrets, setShowSecrets] = useState(false);
+
+  // EPS (Easy Payment System) Gateway Customization State
+  const [epsSettings, setEpsSettings] = useState<any>({
+    is_sandbox: true,
+    base_url: "https://sandboxpgapi.eps.com.bd",
+    username: "Epsdemo@gmail.com",
+    password: "Epsdemo258@",
+    hash_key: "FHZxyzeps56789gfhg678ygu876o=",
+    merchant_id: "29e86e70-0ac6-45eb-ba04-9fcb0aaed12a",
+    store_id: "d44e705f-9e3a-41de-98b1-1674631637da",
+    merchant_number: "01700000000",
+    status: "Sandbox Test Mode"
+  });
+  const [isSavingEps, setIsSavingEps] = useState(false);
+  const [isTestingEps, setIsTestingEps] = useState(false);
+  const [epsPingResult, setEpsPingResult] = useState<any | null>(null);
+  const [showEpsSecrets, setShowEpsSecrets] = useState(false);
 
   // Tenants Filter & Search State
   const [searchQuery, setSearchQuery] = useState("");
@@ -271,13 +288,14 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [m, tList, rev, infra, logs, bkashCfg, plans, coupons, aiCfg, pricingCfg] = await Promise.all([
+      const [m, tList, rev, infra, logs, bkashCfg, epsCfg, plans, coupons, aiCfg, pricingCfg] = await Promise.all([
         api.getSuperAdminMetrics(),
         api.getSuperAdminTenants(),
         api.getSuperAdminRevenue(),
         api.getSuperAdminInfrastructure(),
         api.getSuperAdminAuditLogs(),
         api.getSuperAdminBkashSettings().catch(() => null),
+        api.getSuperAdminEpsSettings().catch(() => null),
         api.getSuperAdminPlans().catch(() => []),
         api.getSuperAdminCoupons().catch(() => []),
         api.getSuperAdminAISettings().catch(() => null),
@@ -289,6 +307,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       setInfraData(infra);
       setAuditLogs(logs);
       if (bkashCfg) setBkashSettings(bkashCfg);
+      if (epsCfg) setEpsSettings(epsCfg);
       if (plans) setPlansList(plans);
       if (coupons) setCouponsList(coupons);
       if (aiCfg) setAiSettings(aiCfg);
@@ -489,6 +508,41 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       showToast("Connection Error", err.message || "bKash ping test failed", "error");
     } finally {
       setIsTestingBkash(false);
+    }
+  };
+
+  // EPS PGW Gateway Handlers
+  const handleSaveEpsSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingEps(true);
+    try {
+      await api.updateSuperAdminEpsSettings(epsSettings);
+      showToast("EPS Gateway Updated", "Platform EPS credentials and HMAC keys saved successfully.", "success");
+      const updated = await api.getSuperAdminEpsSettings();
+      setEpsSettings(updated);
+      api.getSuperAdminAuditLogs().then(setAuditLogs).catch(() => { });
+    } catch (err: any) {
+      showToast("Error", err.message || "Failed to update EPS settings", "error");
+    } finally {
+      setIsSavingEps(false);
+    }
+  };
+
+  const handleTestEpsPing = async () => {
+    setIsTestingEps(true);
+    setEpsPingResult(null);
+    try {
+      const res = await api.testSuperAdminEpsConnection();
+      setEpsPingResult(res);
+      if (res.status === "healthy") {
+        showToast("EPS API Active", `Latency: ${res.latency_ms}ms • Token Grant & Hash Successful`, "success");
+      } else {
+        showToast("EPS Ping Warning", res.message, "info");
+      }
+    } catch (err: any) {
+      showToast("Connection Error", err.message || "EPS ping test failed", "error");
+    } finally {
+      setIsTestingEps(false);
     }
   };
 
@@ -867,7 +921,17 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                 }`}
             >
-              <CreditCard className="w-4 h-4 text-pink-400" /> bKash PGW Gateway
+              <CreditCard className="w-4 h-4 text-pink-400" /> bKash PGW
+            </button>
+
+            <button
+              onClick={() => handleTabClick("eps")}
+              className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "eps"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                }`}
+            >
+              <CreditCard className="w-4 h-4 text-emerald-400" /> EPS PGW Gateway
             </button>
 
             <button
@@ -2161,8 +2225,274 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 4: GLOBAL AI INFRASTRUCTURE & MODEL MANAGEMENT */}
+      {/* TAB: EPS (EASY PAYMENT SYSTEM) CONFIGURATION & CONTROL PLANE */}
       {/* ========================================================================= */}
+      {activeTab === "eps" && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+
+          {/* Top Status & Ping Hero Card */}
+          <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="space-y-2 max-w-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30">
+                  EPS (Easy Payment System) Engine
+                </span>
+                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${epsSettings.is_sandbox ? 'bg-amber-400 text-slate-950' : 'bg-emerald-400 text-slate-950'
+                  }`}>
+                  {epsSettings.is_sandbox ? 'Sandbox Mode' : 'Live Production'}
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                EPS Payment Gateway Management
+              </h2>
+              <p className="text-xs text-emerald-100/90 leading-relaxed">
+                Configure your official EPS credentials (Cards, MFS, Internet Banking), Merchant ID, Store ID, and Hash Key for multi-channel automated subscription settlement.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <button
+                type="button"
+                onClick={handleTestEpsPing}
+                disabled={isTestingEps}
+                className="px-5 py-2.5 bg-white hover:bg-emerald-50 text-emerald-700 font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isTestingEps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-emerald-600" />}
+                <span>{isTestingEps ? "Testing Ping..." : "Test Connection / Ping"}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Test Ping Response Box if triggered */}
+          {epsPingResult && (
+            <div className="p-4 rounded-2xl bg-slate-900 text-white font-mono text-xs border border-slate-800 space-y-2 animate-in fade-in">
+              <div className="flex justify-between items-center">
+                <span className="text-emerald-400 font-bold flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4" /> {epsPingResult.message}
+                </span>
+                <span className="text-amber-400 font-bold bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
+                  Latency: {epsPingResult.latency_ms}ms
+                </span>
+              </div>
+              <div className="text-slate-400 text-[11px]">
+                Token Preview: <span className="text-emerald-400 font-semibold">{epsPingResult.token_preview}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Configuration Form Card */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            {/* Main Form (2 cols) */}
+            <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                    <Key className="w-4 h-4 text-emerald-600" /> API Credentials & Gateway Parameters
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Updates will take effect immediately across all client checkout sessions.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowEpsSecrets(!showEpsSecrets)}
+                  className="text-xs text-slate-500 hover:text-slate-700 font-semibold flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+                >
+                  {showEpsSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  <span>{showEpsSecrets ? "Hide Secrets" : "Show Secrets"}</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEpsSettings} className="space-y-4 text-xs">
+
+                {/* Environment Mode Toggle */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div>
+                    <div className="font-bold text-slate-900">Gateway Environment Mode</div>
+                    <div className="text-[11px] text-slate-500">
+                      Toggle to switch between Sandbox developer testing and Live payment capture.
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+                    <button
+                      type="button"
+                      onClick={() => setEpsSettings({
+                        ...epsSettings,
+                        is_sandbox: true,
+                        base_url: "https://sandboxpgapi.eps.com.bd"
+                      })}
+                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${epsSettings.is_sandbox
+                        ? "bg-amber-400 text-slate-950 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                        }`}
+                    >
+                      Sandbox
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEpsSettings({
+                        ...epsSettings,
+                        is_sandbox: false,
+                        base_url: "https://pgapi.eps.com.bd"
+                      })}
+                      className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer ${!epsSettings.is_sandbox
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                        }`}
+                    >
+                      Production Live
+                    </button>
+                  </div>
+                </div>
+
+                {/* Base URL */}
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">EPS Base API URL</label>
+                  <input
+                    type="text"
+                    required
+                    value={epsSettings.base_url}
+                    onChange={e => setEpsSettings({ ...epsSettings, base_url: e.target.value })}
+                    placeholder="https://sandboxpgapi.eps.com.bd"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                  />
+                </div>
+
+                {/* Username & Password */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">EPS Username (Email)</label>
+                    <input
+                      type="text"
+                      required
+                      value={epsSettings.username}
+                      onChange={e => setEpsSettings({ ...epsSettings, username: e.target.value })}
+                      placeholder="Epsdemo@gmail.com"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">EPS Password</label>
+                    <input
+                      type={showEpsSecrets ? "text" : "password"}
+                      required
+                      value={epsSettings.password}
+                      onChange={e => setEpsSettings({ ...epsSettings, password: e.target.value })}
+                      placeholder="Enter password"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Hash Key */}
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">EPS Hash Key (Secret for HMAC-SHA512)</label>
+                  <input
+                    type={showEpsSecrets ? "text" : "password"}
+                    required
+                    value={epsSettings.hash_key}
+                    onChange={e => setEpsSettings({ ...epsSettings, hash_key: e.target.value })}
+                    placeholder="FHZxyzeps56789gfhg678ygu876o="
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                  />
+                </div>
+
+                {/* Merchant ID & Store ID */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">Merchant ID</label>
+                    <input
+                      type="text"
+                      required
+                      value={epsSettings.merchant_id}
+                      onChange={e => setEpsSettings({ ...epsSettings, merchant_id: e.target.value })}
+                      placeholder="29e86e70-0ac6-45eb-ba04-9fcb0aaed12a"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">Store ID</label>
+                    <input
+                      type="text"
+                      required
+                      value={epsSettings.store_id}
+                      onChange={e => setEpsSettings({ ...epsSettings, store_id: e.target.value })}
+                      placeholder="d44e705f-9e3a-41de-98b1-1674631637da"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Merchant Number */}
+                <div>
+                  <label className="block font-bold text-slate-800 mb-1">Merchant Contact / Support Number</label>
+                  <input
+                    type="text"
+                    value={epsSettings.merchant_number || ""}
+                    onChange={e => setEpsSettings({ ...epsSettings, merchant_number: e.target.value })}
+                    placeholder="e.g. 01700000000"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-900 font-semibold outline-none focus:border-emerald-500 focus:bg-white transition-all"
+                  />
+                </div>
+
+                {/* Submit Action */}
+                <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                  <button
+                    type="submit"
+                    disabled={isSavingEps}
+                    className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {isSavingEps ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    <span>{isSavingEps ? "Saving Settings..." : "Save EPS PGW Settings"}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Side Card: Official Sandbox Reference */}
+            <div className="space-y-4">
+              <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 text-xs">
+                <div className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-emerald-600" /> EPS Supported Channels
+                </div>
+                <p className="text-slate-500 text-[11.5px] leading-relaxed">
+                  EPS allows Bangladeshi clients to pay using multiple payment channels in BDT (৳):
+                </p>
+
+                <div className="space-y-2">
+                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="font-bold text-slate-800">Visa / Mastercard / Amex</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-pink-500"></span>
+                    <span className="font-bold text-slate-800">bKash, Nagad, Rocket, Upay</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <span className="font-bold text-slate-800">Internet & Core Banking</span>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 space-y-2 font-mono text-[11px]">
+                  <div className="font-bold text-emerald-900">Sandbox Test Account:</div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">User:</span>
+                    <span className="font-bold text-emerald-900">Epsdemo@gmail.com</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Auth:</span>
+                    <span className="font-bold text-emerald-900">HMAC-SHA512</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      )}
       {activeTab === "infrastructure" && (
         <div className="space-y-6 animate-in fade-in duration-200">
 

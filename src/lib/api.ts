@@ -200,10 +200,11 @@ export const api = {
   },
 
   // Auth
-  async login(email: string, password: string = "DemoPass123!") {
+  async login(email: string, password: string = "12345678") {
     return apiFetch("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
+      skipToast: true,
     });
   },
 

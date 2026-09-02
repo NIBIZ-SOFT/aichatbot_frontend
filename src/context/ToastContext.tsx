@@ -76,17 +76,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {/* Toast Notification Container */}
-      <div className="fixed top-4 right-4 sm:top-auto sm:bottom-5 sm:right-5 z-[9999999] flex flex-col gap-2.5 max-w-sm sm:max-w-md w-[calc(100vw-2rem)] sm:w-full pointer-events-none">
+      <div className="fixed top-5 right-5 z-[99999999] flex flex-col gap-2.5 max-w-sm sm:max-w-md w-[calc(100vw-2.5rem)] sm:w-full pointer-events-none">
         {toasts.map(t => (
           <div
             key={t.id}
-            className={`pointer-events-auto p-4 rounded-2xl border shadow-2xl backdrop-blur-2xl flex items-start gap-3 transition-all transform animate-slide-up ${
+            className={`pointer-events-auto p-4 rounded-2xl border shadow-2xl backdrop-blur-2xl flex items-start gap-3 transition-all transform animate-in fade-in slide-in-from-top-4 duration-300 ${
               t.type === "success"
-                ? "bg-slate-900/95 text-white border-emerald-500/30 shadow-emerald-950/20"
+                ? "bg-slate-900/95 text-white border-emerald-500/50 shadow-emerald-950/40"
                 : t.type === "error"
-                ? "bg-slate-950/95 text-rose-100 border-rose-600/40 shadow-rose-950/30"
+                ? "bg-slate-950/95 text-rose-100 border-rose-500 shadow-rose-950/50"
                 : t.type === "warning"
-                ? "bg-slate-950/95 text-amber-100 border-amber-600/40 shadow-amber-950/30"
+                ? "bg-slate-950/95 text-amber-100 border-amber-500/60 shadow-amber-950/40"
                 : "bg-slate-900/95 text-white border-slate-700/50 shadow-slate-950/30"
             }`}
           >

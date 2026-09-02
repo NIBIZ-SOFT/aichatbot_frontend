@@ -171,9 +171,12 @@ export default function LoginScreen() {
 
           {/* Error Alert Box */}
           {errorMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-              <span>{errorMessage}</span>
+            <div className="p-3.5 bg-rose-50/90 border-2 border-rose-400/80 rounded-2xl text-rose-900 text-xs flex items-start gap-3 shadow-md shadow-rose-900/5 animate-in fade-in slide-in-from-top-2 duration-200">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <strong className="block font-bold text-rose-950 mb-0.5">Authentication Failed</strong>
+                <span className="leading-relaxed font-medium">{errorMessage}</span>
+              </div>
             </div>
           )}
 
@@ -185,9 +188,11 @@ export default function LoginScreen() {
                 type="email"
                 required
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={e => { setEmail(e.target.value); setErrorMessage(null); }}
                 placeholder="name@company.com"
-                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 hover:bg-white focus:bg-white text-slate-900 border border-slate-200 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-medium"
+                className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-50 hover:bg-white focus:bg-white text-slate-900 border outline-none focus:ring-2 transition-all font-medium ${
+                  errorMessage ? "border-rose-400 focus:border-rose-600 focus:ring-rose-100" : "border-slate-200 focus:border-indigo-600 focus:ring-indigo-100"
+                }`}
               />
             </div>
 
@@ -206,9 +211,11 @@ export default function LoginScreen() {
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={e => { setPassword(e.target.value); setErrorMessage(null); }}
                   placeholder="••••••••••••"
-                  className="w-full px-3.5 py-2.5 pr-10 text-xs rounded-xl bg-slate-50 hover:bg-white focus:bg-white text-slate-900 border border-slate-200 outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition-all font-mono"
+                  className={`w-full px-3.5 py-2.5 pr-10 text-xs rounded-xl bg-slate-50 hover:bg-white focus:bg-white text-slate-900 border outline-none focus:ring-2 transition-all font-mono ${
+                    errorMessage ? "border-rose-400 focus:border-rose-600 focus:ring-rose-100" : "border-slate-200 focus:border-indigo-600 focus:ring-indigo-100"
+                  }`}
                 />
                 <button
                   type="button"

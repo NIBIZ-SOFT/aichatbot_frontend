@@ -91,17 +91,28 @@ export default function LandingPage() {
     }
   ]);
 
+  const [pricingConfig, setPricingConfig] = useState<any>({
+    default_per_10k_tokens_rate_bdt: 1.5,
+    pay_as_you_go_enabled: true,
+    custom_slider_builder_enabled: true,
+    min_wallet_topup_bdt: 100.0,
+  });
+
   useEffect(() => {
-    api.getPublicPlans()
-      .then((plans: any[]) => {
-        if (plans && Array.isArray(plans) && plans.length > 0) {
-          const activePaidPlans = plans.filter(p => p.monthly_price_bdt > 0 && p.is_active !== false);
-          if (activePaidPlans.length > 0) {
-            setDbPlans(activePaidPlans);
-          }
+    Promise.all([
+      api.getPublicPlans().catch(() => []),
+      api.getPublicPricingConfig().catch(() => null)
+    ]).then(([plans, cfg]: [any[], any]) => {
+      if (plans && Array.isArray(plans) && plans.length > 0) {
+        const activePaidPlans = plans.filter(p => p.monthly_price_bdt > 0 && p.is_active !== false);
+        if (activePaidPlans.length > 0) {
+          setDbPlans(activePaidPlans);
         }
-      })
-      .catch((err) => console.warn("Could not fetch public plans for landing page:", err));
+      }
+      if (cfg) {
+        setPricingConfig(cfg);
+      }
+    }).catch((err) => console.warn("Could not fetch public pricing config:", err));
   }, []);
 
   // Platform Super Admin / Owner Live Chat Widget CDN injection
@@ -167,7 +178,7 @@ export default function LandingPage() {
       <InstantDeployment />
 
       {/* 6. Transparent Pricing */}
-      <PricingSection dbPlans={dbPlans} onOpenPricing={handleOpenPricing} />
+      <PricingSection dbPlans={dbPlans} pricingConfig={pricingConfig} onOpenPricing={handleOpenPricing} />
 
       {/* 7. Frequently Asked Questions */}
       <FaqSection />

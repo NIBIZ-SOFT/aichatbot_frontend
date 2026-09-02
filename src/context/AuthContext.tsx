@@ -168,7 +168,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (email: string, password: string = "12345678"): Promise<{ success: boolean; error?: string }> => {
-    setIsLoading(true);
     try {
       const res = await api.login(email, password);
       localStorage.setItem("aiaas_token", res.access_token);
@@ -200,13 +199,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Login API error:", err);
       const msg = err.message || (typeof err === "string" ? err : "Incorrect email or password.");
       return { success: false, error: msg };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const register = async (name: string, email: string, tenantName: string, password: string = "12345678"): Promise<boolean> => {
-    setIsLoading(true);
     try {
       const res = await api.register(name, email, tenantName, password);
       localStorage.setItem("aiaas_token", res.access_token);
@@ -236,8 +232,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("Register API error:", err);
       return false;
-    } finally {
-      setIsLoading(false);
     }
   };
 

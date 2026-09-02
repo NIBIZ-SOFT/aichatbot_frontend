@@ -33,20 +33,10 @@ export function emitToast(title: string, message?: string, type: ToastType = "er
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const recentToastsRef = useRef<Map<string, number>>(new Map());
 
   const showToast = useCallback((title: string, message?: string, type: ToastType = "success") => {
-    // Smart Deduplication: prevent toast spamming if same message fired within 2.5 seconds
-    const key = `${type}:${title}:${message || ""}`;
-    const now = Date.now();
-    const lastSeen = recentToastsRef.current.get(key) || 0;
-    if (now - lastSeen < 2500) {
-      return; // Ignore spam duplicate
-    }
-    recentToastsRef.current.set(key, now);
-
     const id = Math.random().toString(36).substring(2, 9);
-    setToasts(prev => [...prev.slice(-4), { id, title, message, type }]); // Keep max 5 visible
+    setToasts(prev => [...prev.slice(-4), { id, title, message, type }]);
 
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
@@ -76,18 +66,21 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {/* Toast Notification Container */}
-      <div className="fixed top-5 right-5 z-[99999999] flex flex-col gap-2.5 max-w-sm sm:max-w-md w-[calc(100vw-2.5rem)] sm:w-full pointer-events-none">
+      <div
+        style={{ position: "fixed", top: "18px", right: "18px", zIndex: 999999999 }}
+        className="flex flex-col gap-2.5 max-w-sm sm:max-w-md w-[calc(100vw-2.5rem)] pointer-events-none"
+      >
         {toasts.map(t => (
           <div
             key={t.id}
-            className={`pointer-events-auto p-4 rounded-2xl border shadow-2xl backdrop-blur-2xl flex items-start gap-3 transition-all transform animate-in fade-in slide-in-from-top-4 duration-300 ${
+            className={`toast-slide-down pointer-events-auto p-4 rounded-2xl border shadow-2xl backdrop-blur-2xl flex items-start gap-3 transition-all ${
               t.type === "success"
-                ? "bg-slate-900/95 text-white border-emerald-500/50 shadow-emerald-950/40"
+                ? "bg-slate-900/98 text-white border-emerald-500/60 shadow-emerald-950/40"
                 : t.type === "error"
-                ? "bg-slate-950/95 text-rose-100 border-rose-500 shadow-rose-950/50"
+                ? "bg-slate-950/98 text-rose-100 border-rose-500/80 shadow-rose-950/50"
                 : t.type === "warning"
-                ? "bg-slate-950/95 text-amber-100 border-amber-500/60 shadow-amber-950/40"
-                : "bg-slate-900/95 text-white border-slate-700/50 shadow-slate-950/30"
+                ? "bg-slate-950/98 text-amber-100 border-amber-500/70 shadow-amber-950/40"
+                : "bg-slate-900/98 text-white border-slate-700/50 shadow-slate-950/30"
             }`}
           >
             {t.type === "success" && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />}

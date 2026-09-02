@@ -41,16 +41,23 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
   const isTenantSuspended = tenantInfo?.is_active === false || subscription?.status === "past_due" || subscription?.status === "canceled";
   const suspensionReason = tenantInfo?.branding_config?.suspension_reason || "Subscription renewal is overdue. Settle your pending invoice to restore 24/7 AI capabilities.";
 
-  const totalConvs = stats?.total_conversations ?? 1248;
-  const aiResolved = stats?.ai_resolved_count ?? 874;
-  const humanResolved = stats?.human_resolved_count ?? 374;
-  const tokensUsed = stats?.total_tokens_used ?? 1860000;
+  const totalConvs = stats?.total_conversations ?? 0;
+  const aiResolved = stats?.ai_resolved_count ?? 0;
+  const humanResolved = stats?.human_resolved_count ?? 0;
+  const tokensUsed = stats?.total_tokens_used ?? 0;
+  const tokenLimit = subscription?.monthly_token_limit ?? 500000;
+
+  const aiPct = totalConvs > 0 ? Math.round((aiResolved / totalConvs) * 100) : 0;
+  const humanPct = totalConvs > 0 ? Math.round((humanResolved / totalConvs) * 100) : 0;
+  const tokenLimitStr = tokenLimit >= 1000000 ? `${(tokenLimit / 1000000).toFixed(0)}M` : `${(tokenLimit / 1000).toFixed(0)}k`;
+  const tokenUsedStr = tokensUsed >= 1000000 ? `${(tokensUsed / 1000000).toFixed(2)}M` : `${tokensUsed.toLocaleString()}`;
+  const quotaPct = tokenLimit > 0 ? ((tokensUsed / tokenLimit) * 100).toFixed(1) : "0.0";
 
   const statCards = [
-    { label: "Total Conversations", value: totalConvs.toLocaleString(), change: "+14% vs last week", icon: MessageSquare, iconBg: "bg-[#00C978]/10 text-[#008750]" },
-    { label: "AI Resolved Conversations", value: `${aiResolved.toLocaleString()} (70%)`, change: "Zero human intervention", icon: Sparkles, iconBg: "bg-emerald-50 text-emerald-700" },
-    { label: "Human Escalated Tickets", value: `${humanResolved.toLocaleString()} (30%)`, change: "Handled within SLA", icon: Users, iconBg: "bg-amber-50 text-amber-700" },
-    { label: "Monthly AI Tokens Used", value: `${(tokensUsed / 1000000).toFixed(2)}M / 10M`, change: "18.6% of limit", icon: Cpu, iconBg: "bg-cyan-50 text-cyan-700" }
+    { label: "Total Conversations", value: totalConvs.toLocaleString(), change: totalConvs > 0 ? "Live visitor inquiries" : "No conversations yet", icon: MessageSquare, iconBg: "bg-[#00C978]/10 text-[#008750]" },
+    { label: "AI Resolved Conversations", value: `${aiResolved.toLocaleString()} (${aiPct}%)`, change: "Zero human intervention", icon: Sparkles, iconBg: "bg-emerald-50 text-emerald-700" },
+    { label: "Human Escalated Tickets", value: `${humanResolved.toLocaleString()} (${humanPct}%)`, change: "Handled within SLA", icon: Users, iconBg: "bg-amber-50 text-amber-700" },
+    { label: "Monthly AI Tokens Used", value: `${tokenUsedStr} / ${tokenLimitStr}`, change: `${quotaPct}% of monthly limit`, icon: Cpu, iconBg: "bg-cyan-50 text-cyan-700" }
   ];
 
   return (
@@ -110,7 +117,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
             className="px-4 py-2 bg-[#00C978] hover:bg-[#00B36B] text-[#080D0A] font-bold text-xs rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer"
           >
             <MessageSquare className="w-3.5 h-3.5" />
-            <span>Open Support Inbox ({conversations.length || 3})</span>
+            <span>Open Support Inbox ({conversations.length})</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

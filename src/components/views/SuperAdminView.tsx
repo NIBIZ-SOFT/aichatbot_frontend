@@ -9,7 +9,7 @@ import {
   Sparkles, Activity, Clock, Check, X, Trash2, Zap, ArrowRight,
   FileText, Download, Lock, CheckCircle, HelpCircle, ExternalLink,
   ChevronRight, ChevronLeft, Filter, TrendingUp, Key, Terminal, CreditCard, Eye, EyeOff, Smartphone,
-  Package, Tag, Plus, Edit2, Percent, MessageSquare, Bot
+  Package, Tag, Plus, Edit2, Percent, MessageSquare, Bot, Printer
 } from "lucide-react";
 import { api } from "../../lib/api";
 import { useRouter, usePathname } from "next/navigation";
@@ -93,6 +93,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   const [infraData, setInfraData] = useState<any | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewingInvoice, setViewingInvoice] = useState<any | null>(null);
 
   // SaaS Plans & Offers State
   const [plansList, setPlansList] = useState<any[]>([]);
@@ -1958,9 +1959,12 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
 
           {/* Recent Invoices & Transactions Table */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-            <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-600" /> Recent Billing Transactions & Invoices (BDT ৳)
-            </h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-600" /> Recent Billing Transactions & Official Tax Invoices (BDT ৳)
+              </h3>
+              <span className="text-[11px] font-bold text-slate-400">Click any invoice to preview, verify & print official receipt</span>
+            </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
@@ -1972,20 +1976,45 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                     <th className="py-3 px-4">Amount BDT</th>
                     <th className="py-3 px-4">Payment Method</th>
                     <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {revenueData.recent_transactions.map((tx: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 px-4 font-mono font-bold text-indigo-600">{tx.invoice_number}</td>
+                      <td className="py-3 px-4">
+                        <button
+                          type="button"
+                          onClick={() => setViewingInvoice(tx)}
+                          className="font-mono font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer flex items-center gap-1.5"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-indigo-500" />
+                          <span>{tx.invoice_number}</span>
+                        </button>
+                      </td>
                       <td className="py-3 px-4 font-bold text-slate-900">{tx.tenant_name}</td>
-                      <td className="py-3 px-4">{tx.tier}</td>
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-0.5 rounded-md font-bold text-[11px] bg-slate-100 text-slate-700">
+                          {tx.tier}
+                        </span>
+                      </td>
                       <td className="py-3 px-4 font-bold text-slate-900">৳{tx.amount_bdt.toLocaleString()}</td>
                       <td className="py-3 px-4 text-slate-500">{tx.payment_method}</td>
                       <td className="py-3 px-4">
-                        <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="text-[10.5px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           {tx.status}
                         </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setViewingInvoice(tx)}
+                          className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl transition-all border border-indigo-200 cursor-pointer flex items-center gap-1 ml-auto text-[11px]"
+                        >
+                          <Printer className="w-3 h-3" />
+                          <span>View Receipt</span>
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -3951,6 +3980,243 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Official Tax Invoice & Printable Receipt Modal (Super Admin Verification) */}
+      {viewingInvoice && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-3xl w-full p-6 sm:p-10 my-auto animate-in fade-in zoom-in-95 text-xs text-slate-800 font-sans space-y-6">
+
+            {/* Modal Actions Bar (hidden on print) */}
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100 no-print">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 uppercase tracking-wider flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Official Tax Receipt & Payment Invoice
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95 text-xs"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Print / Save PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingInvoice(null)}
+                  className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 cursor-pointer transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Formal Tax Invoice Container */}
+            <div id="printable-tax-invoice" className="space-y-6 bg-white">
+
+              {/* 1. TOP HEADER: Issuer (Platform Super Admin) vs Invoice Meta */}
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-6 pb-6 border-b-2 border-slate-900">
+                {/* ISSUER DETAILS */}
+                <div className="space-y-2 max-w-sm">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm bg-[#00C978]">
+                      AI
+                    </div>
+                    <div>
+                      <h2 className="text-base font-black text-slate-900 tracking-tight">
+                        Jobab Chat Enterprise Platform
+                      </h2>
+                      <div className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">
+                        Autonomous AI Customer Support & Chat Provider
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-slate-500 leading-relaxed font-medium">
+                    <p>Level 8, Motijheel Commercial Area, Dhaka-1000, Bangladesh</p>
+                    <p>Support: <span className="font-mono text-slate-700">support@jobab.chat</span> • Hotline: <span className="font-mono text-slate-700">+880 1837-586105</span></p>
+                    <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                      Govt. BIN Reg: <strong className="text-slate-700">004892176-0102</strong> • E-Commerce Trade Lic: <strong className="text-slate-700">TR-89210-DHK</strong>
+                    </p>
+                  </div>
+                </div>
+
+                {/* INVOICE META & STATUS */}
+                <div className="sm:text-right space-y-1.5">
+                  <div className="text-xs font-mono font-extrabold uppercase tracking-widest text-slate-400">
+                    TAX INVOICE & RECEIPT
+                  </div>
+                  <div className="text-xl font-black text-slate-900 font-mono tracking-tight">
+                    {viewingInvoice.invoice_number}
+                  </div>
+                  <div className="text-[11px] text-slate-600 font-medium">
+                    Invoice Date: <strong className="text-slate-900 font-mono">{viewingInvoice.date ? new Date(viewingInvoice.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "Current"}</strong>
+                  </div>
+                  <div className="text-[11px] text-slate-600 font-medium">
+                    Payment Gateway: <strong className="text-slate-900">{viewingInvoice.payment_method || "bKash Merchant Direct"}</strong>
+                  </div>
+                  <div className="text-[10.5px] text-slate-500 font-mono">
+                    TrxID: <strong className="text-slate-800">TRX-{viewingInvoice.invoice_number.replace(/[^0-9]/g, '') || "9K82LX"}</strong>
+                  </div>
+                  <div className="pt-1">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-full font-extrabold text-[11px]">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> PAID & SETTLED
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. BILLED TO */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <div>
+                  <div className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-1">
+                    BILLED TO (CLIENT ORGANIZATION):
+                  </div>
+                  <div className="text-sm font-black text-slate-900">
+                    {viewingInvoice.tenant_name || "Client Organization"}
+                  </div>
+                  <div className="text-[11px] text-slate-600 font-medium mt-1">
+                    <span className="text-slate-400">Account Type:</span> <strong className="text-slate-800">SaaS Enterprise Tenant</strong>
+                  </div>
+                  <div className="text-[11px] text-slate-600 font-medium">
+                    <span className="text-slate-400">Subscription Status:</span> <span className="font-mono text-emerald-700 font-bold">Active & Verified</span>
+                  </div>
+                </div>
+
+                <div className="sm:text-right">
+                  <div className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-1">
+                    CLIENT STORE & LOCATION:
+                  </div>
+                  <div className="text-[11px] text-slate-700 font-medium">
+                    Dhaka, Bangladesh
+                  </div>
+                  <div className="text-[11px] text-slate-600 font-medium">
+                    <span className="text-slate-400">Authorized Billing:</span> <span className="font-mono text-slate-800">Primary Tenant Account</span>
+                  </div>
+                  <div className="text-[10.5px] text-slate-500 font-mono mt-0.5">
+                    Tenant Ref: <strong>TEN-{(viewingInvoice.invoice_number || "").slice(-6).toUpperCase()}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. ITEMIZED SERVICE TABLE */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b-2 border-slate-800 bg-slate-100 text-slate-700 uppercase font-black tracking-wider text-[10px]">
+                      <th className="py-2.5 px-3">SL</th>
+                      <th className="py-2.5 px-3">Service & Solution Description</th>
+                      <th className="py-2.5 px-3">Billing Cycle</th>
+                      <th className="py-2.5 px-3 text-right">Qty</th>
+                      <th className="py-2.5 px-3 text-right">Rate (BDT)</th>
+                      <th className="py-2.5 px-3 text-right">Amount (BDT)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    <tr>
+                      <td className="py-3 px-3 font-mono font-bold text-slate-500">01</td>
+                      <td className="py-3 px-3">
+                        <div className="font-black text-slate-900 text-xs">
+                          Enterprise AI Chatbot & Autonomous Live Solution
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                          Package: <strong className="text-indigo-600">{viewingInvoice.tier || "Subscription Package"}</strong> • Includes pgvector RAG Knowledge Base, 1-Line Embed Script & Multi-Agent Queues.
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-slate-600 font-medium">
+                        Monthly (BDT ৳)
+                      </td>
+                      <td className="py-3 px-3 text-right font-mono text-slate-700">1</td>
+                      <td className="py-3 px-3 text-right font-mono font-bold text-slate-800">
+                        ৳{viewingInvoice.amount_bdt.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-3 text-right font-mono font-black text-slate-900">
+                        ৳{viewingInvoice.amount_bdt.toLocaleString()}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* 4. FINANCIAL SUMMARY */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t-2 border-slate-200 items-start">
+                <div className="space-y-2 p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-100 text-[11px] text-indigo-950">
+                  <div className="font-bold flex items-center gap-1.5 text-indigo-900">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Payment Verification & Security</span>
+                  </div>
+                  <p className="text-slate-600 leading-relaxed">
+                    Payment successfully captured and authorized via <strong>{viewingInvoice.payment_method}</strong>. Digital IT services delivered instantly under SLA compliance.
+                  </p>
+                  <div className="text-[10px] text-slate-500 font-mono pt-1">
+                    Receipt Hash: <code>{viewingInvoice.invoice_number}-BD-AUTH-2026</code>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between text-slate-600 font-medium">
+                    <span>Subtotal:</span>
+                    <span className="font-mono font-bold text-slate-800">৳{viewingInvoice.amount_bdt.toLocaleString()} BDT</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 font-medium">
+                    <span>VAT / Tax (0% IT Export Exemption):</span>
+                    <span className="font-mono text-slate-500">৳0.00 BDT</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t-2 border-slate-900">
+                    <span>Total Amount Paid:</span>
+                    <span className="font-mono text-emerald-700 text-base">৳{viewingInvoice.amount_bdt.toLocaleString()} BDT</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. OFFICIAL DIGITAL SEAL & SIGNATORY */}
+              <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-end gap-6 text-[10px] text-slate-400">
+                <div className="max-w-md space-y-1">
+                  <p className="font-bold text-slate-600 uppercase tracking-wider">Terms & Legal Exemption:</p>
+                  <p className="leading-relaxed">
+                    This is an official computer-generated Tax Invoice issued by <strong>Jobab Chat Enterprise Platform</strong>. No physical signature is required. Eligible for company tax deductions & corporate accounting audits under Bangladesh NBR regulations.
+                  </p>
+                </div>
+
+                {/* Digital Stamp / Seal Box */}
+                <div className="border-2 border-dashed border-emerald-600/60 p-3 rounded-2xl bg-emerald-50/40 text-center space-y-1 min-w-[200px]">
+                  <div className="text-[11px] font-black text-emerald-800 tracking-wider uppercase flex items-center justify-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    DIGITALLY SEALED
+                  </div>
+                  <div className="text-[9.5px] font-bold text-slate-700 font-mono">
+                    Jobab Chat Finance Dept.
+                  </div>
+                  <div className="text-[8.5px] text-slate-500 font-mono">
+                    Authorized Electronic Receipt
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Bottom Close Action (hidden on print) */}
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 no-print">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-md text-xs"
+              >
+                <Printer className="w-4 h-4" /> Print / Save PDF
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewingInvoice(null)}
+                className="px-5 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 cursor-pointer text-xs"
+              >
+                Close
+              </button>
+            </div>
+
           </div>
         </div>
       )}

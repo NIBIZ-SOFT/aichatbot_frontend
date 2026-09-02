@@ -100,7 +100,7 @@ export default function DiagnosticsPage() {
   };
 
   const handleSeedDatabase = async () => {
-    if (!confirm("Are you sure you want to run the database seeder? This will ensure Super Admin (admin@gmail.com), OpenRouter AI configs, bKash & EPS settings, and SaaS Pricing Plans are fully populated.")) {
+    if (!confirm("Are you sure you want to clean and reset all trial data? This will purge all past test client tenants, demo accounts, and trial data while keeping the database tables and initializing clean production Super Admin (admin@gmail.com), OpenRouter AI configs, bKash & EPS settings, and SaaS Pricing Plans.")) {
       return;
     }
     setIsSeeding(true);
@@ -108,10 +108,10 @@ export default function DiagnosticsPage() {
     try {
       const res = await api.triggerDatabaseSeed();
       setSeedResult(res.message);
-      showToast("Database Seeded Successfully", "Super Admin and platform configs are ready!", "success");
+      showToast("Database Purged & Seeded", "All past trial data purged! 100% clean production state initialized.", "success");
       await runDiagnostics();
     } catch (err: any) {
-      setSeedResult(`❌ Seeder Failed: ${err.message}`);
+      setSeedResult(`❌ Purge & Seeder Failed: ${err.message}`);
       showToast("Seeder Failed", err.message, "error");
     } finally {
       setIsSeeding(false);
@@ -282,7 +282,7 @@ export default function DiagnosticsPage() {
                 className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 <Sparkles className={`w-3.5 h-3.5 ${isSeeding ? "animate-spin" : ""}`} />
-                <span>{isSeeded ? "Reseed Database" : "⚡ Run Seeder Now"}</span>
+                <span>🧹 Purge All Trial Data & Reseed</span>
               </button>
             </div>
 

@@ -967,31 +967,25 @@ export default function SubscriptionView() {
 
               {/* 1. TOP HEADER: Issuer (Platform Super Admin) vs Invoice Meta */}
               <div className="flex flex-col sm:flex-row justify-between items-start gap-6 pb-6 border-b-2 border-slate-900">
-                {/* ISSUER DETAILS (Platform Super Admin Official Information) */}
+                {/* ISSUER DETAILS (Jobab Chat Official Platform Information) */}
                 <div className="space-y-2 max-w-sm">
                   <div className="flex items-center gap-2.5">
-                    {currentTheme.logo_url ? (
-                      <img src={currentTheme.logo_url} alt="Platform Logo" className="h-9 w-auto object-contain" />
-                    ) : (
-                      <div className="h-9 w-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm"
-                        style={{ backgroundColor: currentTheme.primary_color || "#00C978" }}
-                      >
-                        AI
-                      </div>
-                    )}
+                    <div className="h-9 w-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-sm bg-[#00C978]">
+                      AI
+                    </div>
                     <div>
                       <h2 className="text-base font-black text-slate-900 tracking-tight">
-                        {currentTheme.platform_name || "N.I. BIZ Soft Platform"}
+                        Jobab Chat Enterprise Platform
                       </h2>
-                      <div className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">
-                        Jobab Chat & Autonomous Chat Provider
+                      <div className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">
+                        Autonomous AI Customer Support & Chat Provider
                       </div>
                     </div>
                   </div>
 
                   <div className="text-[11px] text-slate-500 leading-relaxed font-medium">
                     <p>Level 8, Motijheel Commercial Area, Dhaka-1000, Bangladesh</p>
-                    <p>Support: <span className="font-mono text-slate-700">support@nibizsoft.com</span> • Hotline: <span className="font-mono text-slate-700">+880 1837-586105</span></p>
+                    <p>Support: <span className="font-mono text-slate-700">support@jobab.chat</span> • Hotline: <span className="font-mono text-slate-700">+880 1837-586105</span></p>
                     <p className="text-[10px] text-slate-400 font-mono mt-0.5">
                       Govt. BIN Reg: <strong className="text-slate-700">004892176-0102</strong> • E-Commerce Trade Lic: <strong className="text-slate-700">TR-89210-DHK</strong>
                     </p>

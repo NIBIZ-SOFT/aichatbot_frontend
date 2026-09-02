@@ -67,45 +67,63 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
       {/* Toast Notification Container */}
       <div
-        style={{ position: "fixed", top: "18px", right: "18px", zIndex: 999999999 }}
+        style={{ position: "fixed", top: "20px", right: "20px", zIndex: 999999999 }}
         className="flex flex-col gap-2.5 max-w-sm sm:max-w-md w-[calc(100vw-2.5rem)] pointer-events-none"
       >
         {toasts.map(t => (
           <div
             key={t.id}
-            className={`toast-slide-down pointer-events-auto p-4 rounded-2xl border shadow-2xl backdrop-blur-2xl flex items-start gap-3 transition-all ${
+            className={`toast-slide-down pointer-events-auto p-4 rounded-2xl bg-white border shadow-2xl flex items-start gap-3.5 transition-all ${
               t.type === "success"
-                ? "bg-slate-900/98 text-white border-emerald-500/60 shadow-emerald-950/40"
+                ? "border-slate-200 border-l-4 border-l-emerald-500 shadow-slate-900/10"
                 : t.type === "error"
-                ? "bg-slate-950/98 text-rose-100 border-rose-500/80 shadow-rose-950/50"
+                ? "border-slate-200 border-l-4 border-l-rose-500 shadow-slate-900/10"
                 : t.type === "warning"
-                ? "bg-slate-950/98 text-amber-100 border-amber-500/70 shadow-amber-950/40"
-                : "bg-slate-900/98 text-white border-slate-700/50 shadow-slate-950/30"
+                ? "border-slate-200 border-l-4 border-l-amber-500 shadow-slate-900/10"
+                : "border-slate-200 border-l-4 border-l-indigo-500 shadow-slate-900/10"
             }`}
           >
-            {t.type === "success" && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />}
-            {t.type === "error" && (
-              t.title.toLowerCase().includes("timeout") ? (
-                <Clock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-              ) : t.title.toLowerCase().includes("connection") ? (
-                <WifiOff className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-              ) : (
-                <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-              )
+            {/* Type-Specific Icon Badges */}
+            {t.type === "success" && (
+              <div className="h-8 w-8 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
             )}
-            {t.type === "warning" && <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />}
-            {t.type === "info" && <Info className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />}
+            {t.type === "error" && (
+              <div className="h-8 w-8 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+                {t.title.toLowerCase().includes("timeout") ? (
+                  <Clock className="w-4 h-4 text-amber-600" />
+                ) : t.title.toLowerCase().includes("connection") ? (
+                  <WifiOff className="w-4 h-4 text-rose-600" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-600" />
+                )}
+              </div>
+            )}
+            {t.type === "warning" && (
+              <div className="h-8 w-8 rounded-xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
+                <ShieldAlert className="w-4 h-4 text-amber-600" />
+              </div>
+            )}
+            {t.type === "info" && (
+              <div className="h-8 w-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                <Info className="w-4 h-4 text-indigo-600" />
+              </div>
+            )}
 
-            <div className="flex-1 min-w-0">
-              <h5 className="font-bold text-xs text-white tracking-wide">{t.title}</h5>
-              {t.message && <p className="text-[11.5px] text-slate-300 mt-1 leading-relaxed">{t.message}</p>}
+            {/* Title & Message */}
+            <div className="flex-1 min-w-0 pt-0.5">
+              <h5 className="font-bold text-xs text-slate-900 tracking-tight leading-snug">{t.title}</h5>
+              {t.message && <p className="text-[11.5px] text-slate-600 mt-0.5 leading-relaxed font-normal">{t.message}</p>}
             </div>
 
+            {/* Close Button */}
             <button
               onClick={() => removeToast(t.id)}
-              className="text-slate-400 hover:text-white p-1 transition-colors cursor-pointer rounded-lg hover:bg-slate-800/60"
+              className="text-slate-400 hover:text-slate-700 p-1.5 transition-colors cursor-pointer rounded-lg hover:bg-slate-100 shrink-0"
+              title="Close notification"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         ))}

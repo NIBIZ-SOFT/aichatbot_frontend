@@ -794,7 +794,12 @@ export const api = {
     return apiFetch("/plans/validate-coupon", {
       method: "POST",
       body: JSON.stringify({ code, plan_code: planCode, amount_bdt: amountBdt }),
+      skipToast: true,
     });
+  },
+
+  async validateCouponCode(code: string, planCode: string, amountBdt: number) {
+    return this.validateCoupon(code, planCode, amountBdt);
   },
 
   // Platform Super Admin Plans Management

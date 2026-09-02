@@ -28,43 +28,73 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
     {
       id: "starter",
       code: "starter",
-      name: "Starter Package",
+      name: "Starter Plan",
       monthlyPrice: 4990,
       annualPrice: 4240,
       price: "৳4,990",
       period: "/ month",
-      tokens: "500,000 AI Tokens",
+      tokens: "500k AI Tokens",
       seats: "2 Support Seats",
-      widgets: "1 Website Widget",
-      desc: "Perfect for early-stage startups and small online businesses in Bangladesh."
+      widgets: "2 Website Widgets",
+      desc: "Professional conversational AI for growing e-commerce businesses.",
+      features: [
+        "500,000 AI Tokens / month",
+        "2 Active Website Widgets",
+        "2 Staff / Agent Seats",
+        "10 Knowledge Base Documents",
+        "bKash & EPS Automated Billing",
+        "Basic CSAT & Analytics",
+        "Email Support (24h SLA)"
+      ]
     },
     {
       id: "growth",
       code: "growth",
-      name: "Growth Package",
+      name: "Growth Plan",
       monthlyPrice: 19990,
       annualPrice: 16990,
       price: "৳19,990",
       period: "/ month",
       popular: true,
-      badge_text: "MOST POPULAR",
-      tokens: "2,500,000 AI Tokens",
-      seats: "10 Support Seats",
+      badge_text: "POPULAR",
+      tokens: "2,500k AI Tokens",
+      seats: "5 Support Seats",
       widgets: "5 Website Widgets",
-      desc: "Ideal for growing e-commerce brands and IT companies needing RAG knowledge search."
+      desc: "High-volume AI automation for scaling digital commerce brands.",
+      features: [
+        "2,500,000 AI Tokens / month",
+        "5 Active Website Widgets",
+        "5 Staff / Agent Seats",
+        "50 Knowledge Base Documents",
+        "E-Commerce Cart & Order Desk",
+        "Advanced CSAT & Real-Time Analytics",
+        "Custom Brand White-Labeling",
+        "Priority WhatsApp & Ticket Support"
+      ]
     },
     {
       id: "enterprise",
       code: "enterprise",
-      name: "Enterprise Package",
+      name: "Enterprise Plan",
       monthlyPrice: 49990,
       annualPrice: 42490,
       price: "৳49,990",
       period: "/ month",
-      tokens: "10,000,000 AI Tokens",
-      seats: "25 Support Seats",
-      widgets: "Unlimited Widgets",
-      desc: "Complete white-label, 99.99% uptime SLA, and bKash/Nagad/Card corporate billing."
+      badge_text: "Enterprise",
+      tokens: "10,000k AI Tokens",
+      seats: "20 Support Seats",
+      widgets: "20 Website Widgets",
+      desc: "Dedicated LLM infrastructure, custom integrations & unlimited scalability.",
+      features: [
+        "10,000,000 AI Tokens / month",
+        "20 Active Website Widgets",
+        "20 Staff / Agent Seats",
+        "200 Knowledge Base Documents",
+        "Custom AI LLM Fine-Tuning & RAG",
+        "Dedicated Account Manager",
+        "Enterprise 99.9% SLA Guarantee",
+        "24/7 Phone & Slack Direct Support"
+      ]
     }
   ]);
 
@@ -123,7 +153,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
 
             const isPaygActive = pricingCfg?.pay_as_you_go_enabled !== false;
             const tokenRate10k = pricingCfg?.default_per_10k_tokens_rate_bdt || 1.50;
-            const minTopup = pricingCfg?.min_wallet_topup_bdt || 1000;
+            const minTopup = pricingCfg?.min_wallet_topup_bdt || 100;
 
             const paygPlan = isPaygActive ? {
               id: "payg",

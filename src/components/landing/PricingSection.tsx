@@ -21,6 +21,8 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
   const isSliderActive = pricingConfig?.custom_slider_builder_enabled !== false;
   const tokenRate10k = pricingConfig?.default_per_10k_tokens_rate_bdt || 1.50;
   const minTopup = pricingConfig?.min_wallet_topup_bdt || 100.0;
+  const annualDiscountPercent = pricingConfig?.annual_discount_percentage !== undefined ? Number(pricingConfig.annual_discount_percentage) : 15;
+  const discountMultiplier = Math.max(0, 1 - (annualDiscountPercent / 100));
 
   // Real-time custom slider price calculation
   const baseFee = 1990;
@@ -28,7 +30,7 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
   const extraSeatsCost = Math.max(0, sliderSeats - 2) * 750;
   const extraWebsitesCost = Math.max(0, sliderWebsites - 1) * 1200;
   const rawCustomMonthly = Math.round(baseFee + tokensCost + extraSeatsCost + extraWebsitesCost);
-  const customPrice = billingCycle === "annual" ? Math.round(rawCustomMonthly * 0.85) : rawCustomMonthly;
+  const customPrice = billingCycle === "annual" ? Math.round(rawCustomMonthly * discountMultiplier) : rawCustomMonthly;
 
   return (
     <section id="pricing" className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
@@ -69,9 +71,11 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
             }`}
           >
             <span>Annual Billing</span>
-            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-              15% OFF
-            </span>
+            {annualDiscountPercent > 0 && (
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                {annualDiscountPercent}% OFF
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -81,7 +85,7 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
         {dbPlans.map((plan) => {
           const isPopular = plan.is_popular;
           const price = billingCycle === "annual" 
-            ? (plan.annual_price_bdt || Math.round(plan.monthly_price_bdt * 0.85)) 
+            ? (plan.annual_price_bdt || Math.round(plan.monthly_price_bdt * discountMultiplier)) 
             : plan.monthly_price_bdt;
 
           return (

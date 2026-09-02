@@ -237,6 +237,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
     pay_as_you_go_enabled: true,
     custom_slider_builder_enabled: true,
     min_wallet_topup_bdt: 100.0,
+    annual_discount_percentage: 15.0,
     base_custom_platform_fee_bdt: 1990.0,
     per_extra_agent_bdt: 750.0,
     per_extra_website_bdt: 1200.0,
@@ -1557,7 +1558,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
             </div>
 
             {/* Grid Controls */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 relative z-10">
               
               {/* 1. PAYG Master Switch */}
               <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 flex flex-col justify-between space-y-3">
@@ -1653,6 +1654,28 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 </div>
                 <div className="text-[10px] text-slate-400 font-mono pt-0.5">
                   Protects payment gateway fee margin
+                </div>
+              </div>
+
+              {/* 5. Annual Billing Discount % */}
+              <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 space-y-2">
+                <label className="text-xs font-bold text-slate-200 block">
+                  Annual Discount (%)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    max="90"
+                    value={pricingEngineConfig.annual_discount_percentage ?? 15}
+                    onChange={(e) => setPricingEngineConfig({ ...pricingEngineConfig, annual_discount_percentage: parseFloat(e.target.value) ?? 15 })}
+                    className="w-full pl-3 pr-12 py-2 bg-slate-900/90 border border-slate-700 rounded-xl text-xs font-mono font-bold text-emerald-400 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono font-bold text-[11px]">% OFF</span>
+                </div>
+                <div className="text-[10px] text-slate-400 font-mono pt-0.5">
+                  Live discount badge & calculation
                 </div>
               </div>
 

@@ -134,12 +134,15 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
         if (dbPlans && Array.isArray(dbPlans) && dbPlans.length > 0) {
           const paid = dbPlans.filter(p => p.monthly_price_bdt > 0 && p.is_active !== false);
           if (paid.length > 0) {
+            const annualDiscount = pricingCfg?.annual_discount_percentage !== undefined ? Number(pricingCfg.annual_discount_percentage) : 15;
+            const discountMult = Math.max(0, 1 - (annualDiscount / 100));
+
             const formatted = paid.map(p => ({
               id: p.code,
               code: p.code,
               name: p.name,
               monthlyPrice: p.monthly_price_bdt,
-              annualPrice: p.annual_price_bdt || Math.round(p.monthly_price_bdt * 0.85),
+              annualPrice: p.annual_price_bdt || Math.round(p.monthly_price_bdt * discountMult),
               price: `৳${p.monthly_price_bdt.toLocaleString()}`,
               period: "/ month",
               popular: p.is_popular,

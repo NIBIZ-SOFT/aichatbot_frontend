@@ -85,7 +85,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password?: string) => Promise<boolean>;
+  login: (email: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   loginWithToken: (jwtToken: string) => Promise<boolean>;
   register: (name: string, email: string, tenantName: string, password?: string) => Promise<boolean>;
   logout: () => void;
@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string = "12345678"): Promise<boolean> => {
+  const login = async (email: string, password: string = "12345678"): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     try {
       const res = await api.login(email, password);
@@ -195,10 +195,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("aiaas_user", JSON.stringify(loggedUser));
       }
 
-      return true;
-    } catch (err) {
+      return { success: true };
+    } catch (err: any) {
       console.error("Login API error:", err);
-      return false;
+      const msg = err.message || (typeof err === "string" ? err : "Incorrect email or password.");
+      return { success: false, error: msg };
     } finally {
       setIsLoading(false);
     }

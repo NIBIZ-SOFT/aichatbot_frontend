@@ -33,8 +33,8 @@ export default function LoginScreen() {
     setErrorMessage(null);
     setIsLoading(true);
 
-    const ok = await login(email, password);
-    if (ok) {
+    const res = await login(email, password);
+    if (res.success) {
       showToast("Authentication Successful", `Signed in as ${email}`, "success");
       if (email.toLowerCase().includes("admin")) {
         router.replace("/superadmin");
@@ -42,8 +42,9 @@ export default function LoginScreen() {
         router.replace("/dashboard");
       }
     } else {
-      setErrorMessage("Invalid email or password. Please check your credentials.");
-      showToast("Authentication Failed", "Incorrect email or password.", "error");
+      const err = res.error || "Incorrect email or password. Please check your credentials.";
+      setErrorMessage(err);
+      showToast("Authentication Failed", err, "error");
     }
     setIsLoading(false);
   };

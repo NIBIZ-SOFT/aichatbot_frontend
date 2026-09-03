@@ -11,7 +11,7 @@ import {
   CheckCircle2, RefreshCw, Star, HelpCircle, PhoneCall, Layers
 } from "lucide-react";
 import { api } from "../../lib/api";
-import { calculateEstimatedMessages, enhanceFeatureWithMessages } from "../../lib/pricingUtils";
+import { calculateEstimatedMessages, enhanceFeatureWithMessages, setGlobalTokensPerMessage } from "../../lib/pricingUtils";
 
 export default function PricingPage() {
   const router = useRouter();
@@ -108,48 +108,52 @@ export default function PricingPage() {
   // bKash Checkout State
   const [isBkashModalOpen, setIsBkashModalOpen] = useState(false);
 
-  // Fetch dynamic plans from database
+  // Fetch dynamic plans and pricing config from database
   useEffect(() => {
-    api.getPublicPlans()
-      .then((dbPlans: any[]) => {
-        if (dbPlans && dbPlans.length > 0) {
-          const paid = dbPlans.filter(p => p.monthly_price_bdt > 0);
-          if (paid.length > 0) {
-            const formatted = paid.map(p => {
-              const msgEst = calculateEstimatedMessages(p.monthly_token_limit);
-              const tokenStr = p.monthly_token_limit >= 1000000 
-                ? `${(p.monthly_token_limit / 1000000).toFixed(p.monthly_token_limit % 1000000 === 0 ? 0 : 1)}M` 
-                : `${(p.monthly_token_limit / 1000).toFixed(0)}k`;
-              return {
-                id: p.code,
-                code: p.code,
-                name: p.name,
-                monthlyPrice: p.monthly_price_bdt,
-                annualPrice: p.annual_price_bdt || Math.round(p.monthly_price_bdt * 0.85),
-                price: `৳${p.monthly_price_bdt.toLocaleString()}`,
-                period: "/ month",
-                popular: p.is_popular,
-                badge_text: p.badge_text,
-                tokens: `~${msgEst.toLocaleString()} Messages (~${tokenStr} Tokens)`,
-                seats: `${p.max_agents} Support Seats`,
-                widgets: `${p.max_websites} Website Widgets`,
-                desc: p.description,
-                features: (p.features || [
-                  `~${msgEst.toLocaleString()} AI Messages / mo (~${tokenStr} Tokens)`,
-                  `${p.max_agents} Support Seats`,
-                  `${p.max_websites} Website Widgets`,
-                  "bKash Instant Billing"
-                ]).map((f: string) => enhanceFeatureWithMessages(f, p.monthly_token_limit))
-              };
-            });
-            setPlans(formatted);
-            if (!formatted.some(p => p.id === selectedTier)) {
-              setSelectedTier(formatted[0].id);
-            }
+    Promise.all([
+      api.getPublicPlans().catch(() => []),
+      api.getPublicPricingConfig().catch(() => null)
+    ]).then(([dbPlans, pricingCfg]: [any[], any]) => {
+      if (pricingCfg && pricingCfg.tokens_per_message) {
+        setGlobalTokensPerMessage(pricingCfg.tokens_per_message);
+      }
+      if (dbPlans && dbPlans.length > 0) {
+        const paid = dbPlans.filter(p => p.monthly_price_bdt > 0);
+        if (paid.length > 0) {
+          const formatted = paid.map(p => {
+            const msgEst = calculateEstimatedMessages(p.monthly_token_limit, pricingCfg?.tokens_per_message);
+            const tokenStr = p.monthly_token_limit >= 1000000 
+              ? `${(p.monthly_token_limit / 1000000).toFixed(p.monthly_token_limit % 1000000 === 0 ? 0 : 1)}M` 
+              : `${(p.monthly_token_limit / 1000).toFixed(0)}k`;
+            return {
+              id: p.code,
+              code: p.code,
+              name: p.name,
+              monthlyPrice: p.monthly_price_bdt,
+              annualPrice: p.annual_price_bdt || Math.round(p.monthly_price_bdt * 0.85),
+              price: `৳${p.monthly_price_bdt.toLocaleString()}`,
+              period: "/ month",
+              popular: p.is_popular,
+              badge_text: p.badge_text,
+              tokens: `~${msgEst.toLocaleString()} Messages (~${tokenStr} Tokens)`,
+              seats: `${p.max_agents} Support Seats`,
+              widgets: `${p.max_websites} Website Widgets`,
+              desc: p.description,
+              features: (p.features || [
+                `~${msgEst.toLocaleString()} AI Messages / mo (~${tokenStr} Tokens)`,
+                `${p.max_agents} Support Seats`,
+                `${p.max_websites} Website Widgets`,
+                "bKash Instant Billing"
+              ]).map((f: string) => enhanceFeatureWithMessages(f, p.monthly_token_limit, pricingCfg?.tokens_per_message))
+            };
+          });
+          setPlans(formatted);
+          if (!formatted.some(p => p.id === selectedTier)) {
+            setSelectedTier(formatted[0].id);
           }
         }
-      })
-      .catch(() => { });
+      }
+    }).catch(() => { });
   }, []);
 
   const currentPlan = plans.find(p => p.id === selectedTier) || plans[0];

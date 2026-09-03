@@ -19,7 +19,7 @@ import PricingEngineTab from "../superadmin/PricingEngineTab";
 import TenantPricingContractModal from "../superadmin/TenantPricingContractModal";
 import SeoManagementTab from "../superadmin/SeoManagementTab";
 import PublicPagesCmsTab from "../superadmin/PublicPagesCmsTab";
-import { calculateEstimatedMessages, enhanceFeatureWithMessages } from "../../lib/pricingUtils";
+import { calculateEstimatedMessages, enhanceFeatureWithMessages, setGlobalTokensPerMessage } from "../../lib/pricingUtils";
 
 interface TenantItem {
   id: string;
@@ -237,8 +237,9 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   };
 
   // Dynamic AI Token & Pricing Engine State
-  const [pricingEngineConfig, setPricingEngineConfig] = useState({
+  const [pricingEngineConfig, setPricingEngineConfig] = useState<any>({
     default_per_10k_tokens_rate_bdt: 1.50,
+    tokens_per_message: 333.56,
     pay_as_you_go_enabled: true,
     custom_slider_builder_enabled: true,
     min_wallet_topup_bdt: 100.0,
@@ -258,8 +259,11 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       const res = await api.updateSuperAdminPricingEngine(pricingEngineConfig);
       if (res && res.config) {
         setPricingEngineConfig(prev => ({ ...prev, ...res.config }));
+        if (res.config.tokens_per_message) {
+          setGlobalTokensPerMessage(res.config.tokens_per_message);
+        }
       }
-      showToast("Pricing Engine Updated", "Pricing settings, annual discount & AI token rates saved successfully!", "success");
+      showToast("Pricing Engine Updated", "Pricing settings, message calibration, annual discount & AI token rates saved successfully!", "success");
     } catch (err: any) {
       showToast("Update Failed", err.message || "Failed to update pricing engine", "error");
     } finally {
@@ -361,7 +365,12 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       if (plans) setPlansList(plans);
       if (coupons) setCouponsList(coupons);
       if (aiCfg) setAiSettings(aiCfg);
-      if (pricingCfg) setPricingEngineConfig(prev => ({ ...prev, ...pricingCfg }));
+      if (pricingCfg) {
+        setPricingEngineConfig((prev: any) => ({ ...prev, ...pricingCfg }));
+        if (pricingCfg.tokens_per_message) {
+          setGlobalTokensPerMessage(pricingCfg.tokens_per_message);
+        }
+      }
     } catch (err) {
       console.error("Super Admin data load error:", err);
       showToast("Error loading Super Admin control plane", "Ensure you are logged in as super_admin.", "error");
@@ -1797,6 +1806,39 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 </div>
               </div>
 
+              {/* 9. Tokens Per Message Calibration Standard */}
+              <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-indigo-500/40 space-y-2 col-span-1 sm:col-span-2 lg:col-span-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Tokens / Message Calibration Standard</span>
+                  </label>
+                  <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-950/90 px-2 py-0.5 rounded-full border border-indigo-700/50">
+                    Default: 333.56
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="10"
+                    max="5000"
+                    value={pricingEngineConfig.tokens_per_message ?? 333.56}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value) || 333.56;
+                      setPricingEngineConfig({ ...pricingEngineConfig, tokens_per_message: val });
+                      setGlobalTokensPerMessage(val);
+                    }}
+                    className="w-full px-3 py-2 bg-slate-900/90 border border-indigo-500/50 rounded-xl text-xs font-mono font-bold text-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                  />
+                </div>
+                <div className="text-[10.5px] text-slate-400 font-mono pt-0.5 flex flex-wrap gap-x-4 gap-y-1">
+                  <span>500k Tokens ≈ <strong className="text-emerald-400">~{Math.round(500000 / (pricingEngineConfig.tokens_per_message || 333.56)).toLocaleString()} msgs</strong></span>
+                  <span>2.5M Tokens ≈ <strong className="text-emerald-400">~{Math.round(2500000 / (pricingEngineConfig.tokens_per_message || 333.56)).toLocaleString()} msgs</strong></span>
+                  <span>10M Tokens ≈ <strong className="text-emerald-400">~{Math.round(10000000 / (pricingEngineConfig.tokens_per_message || 333.56)).toLocaleString()} msgs</strong></span>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -1850,7 +1892,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                           <MessageSquare className="w-3.5 h-3.5 text-indigo-600" /> Est. Messages:
                         </span>
                         <span className="font-black font-mono text-indigo-700 text-xs">
-                          ~{calculateEstimatedMessages(plan.monthly_token_limit).toLocaleString()} /mo
+                          ~{calculateEstimatedMessages(plan.monthly_token_limit, pricingEngineConfig.tokens_per_message).toLocaleString()} /mo
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-slate-700">
@@ -1876,7 +1918,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                       {(plan.features || []).slice(0, 4).map((feat: string, i: number) => (
                         <div key={i} className="flex items-start gap-1.5">
                           <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                          <span className="line-clamp-1">{enhanceFeatureWithMessages(feat, plan.monthly_token_limit)}</span>
+                          <span className="line-clamp-1">{enhanceFeatureWithMessages(feat, plan.monthly_token_limit, pricingEngineConfig.tokens_per_message)}</span>
                         </div>
                       ))}
                       {(plan.features || []).length > 4 && (
@@ -3730,7 +3772,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                     className="w-full p-2 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono text-xs font-bold bg-white"
                   />
                   <div className="text-[10px] text-indigo-600 font-bold font-mono">
-                    ≈ ~{calculateEstimatedMessages(planFormData.monthly_token_limit || 0).toLocaleString()} Messages / mo
+                    ≈ ~{calculateEstimatedMessages(planFormData.monthly_token_limit || 0, pricingEngineConfig.tokens_per_message).toLocaleString()} Messages / mo
                   </div>
                 </div>
 

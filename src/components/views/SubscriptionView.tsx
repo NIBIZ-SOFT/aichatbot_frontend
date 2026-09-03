@@ -12,7 +12,7 @@ import {
   Printer, Award, MessageSquare
 } from "lucide-react";
 import { api } from "../../lib/api";
-import { calculateEstimatedMessages, enhanceFeatureWithMessages } from "../../lib/pricingUtils";
+import { calculateEstimatedMessages, enhanceFeatureWithMessages, setGlobalTokensPerMessage } from "../../lib/pricingUtils";
 import PaymentMethodModal from "../payment/PaymentMethodModal";
 
 interface SubscriptionDetails {
@@ -227,6 +227,9 @@ export default function SubscriptionView() {
       if (tSettings) setTenantInfo(tSettings);
       if (pricingCfg) {
         setPricingConfig(pricingCfg);
+        if (pricingCfg.tokens_per_message) {
+          setGlobalTokensPerMessage(pricingCfg.tokens_per_message);
+        }
         if (pricingCfg.bkash_enabled === false && pricingCfg.eps_enabled !== false) {
           setTopupGateway("eps");
         } else if (pricingCfg.eps_enabled === false && pricingCfg.bkash_enabled !== false) {
@@ -235,7 +238,7 @@ export default function SubscriptionView() {
       }
       if (dbPlans && dbPlans.length > 0) {
         const mapped = dbPlans.map(p => {
-          const msgEst = calculateEstimatedMessages(p.monthly_token_limit);
+          const msgEst = calculateEstimatedMessages(p.monthly_token_limit, pricingCfg?.tokens_per_message);
           const tokenStr = p.monthly_token_limit >= 1000000 
             ? `${(p.monthly_token_limit / 1000000).toFixed(p.monthly_token_limit % 1000000 === 0 ? 0 : 1)}M` 
             : `${(p.monthly_token_limit / 1000).toFixed(0)}k`;
@@ -251,7 +254,7 @@ export default function SubscriptionView() {
             rag: `${p.max_knowledge_docs || 50} Knowledge Docs`,
             badge: p.badge_text || (p.is_popular ? "MOST POPULAR" : null),
             description: p.description,
-            features: (p.features || []).map((f: string) => enhanceFeatureWithMessages(f, p.monthly_token_limit))
+            features: (p.features || []).map((f: string) => enhanceFeatureWithMessages(f, p.monthly_token_limit, pricingCfg?.tokens_per_message))
           };
         });
         setPlans(mapped);

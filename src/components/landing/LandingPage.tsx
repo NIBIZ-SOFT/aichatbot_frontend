@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import PricingModal from "../auth/PricingModal";
 import { api, API_BASE_URL, CDN_WIDGET_URL } from "../../lib/api";
+import { setGlobalTokensPerMessage } from "../../lib/pricingUtils";
 
 // Modular Clean Landing Components
 import LandingNavbar from "./LandingNavbar";
@@ -111,6 +112,9 @@ export default function LandingPage() {
       }
       if (cfg) {
         setPricingConfig(cfg);
+        if (cfg.tokens_per_message) {
+          setGlobalTokensPerMessage(cfg.tokens_per_message);
+        }
       }
     }).catch((err) => console.warn("Could not fetch public pricing config:", err));
   }, []);

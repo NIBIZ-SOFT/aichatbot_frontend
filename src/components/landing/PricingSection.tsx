@@ -129,7 +129,7 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
                     <div className="mt-2.5 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-indigo-950 flex items-center gap-1.5">
                         <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>~{calculateEstimatedMessages(plan.monthly_token_limit).toLocaleString()} Messages / mo</span>
+                        <span>~{calculateEstimatedMessages(plan.monthly_token_limit, pricingConfig?.tokens_per_message).toLocaleString()} Messages / mo</span>
                       </span>
                       <span className="text-[10px] font-mono text-indigo-600 font-bold">
                         {(plan.monthly_token_limit / 1000).toLocaleString()}k Tokens
@@ -147,7 +147,7 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
                       <div className="h-4 w-4 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
-                      <span>{enhanceFeatureWithMessages(f, plan.monthly_token_limit)}</span>
+                      <span>{enhanceFeatureWithMessages(f, plan.monthly_token_limit, pricingConfig?.tokens_per_message)}</span>
                     </div>
                   ))}
                 </div>
@@ -194,7 +194,7 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
                 <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
                   <div className="text-[10.5px] text-slate-400 uppercase font-bold">Capacity Rate</div>
                   <div className="text-sm sm:text-base font-black text-amber-400 mt-0.5">৳{tokenRate10k.toFixed(2)} <span className="text-[10px] text-slate-400 font-normal">/ 10k Tokens</span></div>
-                  <div className="text-[10px] text-slate-300 font-medium mt-0.5">≈ ~30 Messages per 10k</div>
+                  <div className="text-[10px] text-slate-300 font-medium mt-0.5">≈ ~{Math.round(10000 / (pricingConfig?.tokens_per_message || 333.56))} Messages per 10k</div>
                 </div>
                 <div className="p-3 bg-white/5 border border-white/10 rounded-2xl">
                   <div className="text-[10.5px] text-slate-400 uppercase font-bold">Min Top-Up</div>
@@ -260,7 +260,7 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
               <div className="flex justify-between items-center text-xs">
                 <span className="font-bold text-slate-900">Monthly Capacity</span>
                 <span className="font-mono font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100 flex items-center gap-1">
-                  <span>~{calculateEstimatedMessages(sliderTokens).toLocaleString()} Messages</span>
+                  <span>~{calculateEstimatedMessages(sliderTokens, pricingConfig?.tokens_per_message).toLocaleString()} Messages</span>
                   <span className="text-[10px] text-slate-400 font-normal">({(sliderTokens / 1000).toLocaleString()}k Tokens)</span>
                 </span>
               </div>

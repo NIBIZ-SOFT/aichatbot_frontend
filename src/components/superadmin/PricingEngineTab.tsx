@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Zap, DollarSign, ShieldCheck, RefreshCw, Cpu, Layers, CheckCircle2, Lock, ArrowRight } from "lucide-react";
+import { Zap, DollarSign, ShieldCheck, RefreshCw, Cpu, Layers, CheckCircle2, Lock, ArrowRight, MessageSquare } from "lucide-react";
 import { api } from "../../lib/api";
 import { useToast } from "../../context/ToastContext";
+import { setGlobalTokensPerMessage } from "../../lib/pricingUtils";
 
 export default function PricingEngineTab() {
   const { showToast } = useToast();
 
   const [config, setConfig] = useState({
     default_per_10k_tokens_rate_bdt: 1.50,
+    tokens_per_message: 333.56,
     pay_as_you_go_enabled: true,
     custom_slider_builder_enabled: true,
     min_wallet_topup_bdt: 100.0,
@@ -27,6 +29,9 @@ export default function PricingEngineTab() {
       const data = await api.getSuperAdminPricingEngine();
       if (data) {
         setConfig((prev) => ({ ...prev, ...data }));
+        if (data.tokens_per_message) {
+          setGlobalTokensPerMessage(data.tokens_per_message);
+        }
       }
     } catch (err: any) {
       showToast("Error", err.message || "Failed to load pricing engine config", "error");
@@ -44,6 +49,9 @@ export default function PricingEngineTab() {
     setIsSaving(true);
     try {
       await api.updateSuperAdminPricingEngine(config);
+      if (config.tokens_per_message) {
+        setGlobalTokensPerMessage(config.tokens_per_message);
+      }
       showToast("Pricing Engine Updated", "Global AI token rates and PAYG settings saved successfully!", "success");
     } catch (err: any) {
       showToast("Update Failed", err.message || "Failed to update pricing engine", "error");
@@ -139,6 +147,60 @@ export default function PricingEngineTab() {
                 <div className="bg-white p-2.5 rounded-xl border border-indigo-100/80">
                   <div className="text-[10px] text-slate-400">1M Tokens</div>
                   <div className="font-bold text-indigo-950 mt-0.5">৳{per1MRate}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Conversational Message Calibration Standard */}
+            <div className="pt-2 border-t border-slate-100 space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Tokens Per Message Calibration Standard</span>
+                </label>
+                <span className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                  Default: 333.56
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Global calibration variable used across Landing Page, Pricing Modals, and Dashboard to convert raw AI Tokens into intuitive message counts for clients. Adjust this anytime to tune estimates.
+              </p>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="10"
+                  max="5000"
+                  value={config.tokens_per_message ?? 333.56}
+                  onChange={(e) => setConfig({ ...config, tokens_per_message: parseFloat(e.target.value) || 333.56 })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                />
+              </div>
+
+              {/* Dynamic Live Capacity Preview based on the configured rate */}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1.5">
+                <div className="text-[10.5px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                  <span>Simulated Plan Message Capacity:</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[10.5px] font-mono text-center">
+                  <div className="bg-white p-2 rounded-lg border border-slate-200">
+                    <div className="text-slate-400 text-[9.5px]">Starter (500k)</div>
+                    <div className="font-bold text-indigo-600 mt-0.5">
+                      ~{Math.round(500000 / (config.tokens_per_message || 333.56)).toLocaleString()} msgs
+                    </div>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200">
+                    <div className="text-slate-400 text-[9.5px]">Growth (2.5M)</div>
+                    <div className="font-bold text-indigo-600 mt-0.5">
+                      ~{Math.round(2500000 / (config.tokens_per_message || 333.56)).toLocaleString()} msgs
+                    </div>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200">
+                    <div className="text-slate-400 text-[9.5px]">Enterprise (10M)</div>
+                    <div className="font-bold text-indigo-600 mt-0.5">
+                      ~{Math.round(10000000 / (config.tokens_per_message || 333.56)).toLocaleString()} msgs
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

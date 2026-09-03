@@ -11,7 +11,7 @@ import {
   CreditCard, Tag, User, Mail, Key, ExternalLink
 } from "lucide-react";
 import { api } from "../../lib/api";
-import { calculateEstimatedMessages, enhanceFeatureWithMessages } from "../../lib/pricingUtils";
+import { calculateEstimatedMessages, enhanceFeatureWithMessages, setGlobalTokensPerMessage } from "../../lib/pricingUtils";
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -133,7 +133,12 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
         api.getPublicPlans().catch(() => []),
         api.getPublicPricingConfig().catch(() => null)
       ]).then(([dbPlans, pricingCfg]: [any[], any]) => {
-        if (pricingCfg) setPricingConfig(pricingCfg);
+        if (pricingCfg) {
+          setPricingConfig(pricingCfg);
+          if (pricingCfg.tokens_per_message) {
+            setGlobalTokensPerMessage(pricingCfg.tokens_per_message);
+          }
+        }
         if (dbPlans && Array.isArray(dbPlans) && dbPlans.length > 0) {
           const paid = dbPlans.filter(p => p.monthly_price_bdt > 0 && p.is_active !== false);
           if (paid.length > 0) {
@@ -150,16 +155,17 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
               period: "/ month",
               popular: p.is_popular,
               badge_text: p.badge_text,
-              tokens: `~${calculateEstimatedMessages(p.monthly_token_limit).toLocaleString()} Messages (~${(p.monthly_token_limit / 1000).toLocaleString()}k Tokens)`,
+              tokens: `~${calculateEstimatedMessages(p.monthly_token_limit, pricingCfg?.tokens_per_message).toLocaleString()} Messages (~${(p.monthly_token_limit / 1000).toLocaleString()}k Tokens)`,
               seats: `${p.max_agents} Support Seats`,
               widgets: `${p.max_websites} Website Widgets`,
               desc: p.description,
-              features: (p.features || []).map((f: string) => enhanceFeatureWithMessages(f, p.monthly_token_limit))
+              features: (p.features || []).map((f: string) => enhanceFeatureWithMessages(f, p.monthly_token_limit, pricingCfg?.tokens_per_message))
             }));
 
             const isPaygActive = pricingCfg?.pay_as_you_go_enabled !== false;
             const tokenRate10k = pricingCfg?.default_per_10k_tokens_rate_bdt || 1.50;
             const minTopup = pricingCfg?.min_wallet_topup_bdt || 100;
+            const paygMsgCount = Math.round(10000 / (pricingCfg?.tokens_per_message || 333.56));
 
             const paygPlan = isPaygActive ? {
               id: "payg",
@@ -171,13 +177,13 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
               period: "prepaid credit",
               popular: false,
               badge_text: "ZERO CONTRACT",
-              tokens: `Pay ৳${tokenRate10k.toFixed(2)} per 10k Tokens (≈ 30 Messages)`,
+              tokens: `Pay ৳${tokenRate10k.toFixed(2)} per 10k Tokens (≈ ~${paygMsgCount} Messages)`,
               seats: "5 Support Seats",
               widgets: "2 Website Widgets",
               desc: "No recurring subscription. Pure usage-based billing with instant bKash recharge.",
               features: [
                 "No monthly recurring fees",
-                `৳${tokenRate10k.toFixed(2)} per 10,000 tokens (≈ 30 Messages)`,
+                `৳${tokenRate10k.toFixed(2)} per 10,000 tokens (≈ ~${paygMsgCount} Messages)`,
                 "Instant bKash Recharge",
                 "Full Autonomous AI & RAG",
                 "Credits never expire"

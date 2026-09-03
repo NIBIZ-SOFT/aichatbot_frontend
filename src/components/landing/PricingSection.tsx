@@ -35,7 +35,7 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
 
   return (
     <section id="pricing" className="py-12 sm:py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-      
+
       {/* Section Header & Billing Toggle */}
       <div className="text-center max-w-2xl mx-auto space-y-3">
         <div className="inline-flex items-center gap-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">
@@ -54,27 +54,25 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
           <button
             type="button"
             onClick={() => setBillingCycle("monthly")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              billingCycle === "monthly"
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${billingCycle === "monthly"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
-            }`}
+              }`}
           >
             Monthly Billing
           </button>
           <button
             type="button"
             onClick={() => setBillingCycle("annual")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              billingCycle === "annual"
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${billingCycle === "annual"
                 ? "bg-white text-slate-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
-            }`}
+              }`}
           >
             <span>Annual Billing</span>
             {annualDiscountPercent > 0 && (
               <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                {annualDiscountPercent}% OFF
+                Up to {annualDiscountPercent}% OFF
               </span>
             )}
           </button>
@@ -85,18 +83,25 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
         {dbPlans.map((plan) => {
           const isPopular = plan.is_popular;
-          const price = billingCycle === "annual" 
-            ? (plan.annual_price_bdt || Math.round(plan.monthly_price_bdt * discountMultiplier)) 
+          const price = billingCycle === "annual"
+            ? (plan.annual_price_bdt || Math.round(plan.monthly_price_bdt * discountMultiplier))
             : plan.monthly_price_bdt;
+
+          const planDiscountPercent = plan.monthly_price_bdt > 0 && price < plan.monthly_price_bdt
+            ? Math.round(((plan.monthly_price_bdt - price) / plan.monthly_price_bdt) * 100)
+            : 0;
+
+          const yearlySavings = plan.monthly_price_bdt > price
+            ? (plan.monthly_price_bdt - price) * 12
+            : 0;
 
           return (
             <div
               key={plan.code}
-              className={`p-6 sm:p-7 rounded-3xl border flex flex-col justify-between transition-all ${
-                isPopular
+              className={`p-6 sm:p-7 rounded-3xl border flex flex-col justify-between transition-all ${isPopular
                   ? "bg-white border-indigo-600 shadow-xl ring-2 ring-indigo-600/20 relative"
                   : "bg-white border-slate-200/90 shadow-sm hover:border-slate-300 hover:shadow-md"
-              }`}
+                }`}
             >
               {isPopular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-[11px] font-bold px-3.5 py-0.5 rounded-full shadow-md flex items-center gap-1">
@@ -107,20 +112,46 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
 
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-lg font-black text-slate-900">{plan.name}</h4>
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="text-lg font-black text-slate-900">{plan.name}</h4>
+                    {billingCycle === "annual" && planDiscountPercent > 0 && (
+                      <span className="text-[10.5px] font-black uppercase tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                        Save {planDiscountPercent}%
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500 mt-1 min-h-[34px] font-normal leading-relaxed">{plan.description}</p>
                 </div>
 
                 <div className="pt-2 border-t border-slate-100">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl sm:text-4xl font-black text-slate-900 font-mono tracking-tight">
-                      ৳{price.toLocaleString()}
-                    </span>
-                    <span className="text-xs text-slate-500 font-semibold">/ month</span>
+                  <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 font-mono tracking-tight">
+                        ৳{price.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-slate-500 font-semibold">/ month</span>
+                    </div>
+
+                    {billingCycle === "annual" && planDiscountPercent > 0 && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs line-through text-slate-400 font-mono">
+                          ৳{plan.monthly_price_bdt.toLocaleString()}
+                        </span>
+                        <span className="inline-flex items-center bg-emerald-600 text-white text-[10.5px] font-black px-2 py-0.5 rounded-full shadow-xs">
+                          {planDiscountPercent}% OFF
+                        </span>
+                      </div>
+                    )}
                   </div>
+
                   {billingCycle === "annual" && (
-                    <div className="text-[11px] text-emerald-700 font-semibold mt-1">
-                      Billed annually (৳{(price * 12).toLocaleString()} / yr)
+                    <div className="text-[11px] text-emerald-700 font-semibold mt-1.5 flex items-center justify-between flex-wrap gap-1">
+                      <span>Billed annually (৳{(price * 12).toLocaleString()} / yr)</span>
+                      {yearlySavings > 0 && (
+                        <span className="text-[10px] font-black text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                          Save ৳{yearlySavings.toLocaleString()}/yr
+                        </span>
+                      )}
                     </div>
                   )}
 
@@ -157,11 +188,10 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
                 <button
                   type="button"
                   onClick={() => onOpenPricing(plan.code)}
-                  className={`w-full py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm ${
-                    isPopular
+                  className={`w-full py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm ${isPopular
                       ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/30 hover:shadow-indigo-600/50"
                       : "bg-slate-900 hover:bg-slate-800 text-white"
-                  }`}
+                    }`}
                 >
                   <span>Choose {plan.name}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -176,7 +206,7 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
       {isPaygActive && (
         <div className="bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 rounded-3xl border border-indigo-500/30 shadow-2xl relative overflow-hidden">
           <div className="absolute right-0 top-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-          
+
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
             <div className="space-y-3 max-w-2xl">
               <div className="inline-flex items-center gap-1.5 bg-amber-400/10 border border-amber-400/30 text-amber-300 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">
@@ -249,12 +279,27 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
 
             <div className="text-right shrink-0">
               <div className="text-xs font-bold text-slate-500 uppercase">Estimated Total</div>
-              <div className="text-2xl sm:text-3xl font-black text-indigo-600 font-mono">৳{customPrice.toLocaleString()} <span className="text-xs text-slate-500 font-medium">/ mo</span></div>
+              <div className="flex items-baseline justify-end gap-1.5">
+                <span className="text-2xl sm:text-3xl font-black text-indigo-600 font-mono">
+                  ৳{customPrice.toLocaleString()}
+                </span>
+                <span className="text-xs text-slate-500 font-medium">/ mo</span>
+              </div>
+              {billingCycle === "annual" && annualDiscountPercent > 0 && (
+                <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                  <span className="text-xs line-through text-slate-400 font-mono">
+                    ৳{rawCustomMonthly.toLocaleString()}
+                  </span>
+                  <span className="text-[10px] font-black text-white bg-emerald-600 px-2 py-0.5 rounded-full shadow-xs">
+                    {annualDiscountPercent}% OFF
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
+
             {/* Slider 1: Tokens */}
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
               <div className="flex justify-between items-center text-xs">
@@ -339,9 +384,14 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
             <button
               type="button"
               onClick={() => onOpenPricing("growth")}
-              className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 cursor-pointer shrink-0"
+              className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 cursor-pointer shrink-0 shadow-sm"
             >
-              <span>Deploy Custom Configuration (৳{customPrice.toLocaleString()})</span>
+              <span>Deploy Custom Configuration (৳{customPrice.toLocaleString()}/mo)</span>
+              {billingCycle === "annual" && annualDiscountPercent > 0 && (
+                <span className="bg-emerald-500 text-white text-[9.5px] font-black px-1.5 py-0.2 rounded-full">
+                  -{annualDiscountPercent}%
+                </span>
+              )}
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

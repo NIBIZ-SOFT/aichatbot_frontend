@@ -645,11 +645,28 @@ export default function SubscriptionView() {
 
                 {/* Price */}
                 <div className="my-4 pb-4 border-b border-[#CBD7D0]/60">
-                  <div className="text-2xl font-bold font-mono">
-                    ৳{displayPrice.toLocaleString()}
+                  <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                    <div className="text-2xl font-bold font-mono">
+                      ৳{displayPrice.toLocaleString()}
+                    </div>
+                    {isAnnual && p.monthlyPrice > p.annualPrice && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs line-through text-slate-400 font-mono">
+                          ৳{p.monthlyPrice.toLocaleString()}
+                        </span>
+                        <span className="text-[10px] font-black text-[#008750] bg-[#00C978]/15 px-2 py-0.5 rounded-full">
+                          {Math.round(((p.monthlyPrice - p.annualPrice) / p.monthlyPrice) * 100)}% OFF
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-[11px] text-[#4F7863] font-medium mt-0.5">
-                    {p.monthlyPrice === 0 ? "Forever Free Sandbox" : isAnnual ? "per month, billed annually" : "per month, billed monthly"}
+                  <div className="text-[11px] text-[#4F7863] font-medium mt-0.5 flex items-center justify-between flex-wrap gap-1">
+                    <span>{p.monthlyPrice === 0 ? "Forever Free Sandbox" : isAnnual ? `৳${(displayPrice * 12).toLocaleString()} / yr` : "per month, billed monthly"}</span>
+                    {isAnnual && p.monthlyPrice > p.annualPrice && (
+                      <span className="font-bold text-[#008750]">
+                        Save ৳{((p.monthlyPrice - p.annualPrice) * 12).toLocaleString()}/yr
+                      </span>
+                    )}
                   </div>
                 </div>
 

@@ -452,12 +452,24 @@ export default function PricingPage() {
                       </div>
 
                       <div className="pt-1">
-                        <div className="text-xl font-bold text-white font-mono">
-                          ৳{displayPrice.toLocaleString()} <span className="text-xs font-normal text-[#759B87] font-sans">/ mo</span>
+                        <div className="flex items-baseline justify-between gap-1 flex-wrap">
+                          <div className="text-xl font-bold text-white font-mono">
+                            ৳{displayPrice.toLocaleString()} <span className="text-xs font-normal text-[#759B87] font-sans">/ mo</span>
+                          </div>
+                          {isAnnual && p.monthlyPrice > p.annualPrice && (
+                            <span className="text-[9.5px] font-black bg-[#00C978] text-[#080D0A] px-1.5 py-0.2 rounded-full">
+                              {Math.round(((p.monthlyPrice - p.annualPrice) / p.monthlyPrice) * 100)}% OFF
+                            </span>
+                          )}
                         </div>
                         {isAnnual && (
-                          <div className="text-[10px] text-[#00C978] font-medium mt-0.5">
-                            Billed annually (৳{(displayPrice * 12).toLocaleString()} BDT/yr)
+                          <div className="text-[10px] text-[#00C978] font-medium mt-0.5 flex items-center justify-between flex-wrap gap-1">
+                            <span>৳{(displayPrice * 12).toLocaleString()} BDT/yr</span>
+                            {p.monthlyPrice > p.annualPrice && (
+                              <span className="text-[9px] text-[#759B87]">
+                                Save ৳{((p.monthlyPrice - p.annualPrice) * 12).toLocaleString()}/yr
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>

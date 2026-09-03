@@ -247,8 +247,11 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
   const handleSavePricingEngine = async () => {
     setIsSavingPricingEngine(true);
     try {
-      await api.updateSuperAdminPricingEngine(pricingEngineConfig);
-      showToast("Pricing Engine Updated", "Pay-As-You-Go visibility & AI token rates saved successfully!", "success");
+      const res = await api.updateSuperAdminPricingEngine(pricingEngineConfig);
+      if (res && res.config) {
+        setPricingEngineConfig(prev => ({ ...prev, ...res.config }));
+      }
+      showToast("Pricing Engine Updated", "Pricing settings, annual discount & AI token rates saved successfully!", "success");
     } catch (err: any) {
       showToast("Update Failed", err.message || "Failed to update pricing engine", "error");
     } finally {

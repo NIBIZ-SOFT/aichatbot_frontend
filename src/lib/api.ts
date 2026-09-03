@@ -377,6 +377,19 @@ export const api = {
     });
   },
 
+  async updateWebsite(id: string, data: any) {
+    return apiFetch(`/websites/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteWebsite(id: string) {
+    return apiFetch(`/websites/${id}`, {
+      method: "DELETE",
+    });
+  },
+
   // Contacts
   async getContacts() {
     return apiFetch("/contacts");

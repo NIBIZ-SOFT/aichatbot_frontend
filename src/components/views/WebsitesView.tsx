@@ -136,9 +136,14 @@ export default function WebsitesView() {
   const handleSaveCustomizer = async () => {
     if (!selectedSite) return;
     try {
+      const updated = await api.updateWebsite(selectedSite.id, {
+        ecommerce_config: ecomConfig
+      });
+      setSelectedSite(updated);
+      setWebsites(prev => prev.map(s => s.id === updated.id ? updated : s));
       showToast("Settings Saved", "Widget e-commerce features updated in database.", "success");
-    } catch (e) {
-      showToast("Error", "Could not save widget settings", "error");
+    } catch (e: any) {
+      showToast("Error", e.message || "Could not save widget settings", "error");
     }
   };
 

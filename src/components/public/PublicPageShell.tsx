@@ -205,10 +205,10 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 print:bg-white print:text-black">
       
-      {/* 1. Header Navigation Bar (Matches Landing Page Theme) */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-all">
+      {/* 1. Header Navigation Bar (Hidden in Print) */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-all print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
           
           {/* Brand Logo */}
@@ -281,8 +281,8 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
         </div>
       </header>
 
-      {/* 2. Hero Section: Matches Landing Page Gradient (from-indigo-50/60 via-white to-slate-50) */}
-      <section className="relative pt-10 pb-12 sm:pt-14 sm:pb-16 bg-gradient-to-b from-indigo-50/60 via-white to-slate-50 border-b border-slate-200/80 overflow-hidden">
+      {/* 2. Hero Section (Web Mode, Hidden in Print) */}
+      <section className="relative pt-10 pb-12 sm:pt-14 sm:pb-16 bg-gradient-to-b from-indigo-50/60 via-white to-slate-50 border-b border-slate-200/80 overflow-hidden print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 text-center sm:text-left">
           
           {/* Badge & Timestamp Row */}
@@ -376,8 +376,8 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
         </div>
       </section>
 
-      {/* 3. In-Page Interactive Search & Utility Bar (Light Theme) */}
-      <div className="sticky top-18 sm:top-20 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs py-3 px-4 sm:px-6 lg:px-8">
+      {/* 3. In-Page Interactive Search & Utility Bar (Hidden in Print) */}
+      <div className="sticky top-18 sm:top-20 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-2xs py-3 px-4 sm:px-6 lg:px-8 print:hidden">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           
           {/* Live Section Search Input */}
@@ -420,22 +420,48 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
               onClick={() => {
                 if (typeof window !== "undefined") window.print();
               }}
-              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer text-xs"
+              className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer text-xs border border-indigo-200/80 shadow-2xs"
             >
-              <Printer className="w-3 h-3" />
-              <span className="hidden sm:inline">Print Document</span>
+              <Printer className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Print Official Document</span>
             </button>
           </div>
 
         </div>
       </div>
 
-      {/* 4. Main Body: Left Quick Jump Table of Contents & Right Section Widgets */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* 4. Main Body Container: Web Layout vs Print Layout */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 print:p-0 print:m-0 print:max-w-none">
+        
+        {/* Dedicated Print-Only Formal Letterhead */}
+        <div className="hidden print:block mb-8 pb-6 border-b-2 border-slate-900">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-xs font-black tracking-wider uppercase text-indigo-700">
+                Jobab.chat — Enterprise Legal Documentation
+              </div>
+              <h1 className="text-2xl font-black text-slate-900 mt-1">
+                {pageData.title}
+              </h1>
+              {pageData.subtitle && (
+                <p className="text-xs text-slate-600 mt-1 max-w-xl">
+                  {pageData.subtitle}
+                </p>
+              )}
+            </div>
+            <div className="text-right text-[11px] text-slate-600 font-mono space-y-0.5">
+              <div><strong>Document:</strong> /{initialSlug}</div>
+              <div><strong>Version / Date:</strong> {pageData.last_updated || "Current"}</div>
+              <div><strong>Jurisdiction:</strong> Bangladesh & Global</div>
+              <div><strong>Official URL:</strong> https://jobab.chat/{initialSlug}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start print:block">
           
-          {/* Left Sticky Navigation (4 cols) */}
-          <aside className="lg:col-span-4 space-y-5 lg:sticky lg:top-38">
+          {/* Left Sticky Navigation (Hidden in Print) */}
+          <aside className="lg:col-span-4 space-y-5 lg:sticky lg:top-38 print:hidden">
             
             {/* Quick Document Navigation */}
             <div className="bg-white border border-slate-200/90 p-5 rounded-3xl shadow-xs space-y-3">
@@ -537,8 +563,8 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
 
           </aside>
 
-          {/* Right Main Article: Light Theme Customized Section Cards (8 cols) */}
-          <div className="lg:col-span-8 space-y-6">
+          {/* Right Main Article: Section Cards (Expands to 100% in Print) */}
+          <div className="lg:col-span-8 space-y-6 print:w-full print:space-y-6">
             
             {filteredSections.length === 0 ? (
               <div className="bg-white border border-slate-200 p-10 rounded-3xl text-center space-y-3 shadow-xs">
@@ -560,26 +586,26 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
                 <article
                   key={section.id}
                   id={section.id}
-                  className="bg-white border border-slate-200/90 hover:border-indigo-200 rounded-3xl p-6 sm:p-8 shadow-xs space-y-5 transition-all scroll-mt-38"
+                  className="bg-white border border-slate-200/90 hover:border-indigo-200 rounded-3xl p-6 sm:p-8 shadow-xs space-y-5 transition-all scroll-mt-38 print:border-none print:shadow-none print:p-0 print:mb-6 print:break-inside-avoid"
                 >
                   {/* Section Card Header Widget */}
-                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4 print:border-b-2 print:border-slate-800 print:pb-2">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2.5 rounded-xl border shadow-2xs shrink-0 ${getSectionIconBg(section.iconType)}`}>
+                      <div className={`p-2.5 rounded-xl border shadow-2xs shrink-0 print:hidden ${getSectionIconBg(section.iconType)}`}>
                         {getSectionIcon(section.iconType)}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           {section.number && (
-                            <span className="text-[10px] font-mono font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/80">
+                            <span className="text-[10px] font-mono font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/80 print:bg-transparent print:border-none print:text-black print:text-xs">
                               CLAUSE {section.number.replace(/\./g, "")}
                             </span>
                           )}
-                          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider print:hidden">
                             JOBAB.CHAT OFFICIAL POLICY
                           </span>
                         </div>
-                        <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight mt-0.5">
+                        <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight mt-0.5 print:text-base print:text-black print:mt-1">
                           {section.title}
                         </h2>
                       </div>
@@ -587,43 +613,43 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
 
                     <a
                       href={`#${section.id}`}
-                      className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors shrink-0"
+                      className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-50 transition-colors shrink-0 print:hidden"
                       title="Link to section"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </a>
                   </div>
 
-                  {/* Section Content with Light Theme Typography */}
+                  {/* Section Content Typography */}
                   <div
-                    className="prose prose-slate max-w-none prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-xs sm:prose-p:text-sm prose-li:text-slate-600 prose-li:text-xs sm:prose-li:text-sm prose-strong:text-slate-900 prose-strong:font-bold prose-hr:border-slate-100 prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline"
+                    className="prose prose-slate max-w-none prose-p:text-slate-600 prose-p:leading-relaxed prose-p:text-xs sm:prose-p:text-sm prose-li:text-slate-600 prose-li:text-xs sm:prose-li:text-sm prose-strong:text-slate-900 prose-strong:font-bold prose-hr:border-slate-100 prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline print:prose-p:text-slate-900 print:prose-li:text-slate-900 print:text-xs"
                     dangerouslySetInnerHTML={{ __html: section.contentHtml }}
                   />
 
-                  {/* Specialized Interactive Callout for bKash & EPS Sections */}
+                  {/* Specialized Callout for bKash & EPS Sections */}
                   {section.iconType === "payment" && (
-                    <div className="p-4 rounded-2xl bg-pink-50/80 border border-pink-200/80 flex items-start gap-3 text-xs">
-                      <div className="p-2 rounded-xl bg-pink-100 text-pink-600 shrink-0 mt-0.5">
+                    <div className="p-4 rounded-2xl bg-pink-50/80 border border-pink-200/80 flex items-start gap-3 text-xs print:bg-slate-50 print:border-slate-300 print:text-black">
+                      <div className="p-2 rounded-xl bg-pink-100 text-pink-600 shrink-0 mt-0.5 print:hidden">
                         <CreditCard className="w-4 h-4" />
                       </div>
                       <div className="space-y-1">
-                        <div className="font-extrabold text-pink-900">Financial Data Protection Assurance</div>
-                        <p className="text-[11px] text-pink-800/90 leading-relaxed">
+                        <div className="font-extrabold text-pink-900 print:text-black">Financial Data Protection Assurance</div>
+                        <p className="text-[11px] text-pink-800/90 leading-relaxed print:text-slate-800">
                           Jobab.chat utilizes tokenized direct APIs via bKash Merchant and EPS Gateway. Customer PINs and full debit/credit card numbers are processed exclusively inside certified payment gateway infrastructure and are never visible to or stored by Jobab.chat.
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {/* Specialized Interactive Callout for Security & Isolation Sections */}
+                  {/* Specialized Callout for Security & Isolation Sections */}
                   {section.iconType === "shield" && (
-                    <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex items-start gap-3 text-xs">
-                      <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600 shrink-0 mt-0.5">
+                    <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex items-start gap-3 text-xs print:bg-slate-50 print:border-slate-300 print:text-black">
+                      <div className="p-2 rounded-xl bg-emerald-100 text-emerald-600 shrink-0 mt-0.5 print:hidden">
                         <Lock className="w-4 h-4" />
                       </div>
                       <div className="space-y-1">
-                        <div className="font-extrabold text-emerald-900">Absolute Tenant Boundary Protection</div>
-                        <p className="text-[11px] text-emerald-800/90 leading-relaxed">
+                        <div className="font-extrabold text-emerald-900 print:text-black">Absolute Tenant Boundary Protection</div>
+                        <p className="text-[11px] text-emerald-800/90 leading-relaxed print:text-slate-800">
                           Your enterprise data, vector embeddings, and support conversation logs are isolated in separate logical schemas with tenant ID constraints. No other organization can access or search your data.
                         </p>
                       </div>
@@ -633,8 +659,8 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
               ))
             )}
 
-            {/* Bottom Support Desk Card (Light Theme) */}
-            <div className="bg-white border border-slate-200/90 p-8 rounded-3xl shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6">
+            {/* Bottom Support Desk Card (Hidden in Print) */}
+            <div className="bg-white border border-slate-200/90 p-8 rounded-3xl shadow-xs flex flex-col sm:flex-row items-center justify-between gap-6 print:hidden">
               <div className="space-y-1 text-center sm:text-left">
                 <h3 className="text-base font-extrabold text-slate-900 flex items-center justify-center sm:justify-start gap-2">
                   <Building2 className="w-4 h-4 text-indigo-600" />
@@ -655,13 +681,19 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
               </div>
             </div>
 
+            {/* Print Only Official Registry & Certification Footer */}
+            <div className="hidden print:flex pt-6 mt-12 border-t-2 border-slate-400 text-[10px] text-slate-600 justify-between items-center font-mono">
+              <div>Jobab.chat Legal & Compliance Registry • Dhaka, Bangladesh</div>
+              <div>Official Certified Documentation • Verification: https://jobab.chat/{initialSlug}</div>
+            </div>
+
           </div>
 
         </div>
       </main>
 
-      {/* 5. Enterprise Multi-Column Footer (Matches Landing Page Footer Exactly) */}
-      <footer className="bg-white border-t border-slate-200/80 py-10 text-xs text-slate-500 mt-16">
+      {/* 5. Enterprise Multi-Column Footer (Hidden in Print) */}
+      <footer className="bg-white border-t border-slate-200/80 py-10 text-xs text-slate-500 mt-16 print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -722,13 +754,15 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
         </div>
       </footer>
 
-      {/* Pricing Modal */}
+      {/* Pricing Modal (Hidden in Print) */}
       {isPricingOpen && (
-        <PricingModal
-          isOpen={isPricingOpen}
-          onClose={() => setIsPricingOpen(false)}
-          initialSelectedTier="growth"
-        />
+        <div className="print:hidden">
+          <PricingModal
+            isOpen={isPricingOpen}
+            onClose={() => setIsPricingOpen(false)}
+            initialSelectedTier="growth"
+          />
+        </div>
       )}
 
     </div>

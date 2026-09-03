@@ -343,11 +343,11 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
     setIsLoading(true);
     try {
       const [m, tList, rev, infra, logs, bkashCfg, epsCfg, plans, coupons, aiCfg, pricingCfg] = await Promise.all([
-        api.getSuperAdminMetrics(),
-        api.getSuperAdminTenants(),
-        api.getSuperAdminRevenue(),
-        api.getSuperAdminInfrastructure(),
-        api.getSuperAdminAuditLogs(),
+        api.getSuperAdminMetrics().catch(() => null),
+        api.getSuperAdminTenants().catch(() => []),
+        api.getSuperAdminRevenue().catch(() => null),
+        api.getSuperAdminInfrastructure().catch(() => null),
+        api.getSuperAdminAuditLogs().catch(() => []),
         api.getSuperAdminBkashSettings().catch(() => null),
         api.getSuperAdminEpsSettings().catch(() => null),
         api.getSuperAdminPlans().catch(() => []),
@@ -355,11 +355,11 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
         api.getSuperAdminAISettings().catch(() => null),
         api.getSuperAdminPricingEngine().catch(() => null)
       ]);
-      setMetrics(m);
-      setTenants(tList);
-      setRevenueData(rev);
-      setInfraData(infra);
-      setAuditLogs(logs);
+      if (m) setMetrics(m);
+      if (tList) setTenants(tList);
+      if (rev) setRevenueData(rev);
+      if (infra) setInfraData(infra);
+      if (logs) setAuditLogs(logs);
       if (bkashCfg) setBkashSettings(bkashCfg);
       if (epsCfg) setEpsSettings(epsCfg);
       if (plans) setPlansList(plans);

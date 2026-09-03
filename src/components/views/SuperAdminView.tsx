@@ -17,6 +17,7 @@ import ModuleConfigModal from "../superadmin/ModuleConfigModal";
 import ThemeManagementTab from "../superadmin/ThemeManagementTab";
 import PricingEngineTab from "../superadmin/PricingEngineTab";
 import TenantPricingContractModal from "../superadmin/TenantPricingContractModal";
+import SeoManagementTab from "../superadmin/SeoManagementTab";
 
 interface TenantItem {
   id: string;
@@ -50,7 +51,7 @@ interface MetricsData {
   platform_uptime_percent: number;
 }
 
-export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "payments" | "bkash" | "eps" | "infrastructure" | "audit" | "theme";
+export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "payments" | "bkash" | "eps" | "infrastructure" | "audit" | "theme" | "meta-data";
 
 interface SuperAdminViewProps {
   defaultTab?: SuperAdminTabType;
@@ -1000,6 +1001,16 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 }`}
             >
               <Sparkles className="w-4 h-4 text-amber-400" /> Theme & Branding
+            </button>
+
+            <button
+              onClick={() => handleTabClick("meta-data")}
+              className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "meta-data"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                }`}
+            >
+              <Globe className="w-4 h-4 text-sky-400" /> SEO & Meta Data
             </button>
           </div>
 
@@ -3563,6 +3574,11 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       {/* TAB 9: PLATFORM THEME & BRANDING APPEARANCE SETUP */}
       {/* ========================================================================= */}
       {activeTab === "theme" && <ThemeManagementTab />}
+
+      {/* ========================================================================= */}
+      {/* TAB 10: PLATFORM SEO, OPEN GRAPH & STRUCTURED METADATA */}
+      {/* ========================================================================= */}
+      {activeTab === "meta-data" && <SeoManagementTab />}
 
       {/* VIP Custom Agreement & Pricing Contract Override Modal */}
       {contractOverrideTenant && (

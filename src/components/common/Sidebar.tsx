@@ -146,6 +146,13 @@ export default function Sidebar({ activeNav, onSelectNav, mobileOpen, onCloseMob
           route: "/superadmin/theme",
           icon: Palette,
           badge: "Theme"
+        },
+        {
+          id: "meta-data",
+          label: "SEO & Meta Data",
+          route: "/superadmin/meta-data",
+          icon: Globe,
+          badge: "SEO"
         }
       ]
     }

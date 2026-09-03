@@ -761,6 +761,22 @@ export const api = {
     });
   },
 
+  // Platform SEO & Meta Data
+  async getPublicSeoMetadata() {
+    return apiFetch("/meta-data/public");
+  },
+
+  async getSuperAdminSeoMetadata() {
+    return apiFetch("/superadmin/meta-data");
+  },
+
+  async updateSuperAdminSeoMetadata(data: any) {
+    return apiFetch("/superadmin/meta-data", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
   async getTenantPricingContract(tenantId: string) {
     return apiFetch(`/superadmin/tenants/${tenantId}/pricing-contract`);
   },

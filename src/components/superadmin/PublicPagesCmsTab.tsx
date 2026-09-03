@@ -1,13 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { useToast } from "../../context/ToastContext";
 import { api } from "../../lib/api";
 import {
   FileText, ShieldCheck, Globe, Save, RefreshCw,
   ExternalLink, RotateCcw, CheckCircle2, Eye, Edit3,
-  Sparkles, Clock, AlertCircle, Check
+  Sparkles, Clock, AlertCircle, Check, Code, PenTool
 } from "lucide-react";
+import { marked } from "marked";
+import TurndownService from "turndown";
+
+// Import Quill styles
+import "react-quill/dist/quill.snow.css";
+
+// Dynamic import for ReactQuill to prevent SSR issues in Next.js
+const ReactQuill = dynamic(() => import("react-quill"), {
+  ssr: false,
+  loading: () => (
+    <div className="p-12 text-center bg-slate-50 border border-slate-200 rounded-2xl text-slate-500 font-medium text-xs flex items-center justify-center gap-2">
+      <RefreshCw className="w-4 h-4 animate-spin text-indigo-600" />
+      <span>Loading Quill WYSIWYG Editor...</span>
+    </div>
+  )
+});
 
 interface PageModel {
   slug: string;
@@ -25,9 +42,18 @@ export default function PublicPagesCmsTab() {
 
   const [selectedSlug, setSelectedSlug] = useState<"about" | "privacy" | "terms">("about");
   const [allPages, setAllPages] = useState<Record<string, PageModel>>({});
-  const [activeViewMode, setActiveViewMode] = useState<"edit" | "preview">("edit");
+  const [activeEditorMode, setActiveEditorMode] = useState<"quill" | "markdown" | "preview">("quill");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  // Initialize Turndown service for converting Quill HTML back to standard Markdown
+  const turndownService = useMemo(() => {
+    return new TurndownService({
+      headingStyle: "atx",
+      hr: "---",
+      bulletListMarker: "-"
+    });
+  }, []);
 
   const [form, setForm] = useState<PageModel>({
     slug: "about",
@@ -40,6 +66,9 @@ export default function PublicPagesCmsTab() {
     content: ""
   });
 
+  // Quill HTML state
+  const [quillHtml, setQuillHtml] = useState<string>("");
+
   const loadAllPages = async () => {
     setIsLoading(true);
     try {
@@ -47,7 +76,10 @@ export default function PublicPagesCmsTab() {
       if (data && typeof data === "object") {
         setAllPages(data);
         if (data[selectedSlug]) {
-          setForm(data[selectedSlug]);
+          const pg = data[selectedSlug];
+          setForm(pg);
+          const parsed = marked.parse(pg.content || "") as string;
+          setQuillHtml(parsed);
         }
       }
     } catch (err: any) {
@@ -62,12 +94,38 @@ export default function PublicPagesCmsTab() {
     loadAllPages();
   }, []);
 
-  // When selected slug changes, update form from allPages
+  // When selected slug changes, update form and Quill HTML from allPages
   useEffect(() => {
     if (allPages[selectedSlug]) {
-      setForm(allPages[selectedSlug]);
+      const pg = allPages[selectedSlug];
+      setForm(pg);
+      const parsed = marked.parse(pg.content || "") as string;
+      setQuillHtml(parsed);
     }
   }, [selectedSlug, allPages]);
+
+  // Handle Quill Editor Change
+  const handleQuillChange = (contentHtml: string) => {
+    setQuillHtml(contentHtml);
+    try {
+      const markdown = turndownService.turndown(contentHtml);
+      setForm((prev) => ({ ...prev, content: markdown }));
+    } catch (e) {
+      // fallback
+      setForm((prev) => ({ ...prev, content: contentHtml }));
+    }
+  };
+
+  // Handle Raw Markdown Change
+  const handleMarkdownChange = (rawMarkdown: string) => {
+    setForm((prev) => ({ ...prev, content: rawMarkdown }));
+    try {
+      const parsed = marked.parse(rawMarkdown || "") as string;
+      setQuillHtml(parsed);
+    } catch (e) {
+      setQuillHtml(rawMarkdown);
+    }
+  };
 
   const handleSavePage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -77,6 +135,8 @@ export default function PublicPagesCmsTab() {
       if (res && res.page) {
         setAllPages((prev) => ({ ...prev, [selectedSlug]: res.page }));
         setForm(res.page);
+        const parsed = marked.parse(res.page.content || "") as string;
+        setQuillHtml(parsed);
       }
       showToast("Page Saved Successfully", `Public page '/${selectedSlug}' updated and live!`, "success");
     } catch (err: any) {
@@ -93,6 +153,8 @@ export default function PublicPagesCmsTab() {
       const res = await api.getPublicPage(selectedSlug);
       if (res) {
         setForm(res);
+        const parsed = marked.parse(res.content || "") as string;
+        setQuillHtml(parsed);
         showToast("Reset Prepared", "Default copy loaded. Click 'Save Page Changes' to persist.", "info");
       }
     } catch (err: any) {
@@ -102,56 +164,39 @@ export default function PublicPagesCmsTab() {
     }
   };
 
-  // Simple Markdown renderer for preview
-  const renderPreview = (text: string) => {
-    const sections = (text || "").split("\n\n");
-    return sections.map((section, idx) => {
-      const trimmed = section.trim();
-      if (trimmed.startsWith("## ")) {
-        return (
-          <h2 key={idx} className="text-lg font-black text-slate-900 mt-6 mb-2 border-b border-slate-100 pb-1.5 flex items-center gap-2">
-            <span className="w-1.5 h-4 bg-indigo-600 rounded-full inline-block" />
-            <span>{trimmed.replace(/^##\s+/, "")}</span>
-          </h2>
-        );
-      }
-      if (trimmed.startsWith("### ")) {
-        return (
-          <h3 key={idx} className="text-sm font-extrabold text-slate-800 mt-4 mb-1">
-            {trimmed.replace(/^###\s+/, "")}
-          </h3>
-        );
-      }
-      if (trimmed === "---") {
-        return <hr key={idx} className="my-4 border-slate-200" />;
-      }
-      if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-        const items = trimmed.split("\n").map((line) => line.replace(/^[-*]\s+/, ""));
-        return (
-          <ul key={idx} className="my-2 space-y-1.5 text-slate-600 text-xs pl-4 list-disc">
-            {items.map((item, itemIdx) => (
-              <li key={itemIdx}>{item}</li>
-            ))}
-          </ul>
-        );
-      }
-      if (/^\d+\.\s+/.test(trimmed)) {
-        const items = trimmed.split("\n").map((line) => line.replace(/^\d+\.\s+/, ""));
-        return (
-          <ol key={idx} className="my-2 space-y-1.5 text-slate-600 text-xs pl-4 list-decimal">
-            {items.map((item, itemIdx) => (
-              <li key={itemIdx}>{item}</li>
-            ))}
-          </ol>
-        );
-      }
-      return (
-        <p key={idx} className="my-2 text-slate-600 text-xs leading-relaxed">
-          {trimmed}
-        </p>
-      );
-    });
-  };
+  // Quill Toolbar Configuration
+  const quillModules = useMemo(() => ({
+    toolbar: [
+      [{ header: [2, 3, 4, false] }],
+      ["bold", "italic", "underline", "strike"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["blockquote", "code-block"],
+      ["link"],
+      ["clean"]
+    ]
+  }), []);
+
+  const quillFormats = [
+    "header",
+    "bold",
+    "italic",
+    "underline",
+    "strike",
+    "list",
+    "bullet",
+    "blockquote",
+    "code-block",
+    "link"
+  ];
+
+  // Render HTML for Preview
+  const previewHtml = useMemo(() => {
+    try {
+      return marked.parse(form.content || "") as string;
+    } catch {
+      return form.content || "";
+    }
+  }, [form.content]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -164,7 +209,7 @@ export default function PublicPagesCmsTab() {
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5">
               <FileText className="w-3 h-3 text-indigo-400" />
-              Public CMS Management
+              Quill WYSIWYG & Markdown CMS
             </span>
             <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
               Live Routing Active
@@ -174,7 +219,7 @@ export default function PublicPagesCmsTab() {
             Public Pages CMS (About, Privacy & Terms)
           </h2>
           <p className="text-xs text-slate-300 leading-relaxed">
-            Update and maintain official company background, privacy policies, bKash compliance disclosures, and terms of service without changing source code.
+            Easily write and update rich company background, privacy policies, bKash compliance disclosures, and terms of service with the visual Quill editor.
           </p>
         </div>
 
@@ -187,7 +232,7 @@ export default function PublicPagesCmsTab() {
             title="Open public page in new tab"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Live Preview</span>
+            <span className="hidden sm:inline">Live Public URL</span>
           </a>
 
           <button
@@ -263,7 +308,7 @@ export default function PublicPagesCmsTab() {
               Page SEO & Search Engine Ranking
             </h3>
             <span className="text-[11px] text-slate-400 font-mono">
-              URL: https://jobab.chat/{selectedSlug}
+              Public Route: https://jobab.chat/{selectedSlug}
             </span>
           </div>
 
@@ -343,58 +388,97 @@ export default function PublicPagesCmsTab() {
           </div>
         </div>
 
-        {/* Row 3: Markdown Content Editor & Live Preview Switch */}
+        {/* Row 3: Quill WYSIWYG & Markdown Content Editor */}
         <div className="space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
-                <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
-                Page Content (Markdown Enabled)
+                <PenTool className="w-3.5 h-3.5 text-indigo-600" />
+                Page Content Editor
               </h3>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                Use standard Markdown (<code>## Section Title</code>, <code>- bullet items</code>, <code>**bold text**</code>, <code>---</code> dividers).
+                Format your content seamlessly with the visual Quill editor or switch to raw Markdown mode.
               </p>
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
+            {/* Mode Switcher Tabs */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto text-xs">
               <button
                 type="button"
-                onClick={() => setActiveViewMode("edit")}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${activeViewMode === "edit"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                <Edit3 className="w-3 h-3" />
-                <span>Editor</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveViewMode("preview")}
-                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 ${activeViewMode === "preview"
+                onClick={() => setActiveEditorMode("quill")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${activeEditorMode === "quill"
                   ? "bg-white text-indigo-600 shadow-xs"
                   : "text-slate-500 hover:text-slate-800"
                 }`}
               >
+                <PenTool className="w-3 h-3" />
+                <span>Quill Visual Editor</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveEditorMode("markdown")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${activeEditorMode === "markdown"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                <Code className="w-3 h-3" />
+                <span>Raw Markdown</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveEditorMode("preview")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${activeEditorMode === "preview"
+                  ? "bg-white text-emerald-600 shadow-xs"
+                  : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
                 <Eye className="w-3 h-3" />
-                <span>Live Preview</span>
+                <span>Live Public Preview</span>
               </button>
             </div>
           </div>
 
-          {activeViewMode === "edit" ? (
-            <textarea
-              rows={18}
-              value={form.content || ""}
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-              placeholder="Write or edit full markdown content here..."
-              className="w-full p-4 bg-slate-900 text-slate-100 font-mono text-xs leading-relaxed rounded-2xl border border-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-            />
-          ) : (
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 max-h-[500px] overflow-y-auto">
-              <div className="prose prose-slate max-w-none">
-                {renderPreview(form.content || "")}
-              </div>
+          {/* 1. Quill Rich WYSIWYG Mode */}
+          {activeEditorMode === "quill" && (
+            <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-xs">
+              <ReactQuill
+                theme="snow"
+                value={quillHtml}
+                onChange={handleQuillChange}
+                modules={quillModules}
+                formats={quillFormats}
+                placeholder="Type or format your page content here..."
+                className="bg-white min-h-[380px] text-slate-800"
+              />
+            </div>
+          )}
+
+          {/* 2. Raw Markdown Code Mode */}
+          {activeEditorMode === "markdown" && (
+            <div className="space-y-1.5">
+              <textarea
+                rows={18}
+                value={form.content || ""}
+                onChange={(e) => handleMarkdownChange(e.target.value)}
+                placeholder="Write raw markdown here (## Headings, - bullet items, **bold**)..."
+                className="w-full p-4 bg-slate-900 text-slate-100 font-mono text-xs leading-relaxed rounded-2xl border border-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+              />
+              <p className="text-[10.5px] text-slate-400">
+                Any changes made here in Markdown will automatically synchronize to the Quill visual editor.
+              </p>
+            </div>
+          )}
+
+          {/* 3. Live Public Preview Mode */}
+          {activeEditorMode === "preview" && (
+            <div className="p-8 bg-slate-50 rounded-2xl border border-slate-200 max-h-[500px] overflow-y-auto">
+              <div
+                className="prose prose-slate max-w-none prose-headings:font-black prose-h2:text-xl prose-h2:border-b prose-h2:border-slate-200 prose-h2:pb-2 prose-h3:text-base prose-h3:font-bold prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 text-xs sm:text-sm"
+                dangerouslySetInnerHTML={{ __html: previewHtml }}
+              />
             </div>
           )}
         </div>

@@ -8,6 +8,7 @@ import {
   CheckCircle2, FileText, Lock, Globe, Mail, HelpCircle,
   ExternalLink, Sparkles, Building2, ChevronRight
 } from "lucide-react";
+import { marked } from "marked";
 import { api } from "../../lib/api";
 import PricingModal from "../auth/PricingModal";
 
@@ -71,14 +72,19 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
     }
   }, [pageData]);
 
-  // Extract headings from markdown content for Table of Contents
+  // Extract headings from markdown or HTML content for Table of Contents
   const extractHeadings = (text: string) => {
-    const lines = text.split("\n");
+    const lines = (text || "").split("\n");
     const headings: { id: string; title: string }[] = [];
     lines.forEach((line) => {
-      const match = line.match(/^##\s+(.+)$/);
-      if (match) {
-        const title = match[1].trim();
+      const matchMd = line.match(/^##\s+(.+)$/);
+      const matchHtml = line.match(/<h2[^>]*>(.*?)<\/h2>/i);
+      if (matchMd) {
+        const title = matchMd[1].replace(/\*\*/g, "").trim();
+        const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        headings.push({ id, title });
+      } else if (matchHtml) {
+        const title = matchHtml[1].replace(/<[^>]*>/g, "").trim();
         const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
         headings.push({ id, title });
       }
@@ -88,101 +94,14 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
 
   const headings = extractHeadings(pageData.content || "");
 
-  // Simple Markdown Parser for beautiful typography
-  const renderMarkdown = (text: string) => {
-    const sections = text.split("\n\n");
-    return sections.map((section, idx) => {
-      const trimmed = section.trim();
-
-      // Heading 2
-      if (trimmed.startsWith("## ")) {
-        const title = trimmed.replace(/^##\s+/, "");
-        const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-        return (
-          <h2
-            key={idx}
-            id={id}
-            className="text-lg sm:text-xl font-black text-slate-900 mt-8 mb-3 scroll-mt-24 flex items-center gap-2 border-b border-slate-100 pb-2"
-          >
-            <span className="w-1.5 h-5 bg-indigo-600 rounded-full inline-block" />
-            <span>{title}</span>
-          </h2>
-        );
-      }
-
-      // Heading 3
-      if (trimmed.startsWith("### ")) {
-        const title = trimmed.replace(/^###\s+/, "");
-        return (
-          <h3 key={idx} className="text-base font-extrabold text-slate-900 mt-6 mb-2">
-            {title}
-          </h3>
-        );
-      }
-
-      // Divider
-      if (trimmed === "---") {
-        return <hr key={idx} className="my-6 border-slate-200" />;
-      }
-
-      // Bullet Lists
-      if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-        const items = trimmed.split("\n").map((line) => line.replace(/^[-*]\s+/, ""));
-        return (
-          <ul key={idx} className="my-3 space-y-2 text-slate-600 leading-relaxed text-xs sm:text-sm pl-4">
-            {items.map((item, itemIdx) => (
-              <li key={itemIdx} className="list-disc list-outside">
-                {formatInlineMarkdown(item)}
-              </li>
-            ))}
-          </ul>
-        );
-      }
-
-      // Numbered Lists
-      if (/^\d+\.\s+/.test(trimmed)) {
-        const items = trimmed.split("\n").map((line) => line.replace(/^\d+\.\s+/, ""));
-        return (
-          <ol key={idx} className="my-3 space-y-2 text-slate-600 leading-relaxed text-xs sm:text-sm pl-4 list-decimal list-outside">
-            {items.map((item, itemIdx) => (
-              <li key={itemIdx}>
-                {formatInlineMarkdown(item)}
-              </li>
-            ))}
-          </ol>
-        );
-      }
-
-      // Standard Paragraph
-      return (
-        <p key={idx} className="my-3 text-slate-600 leading-relaxed text-xs sm:text-sm">
-          {formatInlineMarkdown(trimmed)}
-        </p>
-      );
-    });
-  };
-
-  // Helper for bold text and code snippets
-  const formatInlineMarkdown = (text: string) => {
-    const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
-        return (
-          <strong key={i} className="font-extrabold text-slate-900">
-            {part.slice(2, -2)}
-          </strong>
-        );
-      }
-      if (part.startsWith("`") && part.endsWith("`")) {
-        return (
-          <code key={i} className="px-1.5 py-0.5 bg-slate-100 text-indigo-700 font-mono text-[11px] rounded border border-slate-200">
-            {part.slice(1, -1)}
-          </code>
-        );
-      }
-      return part;
-    });
-  };
+  // Render HTML via marked parser
+  const contentHtml = React.useMemo(() => {
+    try {
+      return marked.parse(pageData.content || "") as string;
+    } catch {
+      return pageData.content || "";
+    }
+  }, [pageData.content]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
@@ -357,9 +276,10 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
 
           {/* Right Main Content Card (8 cols) */}
           <article className="lg:col-span-8 bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-sm">
-            <div className="prose prose-slate max-w-none">
-              {renderMarkdown(pageData.content || "")}
-            </div>
+            <div
+              className="prose prose-slate max-w-none prose-headings:font-black prose-h2:text-xl prose-h2:border-b prose-h2:border-slate-100 prose-h2:pb-2 prose-h3:text-base prose-h3:font-bold prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-hr:border-slate-200 text-xs sm:text-sm"
+              dangerouslySetInnerHTML={{ __html: contentHtml }}
+            />
 
             {/* Support / Helpdesk Box */}
             <div className="mt-12 pt-6 border-t border-slate-100 bg-slate-50 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

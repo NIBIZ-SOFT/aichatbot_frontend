@@ -11,6 +11,7 @@ import {
   CheckCircle2, RefreshCw, Star, HelpCircle, PhoneCall, Layers
 } from "lucide-react";
 import { api } from "../../lib/api";
+import { calculateEstimatedMessages, enhanceFeatureWithMessages } from "../../lib/pricingUtils";
 
 export default function PricingPage() {
   const router = useRouter();
@@ -27,11 +28,12 @@ export default function PricingPage() {
       annualPrice: 4240,
       price: "৳4,990",
       period: "/ month",
-      tokens: "500,000 AI Tokens",
+      tokens: "~1,500 Messages (~500k Tokens)",
       seats: "2 Support Seats",
       widgets: "1 Website Widget",
       desc: "Perfect for early-stage startups and small online businesses in Bangladesh.",
       features: [
+        "~1,500 AI Messages / month (500k Tokens)",
         "1 Connected Website Widget",
         "2 Dedicated Agent Seats",
         "Bengali & English AI Auto-Reply",
@@ -49,11 +51,12 @@ export default function PricingPage() {
       period: "/ month",
       popular: true,
       badge_text: "MOST POPULAR",
-      tokens: "2,500,000 AI Tokens",
+      tokens: "~7,500 Messages (~2.5M Tokens)",
       seats: "10 Support Seats",
       widgets: "5 Website Widgets",
       desc: "Ideal for growing e-commerce brands and IT companies needing RAG knowledge search.",
       features: [
+        "~7,500 AI Messages / month (2.5M Tokens)",
         "5 Connected Website Widgets",
         "10 Support & Sales Staff Seats",
         "Role-based Department Queues",
@@ -70,11 +73,12 @@ export default function PricingPage() {
       annualPrice: 42490,
       price: "৳49,990",
       period: "/ month",
-      tokens: "10,000,000 AI Tokens",
+      tokens: "~30,000 Messages (~10M Tokens)",
       seats: "25 Support Seats",
       widgets: "Unlimited Widgets",
       desc: "Complete white-label, 99.99% uptime SLA, and bKash/Nagad/Card corporate billing.",
       features: [
+        "~30,000 AI Messages / month (10M Tokens)",
         "Unlimited Storefront Widgets",
         "25 Dedicated Staff & Admin Seats",
         "White-Label Chat Branding",
@@ -111,27 +115,33 @@ export default function PricingPage() {
         if (dbPlans && dbPlans.length > 0) {
           const paid = dbPlans.filter(p => p.monthly_price_bdt > 0);
           if (paid.length > 0) {
-            const formatted = paid.map(p => ({
-              id: p.code,
-              code: p.code,
-              name: p.name,
-              monthlyPrice: p.monthly_price_bdt,
-              annualPrice: p.annual_price_bdt || Math.round(p.monthly_price_bdt * 0.85),
-              price: `৳${p.monthly_price_bdt.toLocaleString()}`,
-              period: "/ month",
-              popular: p.is_popular,
-              badge_text: p.badge_text,
-              tokens: `${(p.monthly_token_limit / 1000).toLocaleString()}k AI Tokens`,
-              seats: `${p.max_agents} Support Seats`,
-              widgets: `${p.max_websites} Website Widgets`,
-              desc: p.description,
-              features: p.features || [
-                `${(p.monthly_token_limit / 1000).toLocaleString()}k AI Tokens / mo`,
-                `${p.max_agents} Support Seats`,
-                `${p.max_websites} Website Widgets`,
-                "bKash Instant Billing"
-              ]
-            }));
+            const formatted = paid.map(p => {
+              const msgEst = calculateEstimatedMessages(p.monthly_token_limit);
+              const tokenStr = p.monthly_token_limit >= 1000000 
+                ? `${(p.monthly_token_limit / 1000000).toFixed(p.monthly_token_limit % 1000000 === 0 ? 0 : 1)}M` 
+                : `${(p.monthly_token_limit / 1000).toFixed(0)}k`;
+              return {
+                id: p.code,
+                code: p.code,
+                name: p.name,
+                monthlyPrice: p.monthly_price_bdt,
+                annualPrice: p.annual_price_bdt || Math.round(p.monthly_price_bdt * 0.85),
+                price: `৳${p.monthly_price_bdt.toLocaleString()}`,
+                period: "/ month",
+                popular: p.is_popular,
+                badge_text: p.badge_text,
+                tokens: `~${msgEst.toLocaleString()} Messages (~${tokenStr} Tokens)`,
+                seats: `${p.max_agents} Support Seats`,
+                widgets: `${p.max_websites} Website Widgets`,
+                desc: p.description,
+                features: (p.features || [
+                  `~${msgEst.toLocaleString()} AI Messages / mo (~${tokenStr} Tokens)`,
+                  `${p.max_agents} Support Seats`,
+                  `${p.max_websites} Website Widgets`,
+                  "bKash Instant Billing"
+                ]).map((f: string) => enhanceFeatureWithMessages(f, p.monthly_token_limit))
+              };
+            });
             setPlans(formatted);
             if (!formatted.some(p => p.id === selectedTier)) {
               setSelectedTier(formatted[0].id);

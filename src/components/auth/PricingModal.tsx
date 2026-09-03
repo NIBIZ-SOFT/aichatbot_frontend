@@ -11,6 +11,7 @@ import {
   CreditCard, Tag, User, Mail, Key, ExternalLink
 } from "lucide-react";
 import { api } from "../../lib/api";
+import { calculateEstimatedMessages, enhanceFeatureWithMessages } from "../../lib/pricingUtils";
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -33,12 +34,12 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
       annualPrice: 4240,
       price: "৳4,990",
       period: "/ month",
-      tokens: "500k AI Tokens",
+      tokens: "~1,500 Messages (~500k Tokens)",
       seats: "2 Support Seats",
       widgets: "2 Website Widgets",
       desc: "Professional conversational AI for growing e-commerce businesses.",
       features: [
-        "500,000 AI Tokens / month",
+        "~1,500 AI Messages / month (500k Tokens)",
         "2 Active Website Widgets",
         "2 Staff / Agent Seats",
         "10 Knowledge Base Documents",
@@ -57,12 +58,12 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
       period: "/ month",
       popular: true,
       badge_text: "POPULAR",
-      tokens: "2,500k AI Tokens",
+      tokens: "~7,500 Messages (~2.5M Tokens)",
       seats: "5 Support Seats",
       widgets: "5 Website Widgets",
       desc: "High-volume AI automation for scaling digital commerce brands.",
       features: [
-        "2,500,000 AI Tokens / month",
+        "~7,500 AI Messages / month (2.5M Tokens)",
         "5 Active Website Widgets",
         "5 Staff / Agent Seats",
         "50 Knowledge Base Documents",
@@ -81,12 +82,12 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
       price: "৳49,990",
       period: "/ month",
       badge_text: "Enterprise",
-      tokens: "10,000k AI Tokens",
+      tokens: "~30,000 Messages (~10M Tokens)",
       seats: "20 Support Seats",
       widgets: "20 Website Widgets",
       desc: "Dedicated LLM infrastructure, custom integrations & unlimited scalability.",
       features: [
-        "10,000,000 AI Tokens / month",
+        "~30,000 AI Messages / month (10M Tokens)",
         "20 Active Website Widgets",
         "20 Staff / Agent Seats",
         "200 Knowledge Base Documents",
@@ -149,11 +150,11 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
               period: "/ month",
               popular: p.is_popular,
               badge_text: p.badge_text,
-              tokens: `${(p.monthly_token_limit / 1000).toLocaleString()}k AI Tokens`,
+              tokens: `~${calculateEstimatedMessages(p.monthly_token_limit).toLocaleString()} Messages (~${(p.monthly_token_limit / 1000).toLocaleString()}k Tokens)`,
               seats: `${p.max_agents} Support Seats`,
               widgets: `${p.max_websites} Website Widgets`,
               desc: p.description,
-              features: p.features
+              features: (p.features || []).map((f: string) => enhanceFeatureWithMessages(f, p.monthly_token_limit))
             }));
 
             const isPaygActive = pricingCfg?.pay_as_you_go_enabled !== false;
@@ -170,13 +171,13 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
               period: "prepaid credit",
               popular: false,
               badge_text: "ZERO CONTRACT",
-              tokens: `Pay ৳${tokenRate10k.toFixed(2)} per 10k Tokens`,
+              tokens: `Pay ৳${tokenRate10k.toFixed(2)} per 10k Tokens (≈ 30 Messages)`,
               seats: "5 Support Seats",
               widgets: "2 Website Widgets",
               desc: "No recurring subscription. Pure usage-based billing with instant bKash recharge.",
               features: [
                 "No monthly recurring fees",
-                `৳${tokenRate10k.toFixed(2)} per 10,000 tokens`,
+                `৳${tokenRate10k.toFixed(2)} per 10,000 tokens (≈ 30 Messages)`,
                 "Instant bKash Recharge",
                 "Full Autonomous AI & RAG",
                 "Credits never expire"

@@ -9,9 +9,10 @@ import {
   Building2, Globe, Users, Cpu, FileText, Download,
   CheckCircle2, RefreshCw, AlertCircle, Lock, Star,
   ShieldCheck, HelpCircle, ChevronRight, X, PhoneCall, Tag,
-  Printer, Award
+  Printer, Award, MessageSquare
 } from "lucide-react";
 import { api } from "../../lib/api";
+import { calculateEstimatedMessages, enhanceFeatureWithMessages } from "../../lib/pricingUtils";
 import PaymentMethodModal from "../payment/PaymentMethodModal";
 
 interface SubscriptionDetails {
@@ -144,7 +145,7 @@ export default function SubscriptionView() {
       name: "Starter Plan",
       monthlyPrice: 4990,
       annualPrice: 4240,
-      tokens: "500,000 / mo",
+      tokens: "~1,500 Messages (~500k Tokens)",
       tokenLimitNum: 500000,
       websites: "2 Active Widgets",
       agents: "2 Staff Seats",
@@ -152,7 +153,7 @@ export default function SubscriptionView() {
       badge: "Starter",
       description: "Professional conversational AI for growing e-commerce businesses.",
       features: [
-        "500,000 AI Tokens / month",
+        "~1,500 AI Messages / month (500k Tokens)",
         "2 Active Website Widgets",
         "2 Staff / Agent Seats",
         "10 Knowledge Base Documents",
@@ -166,7 +167,7 @@ export default function SubscriptionView() {
       name: "Growth Plan",
       monthlyPrice: 19990,
       annualPrice: 16990,
-      tokens: "2,500,000 / mo",
+      tokens: "~7,500 Messages (~2.5M Tokens)",
       tokenLimitNum: 2500000,
       websites: "5 Active Widgets",
       agents: "5 Staff Seats",
@@ -174,7 +175,7 @@ export default function SubscriptionView() {
       badge: "Most Popular",
       description: "High-volume AI automation for scaling digital commerce brands.",
       features: [
-        "2,500,000 AI Tokens / month",
+        "~7,500 AI Messages / month (2.5M Tokens)",
         "5 Active Website Widgets",
         "5 Staff / Agent Seats",
         "50 Knowledge Base Documents",
@@ -189,7 +190,7 @@ export default function SubscriptionView() {
       name: "Enterprise Plan",
       monthlyPrice: 49990,
       annualPrice: 42490,
-      tokens: "10,000,000 / mo",
+      tokens: "~30,000 Messages (~10M Tokens)",
       tokenLimitNum: 10000000,
       websites: "20 Active Widgets",
       agents: "20 Staff Seats",
@@ -197,7 +198,7 @@ export default function SubscriptionView() {
       badge: "Enterprise",
       description: "Dedicated LLM infrastructure, custom integrations & unlimited scalability.",
       features: [
-        "10,000,000 AI Tokens / month",
+        "~30,000 AI Messages / month (10M Tokens)",
         "20 Active Website Widgets",
         "20 Staff / Agent Seats",
         "200 Knowledge Base Documents",
@@ -233,20 +234,26 @@ export default function SubscriptionView() {
         }
       }
       if (dbPlans && dbPlans.length > 0) {
-        const mapped = dbPlans.map(p => ({
-          id: p.code,
-          name: p.name,
-          monthlyPrice: p.monthly_price_bdt,
-          annualPrice: p.annual_price_bdt,
-          tokens: `${(p.monthly_token_limit / 1000).toLocaleString()}k / mo`,
-          tokenLimitNum: p.monthly_token_limit,
-          websites: `${p.max_websites} Websites`,
-          agents: `${p.max_agents} Agent Seats`,
-          rag: `${p.max_knowledge_docs || 50} Knowledge Docs`,
-          badge: p.badge_text || (p.is_popular ? "MOST POPULAR" : null),
-          description: p.description,
-          features: p.features || []
-        }));
+        const mapped = dbPlans.map(p => {
+          const msgEst = calculateEstimatedMessages(p.monthly_token_limit);
+          const tokenStr = p.monthly_token_limit >= 1000000 
+            ? `${(p.monthly_token_limit / 1000000).toFixed(p.monthly_token_limit % 1000000 === 0 ? 0 : 1)}M` 
+            : `${(p.monthly_token_limit / 1000).toFixed(0)}k`;
+          return {
+            id: p.code,
+            name: p.name,
+            monthlyPrice: p.monthly_price_bdt,
+            annualPrice: p.annual_price_bdt,
+            tokens: `~${msgEst.toLocaleString()} Messages (~${tokenStr} Tokens)`,
+            tokenLimitNum: p.monthly_token_limit,
+            websites: `${p.max_websites} Websites`,
+            agents: `${p.max_agents} Agent Seats`,
+            rag: `${p.max_knowledge_docs || 50} Knowledge Docs`,
+            badge: p.badge_text || (p.is_popular ? "MOST POPULAR" : null),
+            description: p.description,
+            features: (p.features || []).map((f: string) => enhanceFeatureWithMessages(f, p.monthly_token_limit))
+          };
+        });
         setPlans(mapped);
       }
     } catch (err) {
@@ -645,8 +652,8 @@ export default function SubscriptionView() {
 
                 {/* Resource Limits List */}
                 <div className="space-y-2 py-2 text-xs font-medium">
-                  <div className="flex items-center gap-2">
-                    <Cpu className="w-4 h-4 text-[#008750] shrink-0" />
+                  <div className="flex items-center gap-2 font-bold text-indigo-700 bg-indigo-50/80 -mx-1 px-2.5 py-1.5 rounded-xl border border-indigo-100">
+                    <MessageSquare className="w-4 h-4 text-indigo-600 shrink-0" />
                     <span>{p.tokens}</span>
                   </div>
                   <div className="flex items-center gap-2">

@@ -19,6 +19,7 @@ import PricingEngineTab from "../superadmin/PricingEngineTab";
 import TenantPricingContractModal from "../superadmin/TenantPricingContractModal";
 import SeoManagementTab from "../superadmin/SeoManagementTab";
 import PublicPagesCmsTab from "../superadmin/PublicPagesCmsTab";
+import { calculateEstimatedMessages, enhanceFeatureWithMessages } from "../../lib/pricingUtils";
 
 interface TenantItem {
   id: string;
@@ -1844,9 +1845,17 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
 
                     {/* Quotas breakdown */}
                     <div className="mt-4 space-y-2 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                      <div className="flex justify-between items-center text-indigo-950 bg-indigo-50/90 -mx-1 px-2.5 py-1.5 rounded-xl border border-indigo-200/80">
+                        <span className="text-[11px] font-black flex items-center gap-1.5">
+                          <MessageSquare className="w-3.5 h-3.5 text-indigo-600" /> Est. Messages:
+                        </span>
+                        <span className="font-black font-mono text-indigo-700 text-xs">
+                          ~{calculateEstimatedMessages(plan.monthly_token_limit).toLocaleString()} /mo
+                        </span>
+                      </div>
                       <div className="flex justify-between items-center text-slate-700">
                         <span className="text-[11px] text-slate-500">AI Tokens:</span>
-                        <span className="font-bold font-mono text-indigo-600">{(plan.monthly_token_limit / 1000).toLocaleString()}k /mo</span>
+                        <span className="font-bold font-mono text-slate-600">{(plan.monthly_token_limit / 1000).toLocaleString()}k /mo</span>
                       </div>
                       <div className="flex justify-between items-center text-slate-700">
                         <span className="text-[11px] text-slate-500">Support Seats:</span>
@@ -1867,7 +1876,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                       {(plan.features || []).slice(0, 4).map((feat: string, i: number) => (
                         <div key={i} className="flex items-start gap-1.5">
                           <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
-                          <span className="line-clamp-1">{feat}</span>
+                          <span className="line-clamp-1">{enhanceFeatureWithMessages(feat, plan.monthly_token_limit)}</span>
                         </div>
                       ))}
                       {(plan.features || []).length > 4 && (
@@ -3720,6 +3729,9 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                     onChange={e => setPlanFormData({ ...planFormData, monthly_token_limit: parseInt(e.target.value) || 0 })}
                     className="w-full p-2 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono text-xs font-bold bg-white"
                   />
+                  <div className="text-[10px] text-indigo-600 font-bold font-mono">
+                    ≈ ~{calculateEstimatedMessages(planFormData.monthly_token_limit || 0).toLocaleString()} Messages / mo
+                  </div>
                 </div>
 
                 <div className="space-y-1">

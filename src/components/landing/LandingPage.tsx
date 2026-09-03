@@ -32,7 +32,7 @@ export default function LandingPage() {
       max_websites: 2,
       max_knowledge_docs: 10,
       features: [
-        "500,000 AI Tokens / month",
+        "~1,500 AI Messages / month (500k Tokens)",
         "2 Active Website Widgets",
         "2 Staff / Agent Seats",
         "10 Knowledge Base Documents",
@@ -54,7 +54,7 @@ export default function LandingPage() {
       max_websites: 5,
       max_knowledge_docs: 50,
       features: [
-        "2,500,000 AI Tokens / month",
+        "~7,500 AI Messages / month (2.5M Tokens)",
         "5 Active Website Widgets",
         "5 Staff / Agent Seats",
         "50 Knowledge Base Documents",
@@ -77,7 +77,7 @@ export default function LandingPage() {
       max_websites: 20,
       max_knowledge_docs: 200,
       features: [
-        "10,000,000 AI Tokens / month",
+        "~30,000 AI Messages / month (10M Tokens)",
         "20 Active Website Widgets",
         "20 Staff / Agent Seats",
         "200 Knowledge Base Documents",

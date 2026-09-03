@@ -777,6 +777,22 @@ export const api = {
     });
   },
 
+  // Public Company & Legal Pages CMS
+  async getPublicPage(slug: string) {
+    return apiFetch(`/public-pages/${slug}`);
+  },
+
+  async getSuperAdminPublicPages() {
+    return apiFetch("/superadmin/public-pages");
+  },
+
+  async updateSuperAdminPublicPage(slug: string, data: any) {
+    return apiFetch(`/superadmin/public-pages/${slug}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
   async getTenantPricingContract(tenantId: string) {
     return apiFetch(`/superadmin/tenants/${tenantId}/pricing-contract`);
   },

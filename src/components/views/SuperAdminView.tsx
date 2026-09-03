@@ -18,6 +18,7 @@ import ThemeManagementTab from "../superadmin/ThemeManagementTab";
 import PricingEngineTab from "../superadmin/PricingEngineTab";
 import TenantPricingContractModal from "../superadmin/TenantPricingContractModal";
 import SeoManagementTab from "../superadmin/SeoManagementTab";
+import PublicPagesCmsTab from "../superadmin/PublicPagesCmsTab";
 
 interface TenantItem {
   id: string;
@@ -44,6 +45,8 @@ interface MetricsData {
   suspended_tenants: number;
   total_users: number;
   total_connected_widgets: number;
+  total_conversations_all_time: number;
+  total_monthly_revenue_bdt: number;
   total_tokens_consumed: number;
   total_prompt_tokens: number;
   total_completion_tokens: number;
@@ -51,7 +54,7 @@ interface MetricsData {
   platform_uptime_percent: number;
 }
 
-export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "payments" | "bkash" | "eps" | "infrastructure" | "audit" | "theme" | "meta-data";
+export type SuperAdminTabType = "overview" | "tenants" | "plans" | "coupons" | "revenue" | "pricing-engine" | "payments" | "bkash" | "eps" | "infrastructure" | "audit" | "theme" | "meta-data" | "pages";
 
 interface SuperAdminViewProps {
   defaultTab?: SuperAdminTabType;
@@ -1011,6 +1014,16 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 }`}
             >
               <Globe className="w-4 h-4 text-sky-400" /> SEO & Meta Data
+            </button>
+
+            <button
+              onClick={() => handleTabClick("pages")}
+              className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${activeTab === "pages"
+                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                }`}
+            >
+              <FileText className="w-4 h-4 text-emerald-400" /> CMS Pages (Legal)
             </button>
           </div>
 
@@ -3579,6 +3592,11 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
       {/* TAB 10: PLATFORM SEO, OPEN GRAPH & STRUCTURED METADATA */}
       {/* ========================================================================= */}
       {activeTab === "meta-data" && <SeoManagementTab />}
+
+      {/* ========================================================================= */}
+      {/* TAB 11: PUBLIC CMS & LEGAL PAGES (ABOUT, PRIVACY, TERMS) */}
+      {/* ========================================================================= */}
+      {activeTab === "pages" && <PublicPagesCmsTab />}
 
       {/* VIP Custom Agreement & Pricing Contract Override Modal */}
       {contractOverrideTenant && (

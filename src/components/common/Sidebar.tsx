@@ -153,6 +153,13 @@ export default function Sidebar({ activeNav, onSelectNav, mobileOpen, onCloseMob
           route: "/superadmin/meta-data",
           icon: Globe,
           badge: "SEO"
+        },
+        {
+          id: "pages",
+          label: "CMS Pages (Legal)",
+          route: "/superadmin/pages",
+          icon: FileText,
+          badge: "CMS"
         }
       ]
     }

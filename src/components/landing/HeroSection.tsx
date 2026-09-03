@@ -83,7 +83,7 @@ export default function HeroSection({ onOpenPricing }: HeroSectionProps) {
                 onClick={() => onOpenPricing("growth")}
                 className="w-full sm:w-auto px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Start Free Trial</span>
+                <span>Get Started</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <a

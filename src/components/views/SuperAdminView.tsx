@@ -238,6 +238,9 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
     custom_slider_builder_enabled: true,
     min_wallet_topup_bdt: 100.0,
     annual_discount_percentage: 15.0,
+    bkash_enabled: true,
+    eps_enabled: true,
+    direct_trial_enabled: false,
     base_custom_platform_fee_bdt: 1990.0,
     per_extra_agent_bdt: 750.0,
     per_extra_website_bdt: 1200.0,
@@ -1561,14 +1564,14 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
             </div>
 
             {/* Grid Controls */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 relative z-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 relative z-10">
               
               {/* 1. PAYG Master Switch */}
               <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 flex flex-col justify-between space-y-3">
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                      <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> Pay-As-You-Go Switch
+                      <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> Pay-As-You-Go
                     </span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -1583,11 +1586,11 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                   <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
                     {pricingEngineConfig.pay_as_you_go_enabled 
                       ? "🟢 Visible on Landing Page & Registration modal"
-                      : "🔴 Hidden from public site (existing users unaffected)"}
+                      : "🔴 Hidden from public site"}
                   </p>
                 </div>
                 <div className="text-[10px] font-mono text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-lg">
-                  Status: <strong className={pricingEngineConfig.pay_as_you_go_enabled ? "text-emerald-400" : "text-rose-400"}>{pricingEngineConfig.pay_as_you_go_enabled ? "ACTIVE (SHOW)" : "DISABLED (HIDE)"}</strong>
+                  Status: <strong className={pricingEngineConfig.pay_as_you_go_enabled ? "text-emerald-400" : "text-rose-400"}>{pricingEngineConfig.pay_as_you_go_enabled ? "ACTIVE (SHOW)" : "DISABLED"}</strong>
                 </div>
               </div>
 
@@ -1617,7 +1620,94 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 </div>
               </div>
 
-              {/* 3. Token Meter Unit Rate */}
+              {/* 3. bKash Gateway Checkout Switch */}
+              <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                      <span className="h-3.5 w-3.5 rounded-full bg-[#e2136e] text-white flex items-center justify-center text-[9px] font-black">৳</span>
+                      bKash Checkout
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={pricingEngineConfig.bkash_enabled !== false}
+                        onChange={(e) => setPricingEngineConfig({ ...pricingEngineConfig, bkash_enabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#e2136e]"></div>
+                    </label>
+                  </div>
+                  <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
+                    {pricingEngineConfig.bkash_enabled !== false
+                      ? "🟢 'Pay with bKash' visible on checkout & top-up"
+                      : "🔴 'Pay with bKash' completely HIDDEN"}
+                  </p>
+                </div>
+                <div className="text-[10px] font-mono text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-lg">
+                  Gateway: <strong className={pricingEngineConfig.bkash_enabled !== false ? "text-[#ff60a6]" : "text-rose-400"}>{pricingEngineConfig.bkash_enabled !== false ? "ENABLED (VISIBLE)" : "DISABLED (HIDDEN)"}</strong>
+                </div>
+              </div>
+
+              {/* 4. EPS Gateway Checkout Switch */}
+              <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                      <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
+                      EPS Checkout
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={pricingEngineConfig.eps_enabled !== false}
+                        onChange={(e) => setPricingEngineConfig({ ...pricingEngineConfig, eps_enabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                  </div>
+                  <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
+                    {pricingEngineConfig.eps_enabled !== false
+                      ? "🟢 'Pay with EPS' visible on checkout & top-up"
+                      : "🔴 'Pay with EPS' completely HIDDEN"}
+                  </p>
+                </div>
+                <div className="text-[10px] font-mono text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-lg">
+                  Gateway: <strong className={pricingEngineConfig.eps_enabled !== false ? "text-emerald-400" : "text-rose-400"}>{pricingEngineConfig.eps_enabled !== false ? "ENABLED (VISIBLE)" : "DISABLED (HIDDEN)"}</strong>
+                </div>
+              </div>
+
+              {/* 5. Direct Trial Sandbox Switch */}
+              <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                      Direct Trial Button
+                    </span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={pricingEngineConfig.direct_trial_enabled === true}
+                        onChange={(e) => setPricingEngineConfig({ ...pricingEngineConfig, direct_trial_enabled: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+                    </label>
+                  </div>
+                  <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed">
+                    {pricingEngineConfig.direct_trial_enabled === true
+                      ? "🟢 'Direct Trial' button visible (instant signup without pay)"
+                      : "🔴 Hidden (Customers must pay through gateway)"}
+                  </p>
+                </div>
+                <div className="text-[10px] font-mono text-slate-400 bg-slate-900/60 px-2.5 py-1 rounded-lg">
+                  Trial: <strong className={pricingEngineConfig.direct_trial_enabled === true ? "text-indigo-400" : "text-slate-400"}>{pricingEngineConfig.direct_trial_enabled === true ? "ENABLED" : "OFF (REQUIRE PAY)"}</strong>
+                </div>
+              </div>
+
+              {/* 6. Token Meter Unit Rate */}
               <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 space-y-2">
                 <label className="text-xs font-bold text-slate-200 block">
                   Default Rate / 10k Tokens (৳ BDT)
@@ -1639,7 +1729,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 </div>
               </div>
 
-              {/* 4. Minimum Wallet Top-Up */}
+              {/* 7. Minimum Wallet Top-Up */}
               <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 space-y-2">
                 <label className="text-xs font-bold text-slate-200 block">
                   Minimum Wallet Top-Up (৳ BDT)
@@ -1660,7 +1750,7 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 </div>
               </div>
 
-              {/* 5. Annual Billing Discount % */}
+              {/* 8. Annual Billing Discount % */}
               <div className="p-4 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700/80 space-y-2">
                 <label className="text-xs font-bold text-slate-200 block">
                   Annual Discount (%)
@@ -2190,6 +2280,30 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                   </div>
 
                   <form onSubmit={handleSaveBkashSettings} className="space-y-4 text-xs">
+                    {/* Gateway Active / Hidden Toggle */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <div className="font-bold text-slate-900 flex items-center gap-2">
+                          <span>bKash Gateway Status</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${bkashSettings.is_enabled !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                            {bkashSettings.is_enabled !== false ? "ENABLED (VISIBLE)" : "DISABLED (HIDDEN)"}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          When disabled, "Pay with bKash" button will be completely hidden from client checkout and wallet topup.
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={bkashSettings.is_enabled !== false}
+                          onChange={(e) => setBkashSettings({ ...bkashSettings, is_enabled: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#e2136e]"></div>
+                      </label>
+                    </div>
+
                     {/* Environment Mode Toggle */}
                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div>
@@ -2436,6 +2550,30 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                   </div>
 
                   <form onSubmit={handleSaveEpsSettings} className="space-y-4 text-xs">
+                    {/* Gateway Active / Hidden Toggle */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div>
+                        <div className="font-bold text-slate-900 flex items-center gap-2">
+                          <span>EPS Gateway Status</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${epsSettings.is_enabled !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                            {epsSettings.is_enabled !== false ? "ENABLED (VISIBLE)" : "DISABLED (HIDDEN)"}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          When disabled, "Pay with EPS" button will be completely hidden from client checkout and wallet topup.
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={epsSettings.is_enabled !== false}
+                          onChange={(e) => setEpsSettings({ ...epsSettings, is_enabled: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                      </label>
+                    </div>
+
                     {/* Environment Mode Toggle */}
                     <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div>

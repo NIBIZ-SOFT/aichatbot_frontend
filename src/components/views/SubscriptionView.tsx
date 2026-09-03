@@ -73,6 +73,7 @@ export default function SubscriptionView() {
   const [isTopupModalOpen, setIsTopupModalOpen] = useState(false);
   const [topupAmount, setTopupAmount] = useState<number>(1000);
   const [topupGateway, setTopupGateway] = useState<"bkash" | "eps">("bkash");
+  const [pricingConfig, setPricingConfig] = useState<any>(null);
   const [isInitiatingTopup, setIsInitiatingTopup] = useState(false);
 
   // Plan Upgrade / Change Modal State
@@ -211,17 +212,26 @@ export default function SubscriptionView() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [subData, invList, dbPlans, tSettings, walletData] = await Promise.all([
+      const [subData, invList, dbPlans, tSettings, walletData, pricingCfg] = await Promise.all([
         api.getSubscriptionCurrent(),
         api.getSubscriptionInvoices(),
         api.getPublicPlans().catch(() => []),
         api.getTenantSettings().catch(() => null),
-        api.getTenantWallet().catch(() => null)
+        api.getTenantWallet().catch(() => null),
+        api.getPublicPricingConfig().catch(() => null)
       ]);
       setSubscription(subData);
       setInvoices(invList);
       if (walletData) setWallet(walletData);
       if (tSettings) setTenantInfo(tSettings);
+      if (pricingCfg) {
+        setPricingConfig(pricingCfg);
+        if (pricingCfg.bkash_enabled === false && pricingCfg.eps_enabled !== false) {
+          setTopupGateway("eps");
+        } else if (pricingCfg.eps_enabled === false && pricingCfg.bkash_enabled !== false) {
+          setTopupGateway("bkash");
+        }
+      }
       if (dbPlans && dbPlans.length > 0) {
         const mapped = dbPlans.map(p => ({
           id: p.code,
@@ -1198,30 +1208,40 @@ export default function SubscriptionView() {
               {/* Payment Gateway Toggle */}
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1.5">Select Payment Gateway</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTopupGateway("bkash")}
-                    className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${topupGateway === "bkash"
-                        ? "border-[#e2136e] bg-pink-50 text-[#e2136e] ring-1 ring-pink-500"
-                        : "border-slate-200 hover:border-slate-300 text-slate-700"
-                      }`}
-                  >
-                    <span className="w-4 h-4 rounded-full bg-[#e2136e] text-white flex items-center justify-center text-[10px] font-black">৳</span>
-                    <span>bKash Direct</span>
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {pricingConfig?.bkash_enabled !== false && (
+                    <button
+                      type="button"
+                      onClick={() => setTopupGateway("bkash")}
+                      className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${topupGateway === "bkash"
+                          ? "border-[#e2136e] bg-pink-50 text-[#e2136e] ring-1 ring-pink-500"
+                          : "border-slate-200 hover:border-slate-300 text-slate-700"
+                        }`}
+                    >
+                      <span className="w-4 h-4 rounded-full bg-[#e2136e] text-white flex items-center justify-center text-[10px] font-black">৳</span>
+                      <span>bKash Direct</span>
+                    </button>
+                  )}
 
-                  <button
-                    type="button"
-                    onClick={() => setTopupGateway("eps")}
-                    className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${topupGateway === "eps"
-                        ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600"
-                        : "border-slate-200 hover:border-slate-300 text-slate-700"
-                      }`}
-                  >
-                    <CreditCard className="w-4 h-4 text-emerald-600" />
-                    <span>EPS Gateway</span>
-                  </button>
+                  {pricingConfig?.eps_enabled !== false && (
+                    <button
+                      type="button"
+                      onClick={() => setTopupGateway("eps")}
+                      className={`p-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${topupGateway === "eps"
+                          ? "border-emerald-600 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600"
+                          : "border-slate-200 hover:border-slate-300 text-slate-700"
+                        }`}
+                    >
+                      <CreditCard className="w-4 h-4 text-emerald-600" />
+                      <span>EPS Gateway</span>
+                    </button>
+                  )}
+
+                  {pricingConfig?.bkash_enabled === false && pricingConfig?.eps_enabled === false && (
+                    <div className="col-span-2 text-xs text-amber-700 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                      Payment gateways are temporarily undergoing maintenance.
+                    </div>
+                  )}
                 </div>
               </div>
 

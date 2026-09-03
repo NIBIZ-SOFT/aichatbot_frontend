@@ -100,6 +100,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
 
   const [selectedTier, setSelectedTier] = useState<string>(initialSelectedTier || "growth");
   const [activeStep, setActiveStep] = useState<1 | 2>(1);
+  const [pricingConfig, setPricingConfig] = useState<any>(null);
 
   // Sync initialSelectedTier when prop changes
   useEffect(() => {
@@ -131,6 +132,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
         api.getPublicPlans().catch(() => []),
         api.getPublicPricingConfig().catch(() => null)
       ]).then(([dbPlans, pricingCfg]: [any[], any]) => {
+        if (pricingCfg) setPricingConfig(pricingCfg);
         if (dbPlans && Array.isArray(dbPlans) && dbPlans.length > 0) {
           const paid = dbPlans.filter(p => p.monthly_price_bdt > 0 && p.is_active !== false);
           if (paid.length > 0) {
@@ -201,6 +203,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
   const rawPrice = currentPlan ? currentPlan.monthlyPrice : 19990;
   const discountAmount = appliedCoupon?.discount_amount_bdt || 0;
   const finalPrice = Math.max(0, rawPrice - discountAmount);
+
+  const isBkashEnabled = pricingConfig?.bkash_enabled !== false;
+  const isEpsEnabled = pricingConfig?.eps_enabled !== false;
+  const isTrialEnabled = pricingConfig?.direct_trial_enabled === true;
 
   const handleApplyCoupon = async () => {
     if (!couponCodeInput.trim()) return;
@@ -694,40 +700,52 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                 Cancel
               </button>
 
-              {/* Instant Sandbox Trial Launch */}
-              <button
-                type="button"
-                disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
-                onClick={() => handleProvisionWorkspace()}
-                className="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
-              >
-                {isLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-indigo-600" />}
-                <span className="hidden sm:inline">Direct Trial</span>
-                <span className="sm:hidden">Trial</span>
-              </button>
+              {/* Instant Sandbox Trial Launch (If enabled by Super Admin) */}
+              {isTrialEnabled && (
+                <button
+                  type="button"
+                  disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                  onClick={() => handleProvisionWorkspace()}
+                  className="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                >
+                  {isLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-indigo-600" />}
+                  <span className="hidden sm:inline">Direct Trial</span>
+                  <span className="sm:hidden">Trial</span>
+                </button>
+              )}
 
-              {/* Pay with EPS Gateway Button */}
-              <button
-                type="button"
-                disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
-                onClick={() => handleStartPayment("eps")}
-                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
-              >
-                <CreditCard className="w-3.5 h-3.5" />
-                <span>Pay with EPS</span>
-              </button>
+              {/* Pay with EPS Gateway Button (If enabled by Super Admin) */}
+              {isEpsEnabled && (
+                <button
+                  type="button"
+                  disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                  onClick={() => handleStartPayment("eps")}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>Pay with EPS</span>
+                </button>
+              )}
 
-              {/* Pay with bKash PGW Button */}
-              <button
-                type="button"
-                disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
-                onClick={() => handleStartPayment("bkash")}
-                className="px-4 py-2 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-bold rounded-xl text-xs shadow-md shadow-pink-600/20 transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
-              >
-                <span className="h-4 w-4 rounded-full bg-white text-[#e2136e] flex items-center justify-center text-[10px] font-black">৳</span>
-                <span>Pay with bKash</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              {/* Pay with bKash PGW Button (If enabled by Super Admin) */}
+              {isBkashEnabled && (
+                <button
+                  type="button"
+                  disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                  onClick={() => handleStartPayment("bkash")}
+                  className="px-4 py-2 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-bold rounded-xl text-xs shadow-md shadow-pink-600/20 transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span className="h-4 w-4 rounded-full bg-white text-[#e2136e] flex items-center justify-center text-[10px] font-black">৳</span>
+                  <span>Pay with bKash</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              {!isBkashEnabled && !isEpsEnabled && !isTrialEnabled && (
+                <span className="text-[11px] text-amber-700 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200 font-semibold">
+                  Online payments temporarily in maintenance.
+                </span>
+              )}
             </div>
 
           </div>

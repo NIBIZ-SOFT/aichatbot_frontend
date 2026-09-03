@@ -25,7 +25,7 @@ export default function CtaBanner({ onOpenPricing }: CtaBannerProps) {
             onClick={() => onOpenPricing("growth")}
             className="px-5 py-2.5 bg-white text-indigo-600 hover:bg-slate-50 font-bold text-xs rounded-xl shadow-2xs transition-all cursor-pointer"
           >
-            Get Started Free
+            Get Started
           </button>
           <Link
             href="/login"

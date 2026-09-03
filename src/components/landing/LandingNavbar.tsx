@@ -49,7 +49,7 @@ export default function LandingNavbar({ onOpenPricing }: LandingNavbarProps) {
             onClick={() => onOpenPricing("growth")}
             className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md shadow-indigo-600/20 transition-all cursor-pointer flex items-center gap-2 hover:scale-102 active:scale-98"
           >
-            <span>Get Started Free</span>
+            <span>Get Started</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -116,7 +116,7 @@ export default function LandingNavbar({ onOpenPricing }: LandingNavbarProps) {
               }}
               className="w-full text-center py-2.5 text-xs font-bold text-white bg-indigo-600 rounded-xl shadow-xs"
             >
-              Get Started Free
+              Get Started
             </button>
           </div>
         </div>

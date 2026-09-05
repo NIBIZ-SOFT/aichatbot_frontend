@@ -259,3 +259,90 @@
 .toast-slide-down {
   animation: toastSlideDown 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* ========================================================================= */
+/* UNIVERSAL FORMAL TAX INVOICE & RECEIPT PRINT STYLING */
+/* ========================================================================= */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 14mm 14mm 14mm;
+  }
+
+  *, *::before, *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
+  }
+
+  /* Hide interactive non-printable elements */
+  .no-print,
+  button,
+  .print\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Reset modal overlay container when printed directly */
+  .invoice-modal-overlay {
+    position: static !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+
+  .invoice-modal-card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    border-radius: 0 !important;
+  }
+
+  #printable-tax-invoice {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+
+  /* Prevent awkward page breaks inside rows and seal */
+  #printable-tax-invoice tr,
+  #printable-tax-invoice .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  #printable-tax-invoice .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  /* Suppress application background elements when invoice modal is active */
+  body:has(#printable-tax-invoice) aside,
+  body:has(#printable-tax-invoice) header,
+  body:has(#printable-tax-invoice) nav {
+    display: none !important;
+  }
+}
+

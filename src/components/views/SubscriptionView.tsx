@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { api } from "../../lib/api";
 import { calculateEstimatedMessages, enhanceFeatureWithMessages, setGlobalTokensPerMessage } from "../../lib/pricingUtils";
+import { printInvoiceElement } from "../../lib/printUtils";
 import PaymentMethodModal from "../payment/PaymentMethodModal";
 
 interface SubscriptionDetails {
@@ -1034,11 +1035,11 @@ export default function SubscriptionView() {
 
       {/* Official Tax Invoice & Payment Receipt Modal */}
       {viewingInvoice && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-3xl w-full p-6 sm:p-10 my-auto animate-in fade-in zoom-in-95 text-xs text-slate-800 font-sans space-y-6">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto invoice-modal-overlay print:p-0 print:static print:bg-white print:overflow-visible print:block">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-3xl w-full p-6 sm:p-10 my-auto animate-in fade-in zoom-in-95 text-xs text-slate-800 font-sans space-y-6 invoice-modal-card print:p-0 print:border-none print:shadow-none print:max-w-none print:my-0 print:rounded-none">
 
             {/* Modal Actions Bar (hidden on print) */}
-            <div className="flex justify-between items-center pb-4 border-b border-slate-100 no-print">
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100 no-print print:hidden">
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 uppercase tracking-wider flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
@@ -1048,7 +1049,7 @@ export default function SubscriptionView() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={() => printInvoiceElement("printable-tax-invoice", viewingInvoice.invoice_number, currentTheme?.platform_name)}
                   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95 text-xs"
                 >
                   <Printer className="w-3.5 h-3.5" /> Print / Save PDF
@@ -1269,10 +1270,10 @@ export default function SubscriptionView() {
             </div>
 
             {/* Modal Bottom Close Action (hidden on print) */}
-            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 no-print">
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 no-print print:hidden">
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={() => printInvoiceElement("printable-tax-invoice", viewingInvoice.invoice_number, currentTheme?.platform_name)}
                 className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer shadow-md text-xs"
               >
                 <Printer className="w-4 h-4" /> Print / Save PDF

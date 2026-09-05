@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Bot, ArrowRight, Menu, X } from "lucide-react";
 
 interface LandingNavbarProps {
-  onOpenPricing: (tier: string) => void;
+  onOpenPricing: (tier: string, customConfig?: any) => void;
 }
 
 export default function LandingNavbar({ onOpenPricing }: LandingNavbarProps) {

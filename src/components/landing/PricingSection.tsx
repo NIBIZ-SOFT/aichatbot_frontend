@@ -7,7 +7,7 @@ import { calculateEstimatedMessages, enhanceFeatureWithMessages } from "../../li
 interface PricingSectionProps {
   dbPlans: any[];
   pricingConfig?: any;
-  onOpenPricing: (tier: string) => void;
+  onOpenPricing: (tier: string, customConfig?: any) => void;
 }
 
 export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }: PricingSectionProps) {
@@ -383,7 +383,15 @@ export default function PricingSection({ dbPlans, pricingConfig, onOpenPricing }
 
             <button
               type="button"
-              onClick={() => onOpenPricing("growth")}
+              onClick={() => onOpenPricing("custom", {
+                tokens: sliderTokens,
+                seats: sliderSeats,
+                websites: sliderWebsites,
+                price: customPrice,
+                monthlyPrice: rawCustomMonthly,
+                annualPrice: Math.round(rawCustomMonthly * discountMultiplier),
+                billingCycle: billingCycle
+              })}
               className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 cursor-pointer shrink-0 shadow-sm"
             >
               <span>Deploy Custom Configuration (৳{customPrice.toLocaleString()}/mo)</span>

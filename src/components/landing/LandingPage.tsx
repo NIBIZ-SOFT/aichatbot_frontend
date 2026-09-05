@@ -19,6 +19,7 @@ import LandingFooter from "./LandingFooter";
 export default function LandingPage() {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [selectedPlanTier, setSelectedPlanTier] = useState<string>("growth");
+  const [customQuoteConfig, setCustomQuoteConfig] = useState<any>(null);
 
   // Dynamic Subscription Plans loaded from PostgreSQL database
   const [dbPlans, setDbPlans] = useState<any[]>([
@@ -159,8 +160,9 @@ export default function LandingPage() {
     };
   }, []);
 
-  const handleOpenPricing = (tier: string) => {
+  const handleOpenPricing = (tier: string, customConfig?: any) => {
     setSelectedPlanTier(tier);
+    setCustomQuoteConfig(customConfig || null);
     setShowPricingModal(true);
   };
 
@@ -197,8 +199,12 @@ export default function LandingPage() {
       {showPricingModal && (
         <PricingModal
           isOpen={showPricingModal}
-          onClose={() => setShowPricingModal(false)}
+          onClose={() => {
+            setShowPricingModal(false);
+            setCustomQuoteConfig(null);
+          }}
           initialSelectedTier={selectedPlanTier}
+          customConfig={customQuoteConfig}
         />
       )}
     </div>

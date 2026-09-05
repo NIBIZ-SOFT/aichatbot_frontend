@@ -229,6 +229,7 @@ export const api = {
     subscription_tier?: string;
     billing_cycle?: string;
     business_category?: string;
+    custom_config?: any;
   }) {
     return apiFetch("/auth/provision-tenant", {
       method: "POST",
@@ -442,10 +443,10 @@ export const api = {
     return apiFetch("/subscription/current");
   },
 
-  async changeSubscriptionPlan(tier: string, billingCycle: string = "monthly", paymentMethod: string = "bKash Direct Merchant") {
+  async changeSubscriptionPlan(tier: string, billingCycle: string = "monthly", paymentMethod: string = "bKash Direct Merchant", customConfig?: any) {
     return apiFetch("/subscription/change-plan", {
       method: "POST",
-      body: JSON.stringify({ tier, billing_cycle: billingCycle, payment_method: paymentMethod }),
+      body: JSON.stringify({ tier, billing_cycle: billingCycle, payment_method: paymentMethod, custom_config: customConfig }),
     });
   },
 
@@ -454,7 +455,7 @@ export const api = {
   },
 
   // bKash Tokenized Checkout (Sandbox & Production)
-  async createBkashPayment(tier: string, billingCycle: string = "monthly", phoneNumber: string = "01770618575", couponCode?: string) {
+  async createBkashPayment(tier: string, billingCycle: string = "monthly", phoneNumber: string = "01770618575", couponCode?: string, customConfig?: any) {
     return apiFetch("/payment/bkash/create", {
       method: "POST",
       body: JSON.stringify({
@@ -462,15 +463,23 @@ export const api = {
         billing_cycle: billingCycle,
         phone_number: phoneNumber,
         coupon_code: couponCode || undefined,
-        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined
+        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined,
+        custom_config: customConfig
       }),
     });
   },
 
-  async executeBkashPayment(paymentId: string, tier: string, billingCycle: string = "monthly", couponCode?: string, payerEmail?: string) {
+  async executeBkashPayment(paymentId: string, tier: string, billingCycle: string = "monthly", couponCode?: string, payerEmail?: string, customConfig?: any) {
     return apiFetch("/payment/bkash/execute", {
       method: "POST",
-      body: JSON.stringify({ payment_id: paymentId, tier, billing_cycle: billingCycle, coupon_code: couponCode || undefined, payer_email: payerEmail || undefined }),
+      body: JSON.stringify({
+        payment_id: paymentId,
+        tier,
+        billing_cycle: billingCycle,
+        coupon_code: couponCode || undefined,
+        payer_email: payerEmail || undefined,
+        custom_config: customConfig
+      }),
     });
   },
 
@@ -500,7 +509,8 @@ export const api = {
     tier: string,
     billingCycle: string = "monthly",
     customerDetails?: { name?: string; email?: string; phone?: string; address?: string },
-    couponCode?: string
+    couponCode?: string,
+    customConfig?: any
   ) {
     return apiFetch("/payment/eps/create", {
       method: "POST",
@@ -512,7 +522,8 @@ export const api = {
         customer_phone: customerDetails?.phone,
         customer_address: customerDetails?.address,
         coupon_code: couponCode || undefined,
-        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined
+        frontend_url: typeof window !== "undefined" ? window.location.origin : undefined,
+        custom_config: customConfig
       }),
     });
   },
@@ -522,7 +533,8 @@ export const api = {
     tier: string,
     billingCycle: string = "monthly",
     couponCode?: string,
-    payerEmail?: string
+    payerEmail?: string,
+    customConfig?: any
   ) {
     return apiFetch("/payment/eps/execute", {
       method: "POST",
@@ -532,6 +544,7 @@ export const api = {
         billing_cycle: billingCycle,
         coupon_code: couponCode || undefined,
         payer_email: payerEmail || undefined,
+        custom_config: customConfig
       }),
     });
   },

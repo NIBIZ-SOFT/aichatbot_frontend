@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 
 interface CtaBannerProps {
-  onOpenPricing: (tier: string) => void;
+  onOpenPricing: (tier: string, customConfig?: any) => void;
 }
 
 export default function CtaBanner({ onOpenPricing }: CtaBannerProps) {

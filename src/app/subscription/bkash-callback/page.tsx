@@ -63,7 +63,7 @@ function BkashCallbackContent() {
         }
 
         // Call backend to execute and capture payment with bKash central API
-        const execRes = await api.executeBkashPayment(paymentID, tier, cycle, coupon, payerEmail);
+        const execRes = await api.executeBkashPayment(paymentID, tier, cycle, coupon, payerEmail, pendingSignup?.custom_config);
         
         // If guest signup, finalize provisioning
         if (pendingSignup) {

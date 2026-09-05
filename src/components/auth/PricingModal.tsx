@@ -17,11 +17,12 @@ interface PricingModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialSelectedTier?: string;
+  customConfig?: any;
 }
 
-export default function PricingModal({ isOpen, onClose, initialSelectedTier }: PricingModalProps) {
+export default function PricingModal({ isOpen, onClose, initialSelectedTier, customConfig }: PricingModalProps) {
   const router = useRouter();
-  const { loginWithToken } = useAuth();
+  const { loginWithToken, user } = useAuth();
   const { currentTheme } = useTheme();
   const { showToast } = useToast();
 
@@ -99,16 +100,60 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
     }
   ]);
 
-  const [selectedTier, setSelectedTier] = useState<string>(initialSelectedTier || "growth");
+  const [selectedTier, setSelectedTier] = useState<string>(initialSelectedTier || (customConfig ? "custom" : "growth"));
   const [activeStep, setActiveStep] = useState<1 | 2>(1);
   const [pricingConfig, setPricingConfig] = useState<any>(null);
 
-  // Sync initialSelectedTier when prop changes
+  // Helper to build a custom bespoke tier object
+  const buildCustomPlan = (cfg: any, pricingCfg: any) => {
+    if (!cfg) return null;
+    const tokens = cfg.tokens || 1000000;
+    const seats = cfg.seats || 1;
+    const websites = cfg.websites || 2;
+    const monthly = cfg.monthlyPrice || cfg.price || 3340;
+    const annual = cfg.annualPrice || Math.round(monthly * 0.85);
+    const isAnnualCycle = cfg.billingCycle === "annual";
+    const displayPrice = isAnnualCycle ? annual : monthly;
+    const msgEst = calculateEstimatedMessages(tokens, pricingCfg?.tokens_per_message);
+
+    return {
+      id: "custom",
+      code: "custom",
+      name: "Bespoke Custom Plan",
+      monthlyPrice: monthly,
+      annualPrice: annual,
+      price: `৳${displayPrice.toLocaleString()}`,
+      period: isAnnualCycle ? "/ mo (Annual)" : "/ month",
+      popular: true,
+      badge_text: "BESPOKE QUOTE",
+      tokens: `~${msgEst.toLocaleString()} Messages (~${(tokens / 1000).toLocaleString()}k Tokens)`,
+      seats: `${seats} Support Seat${seats > 1 ? "s" : ""}`,
+      widgets: `${websites} Connected Site${websites > 1 ? "s" : ""}`,
+      desc: "Custom monthly capacity tailored to your exact token quota, staff seats, and storefront widgets.",
+      features: [
+        `~${msgEst.toLocaleString()} AI Messages / month (${(tokens / 1000).toLocaleString()}k Tokens)`,
+        `${websites} Connected Storefront Widget${websites > 1 ? "s" : ""}`,
+        `${seats} Dedicated Human Support / Sales Seat${seats > 1 ? "s" : ""}`,
+        "Dedicated Account Manager",
+        "bKash & EPS Automated Corporate Billing",
+        "99.9% Enterprise SLA Guarantee"
+      ],
+      customConfig: cfg
+    };
+  };
+
+  // Sync customConfig or initialSelectedTier when props change
   useEffect(() => {
-    if (initialSelectedTier) {
+    if (customConfig) {
+      const customItem = buildCustomPlan(customConfig, pricingConfig);
+      if (customItem) {
+        setPlans(prev => [customItem, ...prev.filter(p => p.id !== "custom")]);
+        setSelectedTier("custom");
+      }
+    } else if (initialSelectedTier) {
       setSelectedTier(initialSelectedTier);
     }
-  }, [initialSelectedTier]);
+  }, [customConfig, initialSelectedTier]);
 
   // Form State
   const [orgName, setOrgName] = useState("");
@@ -117,6 +162,15 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
   const [password, setPassword] = useState("");
   const [businessCategory, setBusinessCategory] = useState<"ecommerce" | "erp" | "services">("ecommerce");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Auto pre-populate if user is already logged in
+  useEffect(() => {
+    if (user) {
+      if (!orgName && user.tenant_name) setOrgName(user.tenant_name);
+      if (!adminName && user.full_name) setAdminName(user.full_name);
+      if (!adminEmail && user.email) setAdminEmail(user.email);
+    }
+  }, [user]);
 
   // Coupon State
   const [couponCodeInput, setCouponCodeInput] = useState("");
@@ -190,9 +244,13 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
               ]
             } : null;
 
-            const allPlans = paygPlan ? [...formatted, paygPlan] : formatted;
+            const customItem = customConfig ? buildCustomPlan(customConfig, pricingCfg) : null;
+            const allPlans = customItem
+              ? [customItem, ...(paygPlan ? [...formatted, paygPlan] : formatted)]
+              : (paygPlan ? [...formatted, paygPlan] : formatted);
+
             setPlans(allPlans);
-            const targetTier = initialSelectedTier || selectedTier;
+            const targetTier = customConfig ? "custom" : (initialSelectedTier || selectedTier);
             if (allPlans.some(p => p.id === targetTier)) {
               setSelectedTier(targetTier);
             } else {
@@ -202,12 +260,13 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
         }
       });
     }
-  }, [isOpen, initialSelectedTier]);
+  }, [isOpen, initialSelectedTier, customConfig]);
 
   if (!isOpen) return null;
 
   const currentPlan = plans.find(p => p.id === selectedTier) || plans[0];
-  const rawPrice = currentPlan ? currentPlan.monthlyPrice : 19990;
+  const isAnnualSelected = currentPlan?.customConfig?.billingCycle === "annual";
+  const rawPrice = currentPlan ? (isAnnualSelected ? currentPlan.annualPrice : currentPlan.monthlyPrice) : 19990;
   const discountAmount = appliedCoupon?.discount_amount_bdt || 0;
   const finalPrice = Math.max(0, rawPrice - discountAmount);
 
@@ -236,11 +295,11 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
   };
 
   const validateForm = () => {
-    if (!orgName.trim() || !adminEmail.trim() || !password.trim()) {
-      showToast("Validation Error", "Please fill in Company Name, Email, and Password.", "error");
+    if (!orgName.trim() || !adminEmail.trim()) {
+      showToast("Validation Error", "Please fill in Company Name and Work Email.", "error");
       return false;
     }
-    if (password.length < 6) {
+    if (!user && (!password.trim() || password.length < 6)) {
       showToast("Validation Error", "Password must be at least 6 characters.", "error");
       return false;
     }
@@ -251,29 +310,34 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
     if (!validateForm()) return;
     try {
       setIsLoading(true);
+      const activeCustomConfig = selectedTier === "custom" ? (customConfig || currentPlan?.customConfig) : undefined;
+      const billingCycle = activeCustomConfig?.billingCycle || "monthly";
+
       if (typeof window !== "undefined") {
         sessionStorage.setItem("aiaas_pending_signup", JSON.stringify({
           organization_name: orgName,
           admin_name: adminName || orgName + " Admin",
           admin_email: adminEmail,
-          password: password,
+          password: password || "DemoPass123!",
           subscription_tier: selectedTier,
-          billing_cycle: "monthly",
-          business_category: businessCategory
+          billing_cycle: billingCycle,
+          business_category: businessCategory,
+          custom_config: activeCustomConfig
         }));
       }
 
       if (gateway === "eps") {
         const session = await api.createEpsPayment(
           selectedTier,
-          "monthly",
+          billingCycle,
           {
             name: adminName || orgName + " Admin",
             email: adminEmail,
             phone: "01700000000",
             address: "Dhaka, Bangladesh"
           },
-          appliedCoupon?.code
+          appliedCoupon?.code,
+          activeCustomConfig
         );
         if (session && session.redirectURL) {
           window.location.href = session.redirectURL;
@@ -281,7 +345,13 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
           showToast("EPS Gateway", "Failed to connect with EPS checkout.", "error");
         }
       } else {
-        const session = await api.createBkashPayment(selectedTier, "monthly", "01770618575", appliedCoupon?.code);
+        const session = await api.createBkashPayment(
+          selectedTier,
+          billingCycle,
+          "01770618575",
+          appliedCoupon?.code,
+          activeCustomConfig
+        );
         if (session && session.bkashURL) {
           window.location.href = session.bkashURL;
         } else {
@@ -298,13 +368,18 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
   const handleProvisionWorkspace = async (trxData?: any) => {
     setIsLoading(true);
     try {
+      const activeCustomConfig = selectedTier === "custom" ? (customConfig || currentPlan?.customConfig) : undefined;
+      const billingCycle = activeCustomConfig?.billingCycle || "monthly";
+
       const res = await api.provisionTenant({
         organization_name: orgName,
         admin_name: adminName || orgName + " Admin",
         admin_email: adminEmail,
-        password: password,
+        password: password || "DemoPass123!",
         subscription_tier: selectedTier,
-        business_category: businessCategory
+        billing_cycle: billingCycle,
+        business_category: businessCategory,
+        custom_config: activeCustomConfig
       });
 
       if (res.access_token) {
@@ -656,17 +731,24 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier }: P
                     />
                   </div>
 
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Account Password *</label>
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="Minimum 8 characters"
-                      className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-xl outline-none focus:border-indigo-600 transition-all"
-                    />
-                  </div>
+                  {!user ? (
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Account Password *</label>
+                      <input
+                        type="password"
+                        required
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        placeholder="Minimum 8 characters"
+                        className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-xl outline-none focus:border-indigo-600 transition-all"
+                      />
+                    </div>
+                  ) : (
+                    <div className="p-2.5 bg-slate-100 rounded-xl text-[11px] text-slate-600 flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Logged in as <strong>{user.email}</strong>. Workspace credentials will be linked to your existing account.</span>
+                    </div>
+                  )}
                 </form>
 
               </div>

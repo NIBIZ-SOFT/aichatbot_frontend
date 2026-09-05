@@ -25,7 +25,7 @@ import {
 type IndustryKey = "b2b" | "helpline" | "erp" | "retail";
 
 interface HeroSectionProps {
-  onOpenPricing: (tier: string) => void;
+  onOpenPricing: (tier: string, customConfig?: any) => void;
 }
 
 export default function HeroSection({ onOpenPricing }: HeroSectionProps) {

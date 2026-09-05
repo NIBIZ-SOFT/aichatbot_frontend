@@ -72,7 +72,7 @@ function EpsCallbackContent() {
           }
 
           // Call backend to verify and execute with EPS
-          const execRes = await api.executeEpsPayment(merchantTxnId, tier, cycle, coupon, payerEmail);
+          const execRes = await api.executeEpsPayment(merchantTxnId, tier, cycle, coupon, payerEmail, pendingSignup?.custom_config);
 
           // If guest signup, finalize provisioning
           if (pendingSignup) {

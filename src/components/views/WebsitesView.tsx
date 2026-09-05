@@ -5,7 +5,8 @@ import { useToast } from "../../context/ToastContext";
 import { 
   Globe, Plus, Copy, ExternalLink, CheckCircle2, Bot, Code2, X, 
   MessageSquare, Send, RefreshCw, ShoppingBag, Settings2, Sliders, 
-  Sparkles, CreditCard, Truck, ShieldCheck, Tag, Eye, Edit2
+  Sparkles, CreditCard, Truck, ShieldCheck, Tag, Eye, Edit2,
+  Calendar, Phone, Check, Building2, HelpCircle, Users
 } from "lucide-react";
 import { Website, Product } from "../../types";
 import { api, API_BASE_URL, CDN_WIDGET_URL } from "../../lib/api";
@@ -20,6 +21,7 @@ export default function WebsitesView() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSiteName, setEditSiteName] = useState("");
   const [editSiteDomain, setEditSiteDomain] = useState("");
+  const [editSiteCategory, setEditSiteCategory] = useState<"ecommerce" | "erp" | "services">("ecommerce");
   const [isUpdatingSite, setIsUpdatingSite] = useState(false);
   const [activeTab, setActiveTab] = useState<"embed" | "customizer">("embed");
 
@@ -28,11 +30,12 @@ export default function WebsitesView() {
   const [newDomain, setNewDomain] = useState("");
   const [newCategory, setNewCategory] = useState("ecommerce");
   const [newColor, setNewColor] = useState("#4F46E5");
-  const [newHeader, setNewHeader] = useState("Padma Mart Live AI");
-  const [newWelcome, setNewWelcome] = useState("Hello! Welcome to our store. Need help finding products, checking prices, or placing an order?");
+  const [newHeader, setNewHeader] = useState("Live AI Assistant");
+  const [newWelcome, setNewWelcome] = useState("Hello! How can we assist your business today?");
 
-  // Widget Customizer State (for selected site)
-  const [ecomConfig, setEcomConfig] = useState({
+  // Adaptive Widget Customizer State (for selected site)
+  const [customizerConfig, setCustomizerConfig] = useState({
+    // E-Commerce
     enabled: true,
     show_products_carousel: true,
     allow_instant_checkout: true,
@@ -41,17 +44,51 @@ export default function WebsitesView() {
     eps_enabled: true,
     delivery_charge_inside_dhaka: 60,
     delivery_charge_outside_dhaka: 120,
+    // Services & Bookings
+    lead_capture_enabled: true,
+    booking_enabled: true,
+    whatsapp_connect_enabled: true,
+    service_catalog_enabled: true,
+    // ERP / B2B
+    sla_tickets_enabled: true,
+    demo_scheduler_enabled: true,
+    dedicated_manager_enabled: true
   });
 
   // Interactive Live Preview Simulator
   const [previewMessages, setPreviewMessages] = useState<any[]>([
     { 
       sender: "ai", 
-      text: "Hello! Welcome to our live store. You can ask me about our Panjabi collection, smartwatches, sizes, or order directly right here!",
-      hasProducts: true
+      text: "Hello! Welcome to our portal. How can we assist your business today?",
+      hasProducts: false
     }
   ]);
   const [previewInput, setPreviewInput] = useState("");
+
+  const getCategoryBadge = (cat?: string) => {
+    const c = (cat || "").toLowerCase();
+    if (c === "services") {
+      return { label: "Services & Bookings", icon: "💼", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+    }
+    if (c === "erp") {
+      return { label: "ERP / B2B", icon: "🏢", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" };
+    }
+    return { label: "E-Commerce", icon: "🛍️", badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200" };
+  };
+
+  const getInitialGreeting = (site: Website) => {
+    const cat = (site.business_category || "").toLowerCase();
+    if (site.welcome_message && !site.welcome_message.includes(".example.com")) {
+      return site.welcome_message;
+    }
+    if (cat === "services") {
+      return `Hello! Welcome to ${site.name}. How can we assist with your consultation, project inquiry, or appointment booking today?`;
+    }
+    if (cat === "erp") {
+      return `Welcome to ${site.name}. How can we assist with enterprise support, SLA ticket submission, or live demo scheduling today?`;
+    }
+    return `Hello! Welcome to our store. Need help finding products, checking prices, or placing an order?`;
+  };
 
   const fetchWebsitesAndProducts = async () => {
     try {
@@ -65,15 +102,16 @@ export default function WebsitesView() {
         setWebsites(sitesData);
         const firstSite = sitesData[0];
         setSelectedSite(firstSite);
+        const cat = (firstSite.business_category || "ecommerce").toLowerCase();
         setPreviewMessages([
           { 
             sender: "ai", 
-            text: firstSite.welcome_message || "Hello! Welcome to our live store.",
-            hasProducts: firstSite.business_category === "ecommerce"
+            text: getInitialGreeting(firstSite),
+            hasProducts: cat === "ecommerce"
           }
         ]);
         if (firstSite.ecommerce_config) {
-          setEcomConfig(prev => ({ ...prev, ...firstSite.ecommerce_config }));
+          setCustomizerConfig(prev => ({ ...prev, ...firstSite.ecommerce_config }));
         }
       }
       setProducts(prodsData);
@@ -89,7 +127,7 @@ export default function WebsitesView() {
   }, []);
 
   const handleCopySnippet = (key: string) => {
-    const snippet = `<!-- Enterprise AI Commerce Chatbot Widget -->
+    const snippet = `<!-- Enterprise AI Chatbot Widget -->
 <script src="${CDN_WIDGET_URL}"></script>
 <script>
   EnterpriseChatWidget.init({
@@ -105,21 +143,32 @@ export default function WebsitesView() {
     e.preventDefault();
     if (!newName.trim() || !newDomain.trim()) return;
 
+    let cleanDomain = newDomain.trim().toLowerCase();
+    if (cleanDomain.includes("://")) cleanDomain = cleanDomain.split("://")[1];
+    cleanDomain = cleanDomain.split("/")[0].split("?")[0].split(":")[0].trim();
+
     try {
+      const isEcom = newCategory === "ecommerce";
       const newSite = await api.createWebsite({
-        name: newName,
-        domain: newDomain,
+        name: newName.trim(),
+        domain: cleanDomain,
         business_category: newCategory,
         primary_color: newColor,
-        header_title: newHeader,
-        welcome_message: newWelcome,
+        header_title: newHeader.trim() || `${newName} Live AI`,
+        welcome_message: newWelcome.trim() || `Hello! Welcome to ${newName}. How can we assist you today?`,
         position: "bottom-right",
         ecommerce_config: {
-          enabled: newCategory === "ecommerce",
-          show_products_carousel: true,
-          allow_instant_checkout: true,
-          cod_enabled: true,
+          enabled: isEcom,
+          show_products_carousel: isEcom,
+          allow_instant_checkout: isEcom,
+          cod_enabled: isEcom,
           bkash_enabled: true,
+          eps_enabled: true,
+          lead_capture_enabled: true,
+          booking_enabled: newCategory === "services" || newCategory === "erp",
+          whatsapp_connect_enabled: true,
+          service_catalog_enabled: newCategory === "services",
+          sla_tickets_enabled: newCategory === "erp",
           delivery_charge_inside_dhaka: 60,
           delivery_charge_outside_dhaka: 120
         }
@@ -127,7 +176,7 @@ export default function WebsitesView() {
 
       setWebsites(prev => [...prev, newSite]);
       setSelectedSite(newSite);
-      showToast("Website Added", `${newDomain} added successfully`, "success");
+      showToast("Website Added", `${cleanDomain} (${getCategoryBadge(newCategory).label}) added successfully`, "success");
       setNewName("");
       setNewDomain("");
       setShowAddModal(false);
@@ -141,11 +190,11 @@ export default function WebsitesView() {
     if (!selectedSite) return;
     try {
       const updated = await api.updateWebsite(selectedSite.id, {
-        ecommerce_config: ecomConfig
+        ecommerce_config: customizerConfig
       });
       setSelectedSite(updated);
       setWebsites(prev => prev.map(s => s.id === updated.id ? updated : s));
-      showToast("Settings Saved", "Widget e-commerce features updated successfully.", "success");
+      showToast("Settings Saved", "Widget features and workflows updated successfully.", "success");
     } catch (e: any) {
       showToast("Error", e.message || "Could not save widget settings", "error");
     }
@@ -153,7 +202,7 @@ export default function WebsitesView() {
 
   const handleUpdateSite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSite || !editSiteDomain.trim()) return;
+    if (!selectedSite) return;
 
     let cleanDomain = editSiteDomain.trim().toLowerCase();
     if (cleanDomain.includes("://")) cleanDomain = cleanDomain.split("://")[1];
@@ -161,13 +210,42 @@ export default function WebsitesView() {
 
     setIsUpdatingSite(true);
     try {
+      const isEcom = (editSiteCategory === "ecommerce");
       const updated = await api.updateWebsite(selectedSite.id, {
         name: editSiteName.trim() || selectedSite.name,
-        domain: cleanDomain
+        domain: cleanDomain,
+        business_category: editSiteCategory,
+        ecommerce_config: {
+          ...selectedSite.ecommerce_config,
+          enabled: isEcom,
+          show_products_carousel: isEcom,
+          allow_instant_checkout: isEcom,
+          cod_enabled: isEcom,
+          booking_enabled: editSiteCategory === "services" || editSiteCategory === "erp",
+          lead_capture_enabled: true
+        }
       });
       setSelectedSite(updated);
       setWebsites(prev => prev.map(s => s.id === updated.id ? updated : s));
-      showToast("Storefront Updated", `Domain successfully updated to ${cleanDomain}`, "success");
+      setCustomizerConfig(prev => ({
+        ...prev,
+        enabled: isEcom,
+        show_products_carousel: isEcom,
+        allow_instant_checkout: isEcom,
+        cod_enabled: isEcom,
+        booking_enabled: editSiteCategory === "services" || editSiteCategory === "erp"
+      }));
+
+      // Update simulator greeting
+      setPreviewMessages([
+        { 
+          sender: "ai", 
+          text: getInitialGreeting(updated),
+          hasProducts: editSiteCategory === "ecommerce"
+        }
+      ]);
+
+      showToast("Storefront Updated", `Configured as ${getCategoryBadge(editSiteCategory).label} on ${cleanDomain}`, "success");
       setShowEditModal(false);
     } catch (err: any) {
       showToast("Update Failed", err.message || "Could not update domain", "error");
@@ -176,37 +254,124 @@ export default function WebsitesView() {
     }
   };
 
-  const handleSendPreview = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!previewInput.trim()) return;
+  const handleSendPreview = (e?: React.FormEvent, customPrompt?: string) => {
+    if (e) e.preventDefault();
+    const userText = customPrompt || previewInput.trim();
+    if (!userText) return;
 
-    const userText = previewInput.trim();
-    const isAskingProduct = /product|panjabi|watch|earbuds|buy|price|koto|dam/i.test(userText);
+    const cat = (selectedSite?.business_category || "ecommerce").toLowerCase();
+    const isAskingProduct = /product|panjabi|watch|earbuds|buy|price|koto|dam|item|catalog/i.test(userText);
+    const isAskingBooking = /book|consult|appointment|schedule|time|slot|meeting/i.test(userText);
+    const isAskingService = /service|offer|package|cost|quote|pricing/i.test(userText);
+    const isAskingTicket = /ticket|sla|issue|bug|error|problem|urgent|critical/i.test(userText);
+    const isAskingDemo = /demo|walkthrough|presentation|trial/i.test(userText);
+    const isAskingAgent = /agent|human|talk|representative|consultant|specialist/i.test(userText);
 
     setPreviewMessages(prev => [...prev, { sender: "user", text: userText }]);
-    setPreviewInput("");
+    if (!customPrompt) setPreviewInput("");
 
     setTimeout(() => {
-      if (isAskingProduct && products.length > 0) {
-        setPreviewMessages(prev => [
-          ...prev,
-          {
-            sender: "ai",
-            text: `Here are our top-rated trending items available for instant order. Click 'Order Now' to checkout with Cash on Delivery or bKash!`,
-            hasProducts: true
-          }
-        ]);
+      if (cat === "services") {
+        if (isAskingBooking) {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: "📅 **Appointment & Consultation Booking**\n\nWe'd be delighted to schedule a consultation with our senior specialist! Please provide:\n• Your Preferred Date & Time\n• Contact Phone / WhatsApp Number\n\nOur team will confirm your slot immediately."
+            }
+          ]);
+        } else if (isAskingService) {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: "💼 **Our Professional Services**\n\nWe provide tailored consulting, digital implementation, and ongoing retainer support. Would you like us to generate a personalized quotation or proposal for your business?"
+            }
+          ]);
+        } else if (isAskingAgent) {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: "👤 Connecting you with an available senior consultant right away. You can also reach our direct WhatsApp hotline."
+            }
+          ]);
+        } else {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: `Thank you for your inquiry! Our AI assistant for ${selectedSite?.name || "our services"} is ready to answer questions, schedule bookings, or connect you with our specialists.`
+            }
+          ]);
+        }
+      } else if (cat === "erp") {
+        if (isAskingTicket) {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: "🎫 **Enterprise SLA Ticket Intake**\n\nTicket created: `TKT-8842` (Priority: High).\nOur enterprise engineering team has been notified. You can expect initial response within 15 minutes as per SLA."
+            }
+          ]);
+        } else if (isAskingDemo) {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: "📅 **Executive Live Demo Scheduling**\n\nWe would be pleased to schedule a 30-minute tailored walkthrough of our enterprise platform for your team. Please share your company email and convenient day."
+            }
+          ]);
+        } else if (isAskingAgent) {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: "👤 Handing over to your assigned Enterprise Technical Account Manager..."
+            }
+          ]);
+        } else {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: `Thank you for contacting ${selectedSite?.name || "Enterprise Support"}. Our enterprise knowledge engine indexes corporate SOPs, API docs, and ticket queues.`
+            }
+          ]);
+        }
       } else {
-        setPreviewMessages(prev => [
-          ...prev,
-          {
-            sender: "ai",
-            text: `Thank you for asking! Our AI assistant retrieves verified knowledge from your store and catalogs to give you instant answers.`
-          }
-        ]);
+        // E-Commerce
+        if (isAskingProduct && products.length > 0) {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: `Here are our top-rated trending items available for instant order. Click 'Order' to checkout with Cash on Delivery or bKash!`,
+              hasProducts: true
+            }
+          ]);
+        } else if (isAskingAgent) {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: "Connecting you with an available live customer support agent. One moment please..."
+            }
+          ]);
+        } else {
+          setPreviewMessages(prev => [
+            ...prev,
+            {
+              sender: "ai",
+              text: `Thank you for asking! Our AI shopping assistant can help you discover products, check delivery charges, and place instant orders.`
+            }
+          ]);
+        }
       }
-    }, 600);
+    }, 500);
   };
+
+  const currentCategory = (selectedSite?.business_category || "ecommerce").toLowerCase();
 
   return (
     <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto pb-8 font-sans text-slate-900">
@@ -221,7 +386,7 @@ export default function WebsitesView() {
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Connected Storefronts & CDN Widgets</h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-500">
-            Configure dynamic business categories, customize in-chat product carousels, and embed AI commerce on any website.
+            Configure dynamic business models (E-Commerce, Services, ERP), customize in-chat actions & booking workflows, and embed AI widgets on any website.
           </p>
         </div>
         <button
@@ -246,54 +411,64 @@ export default function WebsitesView() {
             
             {/* Website Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {websites.map(w => (
-                <div
-                  key={w.id}
-                  onClick={() => {
-                    setSelectedSite(w);
-                    setPreviewMessages([
-                      { 
-                        sender: "ai", 
-                        text: w.welcome_message,
-                        hasProducts: w.business_category === "ecommerce"
+              {websites.map(w => {
+                const badgeInfo = getCategoryBadge(w.business_category);
+                return (
+                  <div
+                    key={w.id}
+                    onClick={() => {
+                      setSelectedSite(w);
+                      setPreviewMessages([
+                        { 
+                          sender: "ai", 
+                          text: getInitialGreeting(w),
+                          hasProducts: (w.business_category || "").toLowerCase() === "ecommerce"
+                        }
+                      ]);
+                      if (w.ecommerce_config) {
+                        setCustomizerConfig(prev => ({ ...prev, ...w.ecommerce_config }));
                       }
-                    ]);
-                  }}
-                  className={`p-4 sm:p-5 rounded-2xl border cursor-pointer transition-all ${
-                    selectedSite?.id === w.id
-                      ? "bg-indigo-50/50 border-indigo-500 shadow-sm ring-1 ring-indigo-500/30"
-                      : "bg-white border-slate-200 hover:border-slate-300 shadow-xs"
-                  }`}
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="h-3.5 w-3.5 rounded-full shadow-xs border border-white" style={{ backgroundColor: w.primary_color }}></div>
-                    <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2 py-0.5 rounded">
-                      {w.business_category === "ecommerce" ? "E-Commerce" : "SaaS"}
-                    </span>
+                    }}
+                    className={`p-4 sm:p-5 rounded-2xl border cursor-pointer transition-all ${
+                      selectedSite?.id === w.id
+                        ? "bg-indigo-50/50 border-indigo-500 shadow-sm ring-1 ring-indigo-500/30"
+                        : "bg-white border-slate-200 hover:border-slate-300 shadow-xs"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="h-3.5 w-3.5 rounded-full shadow-xs border border-white" style={{ backgroundColor: w.primary_color }}></div>
+                      <span className={`text-[10px] border font-bold px-2 py-0.5 rounded flex items-center gap-1 ${badgeInfo.badgeClass}`}>
+                        <span>{badgeInfo.icon}</span>
+                        <span>{badgeInfo.label}</span>
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-sm text-slate-900 truncate">{w.name}</h4>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className={`text-xs font-medium truncate ${w.domain ? "text-indigo-600" : "text-amber-600 italic"}`}>
+                        {w.domain || "Domain not configured"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedSite(w);
+                          setEditSiteName(w.name);
+                          setEditSiteDomain(w.domain || "");
+                          setEditSiteCategory((w.business_category as any) || "ecommerce");
+                          setShowEditModal(true);
+                        }}
+                        className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer shrink-0"
+                        title="Edit Domain & Business Category"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                    <div className="text-[10.5px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200 font-mono truncate">
+                      {w.widget_key}
+                    </div>
                   </div>
-                  <h4 className="font-bold text-sm text-slate-900 truncate">{w.name}</h4>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs text-indigo-600 font-medium truncate">{w.domain}</p>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedSite(w);
-                        setEditSiteName(w.name);
-                        setEditSiteDomain(w.domain);
-                        setShowEditModal(true);
-                      }}
-                      className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer shrink-0"
-                      title="Edit Domain"
-                    >
-                      <Edit2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                  <div className="text-[10.5px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200 font-mono truncate">
-                    {w.widget_key}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Tab Controls for Selected Website: Embed Code vs Widget Customizer */}
@@ -320,7 +495,13 @@ export default function WebsitesView() {
                     }`}
                   >
                     <Sliders className="w-4 h-4" />
-                    <span>E-Commerce Customizer</span>
+                    <span>
+                      {currentCategory === "services"
+                        ? "Services & Booking Customizer"
+                        : (currentCategory === "erp"
+                          ? "ERP / B2B Customizer"
+                          : "E-Commerce Customizer")}
+                    </span>
                   </button>
                 </div>
 
@@ -336,18 +517,19 @@ export default function WebsitesView() {
                             type="button"
                             onClick={() => {
                               setEditSiteName(selectedSite.name);
-                              setEditSiteDomain(selectedSite.domain);
+                              setEditSiteDomain(selectedSite.domain || "");
+                              setEditSiteCategory((selectedSite.business_category as any) || "ecommerce");
                               setShowEditModal(true);
                             }}
                             className="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-700 text-[11px] font-semibold rounded-lg flex items-center gap-1 transition-all cursor-pointer border border-slate-200"
-                            title="Edit Storefront Name & Domain"
+                            title="Edit Storefront Domain & Category"
                           >
                             <Edit2 className="w-3 h-3 text-indigo-600" />
                             <span>Edit Domain</span>
                           </button>
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          Paste this 1-line script into <strong className="text-slate-800">{selectedSite.domain}</strong> before &lt;/body&gt;.
+                          Paste this 1-line script into <strong className="text-slate-800 font-mono">{selectedSite.domain || "your website HTML"}</strong> before &lt;/body&gt;.
                         </p>
                       </div>
                       <button
@@ -372,119 +554,282 @@ export default function WebsitesView() {
                   </div>
                 ) : (
                   <div className="p-6 space-y-5">
-                    <div>
-                      <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                        <ShoppingBag className="w-4 h-4 text-indigo-600" />
-                        Client Widget Commerce Customization
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Customize what features your website visitors experience inside the live chat widget.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Product Carousel Toggle */}
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                    {/* ADAPTIVE CUSTOMIZER CONTENT BASED ON BUSINESS CATEGORY */}
+                    {currentCategory === "services" ? (
+                      <>
                         <div>
-                          <div className="text-xs font-bold text-slate-900">In-Chat Product Cards</div>
-                          <div className="text-[11px] text-slate-500">Show visual product carousel when users ask</div>
+                          <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-emerald-600" />
+                            Services, Lead Capture & Booking Customization
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Configure appointment scheduling, lead capture forms, and direct consultation channels for website visitors.
+                          </p>
                         </div>
-                        <input
-                          type="checkbox"
-                          checked={ecomConfig.show_products_carousel}
-                          onChange={e => setEcomConfig({ ...ecomConfig, show_products_carousel: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
-                        />
-                      </div>
 
-                      {/* 1-Click Instant Checkout */}
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Pre-Chat Lead Intake */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">Pre-Chat Lead Intake Form</div>
+                              <div className="text-[11px] text-slate-500">Collect visitor name, phone & inquiry before chat</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.lead_capture_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, lead_capture_enabled: e.target.checked })}
+                              className="w-4 h-4 text-emerald-600 rounded border-slate-300 cursor-pointer accent-emerald-600"
+                            />
+                          </div>
+
+                          {/* Consultation Booking */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">Consultation / Slot Booking</div>
+                              <div className="text-[11px] text-slate-500">Allow visitors to schedule appointment times in chat</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.booking_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, booking_enabled: e.target.checked })}
+                              className="w-4 h-4 text-emerald-600 rounded border-slate-300 cursor-pointer accent-emerald-600"
+                            />
+                          </div>
+
+                          {/* WhatsApp Direct Connect */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">WhatsApp 1-Click Escalation</div>
+                              <div className="text-[11px] text-slate-500">Direct handover button to your official WhatsApp hotline</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.whatsapp_connect_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, whatsapp_connect_enabled: e.target.checked })}
+                              className="w-4 h-4 text-emerald-600 rounded border-slate-300 cursor-pointer accent-emerald-600"
+                            />
+                          </div>
+
+                          {/* Service Catalog & Quotes */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">Service Catalog & Quotes</div>
+                              <div className="text-[11px] text-slate-500">Provide automated pricing estimates and package details</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.service_catalog_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, service_catalog_enabled: e.target.checked })}
+                              className="w-4 h-4 text-emerald-600 rounded border-slate-300 cursor-pointer accent-emerald-600"
+                            />
+                          </div>
+
+                          {/* bKash Advance Booking Fee */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between sm:col-span-2">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">bKash Consultation Deposit / Advance Booking</div>
+                              <div className="text-[11px] text-slate-500">Accept advance token payment or booking fee via bKash</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.bkash_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, bkash_enabled: e.target.checked })}
+                              className="w-4 h-4 text-emerald-600 rounded border-slate-300 cursor-pointer accent-emerald-600"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    ) : currentCategory === "erp" ? (
+                      <>
                         <div>
-                          <div className="text-xs font-bold text-slate-900">1-Click Instant Checkout</div>
-                          <div className="text-[11px] text-slate-500">Allow visitors to place order inside chat</div>
+                          <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                            <Building2 className="w-4 h-4 text-blue-600" />
+                            Enterprise B2B, Knowledge & SLA Customization
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Configure enterprise SLA ticket intake, multi-document knowledge base search, and corporate demo scheduling.
+                          </p>
                         </div>
-                        <input
-                          type="checkbox"
-                          checked={ecomConfig.allow_instant_checkout}
-                          onChange={e => setEcomConfig({ ...ecomConfig, allow_instant_checkout: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
-                        />
-                      </div>
 
-                      {/* Cash on Delivery */}
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* SLA Ticket Intake */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">Urgent SLA Ticket Submission</div>
+                              <div className="text-[11px] text-slate-500">Allow corporate users to log high-severity support tickets</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.sla_tickets_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, sla_tickets_enabled: e.target.checked })}
+                              className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer accent-blue-600"
+                            />
+                          </div>
+
+                          {/* Schedule Live Demo */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">Executive Demo Booking</div>
+                              <div className="text-[11px] text-slate-500">Enable prospective B2B buyers to request a guided walkthrough</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.demo_scheduler_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, demo_scheduler_enabled: e.target.checked })}
+                              className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer accent-blue-600"
+                            />
+                          </div>
+
+                          {/* Dedicated Account Handover */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">Dedicated Account Manager Handover</div>
+                              <div className="text-[11px] text-slate-500">Escalate customer threads directly to their assigned account manager</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.dedicated_manager_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, dedicated_manager_enabled: e.target.checked })}
+                              className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer accent-blue-600"
+                            />
+                          </div>
+
+                          {/* Corporate Identity Intake */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">Corporate Identity Verification</div>
+                              <div className="text-[11px] text-slate-500">Collect organization name & work email before chat session</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.lead_capture_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, lead_capture_enabled: e.target.checked })}
+                              className="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-pointer accent-blue-600"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
                         <div>
-                          <div className="text-xs font-bold text-slate-900">Cash on Delivery (COD)</div>
-                          <div className="text-[11px] text-slate-500">Enable nationwide COD payment</div>
+                          <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                            <ShoppingBag className="w-4 h-4 text-indigo-600" />
+                            Client Widget Commerce Customization
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Customize what features your website visitors experience inside the live chat widget.
+                          </p>
                         </div>
-                        <input
-                          type="checkbox"
-                          checked={ecomConfig.cod_enabled}
-                          onChange={e => setEcomConfig({ ...ecomConfig, cod_enabled: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
-                        />
-                      </div>
 
-                      {/* bKash Online */}
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
-                        <div>
-                          <div className="text-xs font-bold text-slate-900">bKash Online Payment</div>
-                          <div className="text-[11px] text-slate-500">Enable instant mobile checkout</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Product Carousel Toggle */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">In-Chat Product Cards</div>
+                              <div className="text-[11px] text-slate-500">Show visual product carousel when users ask</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.show_products_carousel}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, show_products_carousel: e.target.checked })}
+                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
+                            />
+                          </div>
+
+                          {/* 1-Click Instant Checkout */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">1-Click Instant Checkout</div>
+                              <div className="text-[11px] text-slate-500">Allow visitors to place order inside chat</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.allow_instant_checkout}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, allow_instant_checkout: e.target.checked })}
+                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
+                            />
+                          </div>
+
+                          {/* Cash on Delivery */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">Cash on Delivery (COD)</div>
+                              <div className="text-[11px] text-slate-500">Enable nationwide COD payment</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.cod_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, cod_enabled: e.target.checked })}
+                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
+                            />
+                          </div>
+
+                          {/* bKash Online */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">bKash Online Payment</div>
+                              <div className="text-[11px] text-slate-500">Enable instant mobile checkout</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.bkash_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, bkash_enabled: e.target.checked })}
+                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
+                            />
+                          </div>
+
+                          {/* EPS Gateway */}
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between sm:col-span-2">
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">EPS Easy Payment System</div>
+                              <div className="text-[11px] text-slate-500">Accept debit/credit cards and internet banking in chat</div>
+                            </div>
+                            <input
+                              type="checkbox"
+                              checked={customizerConfig.eps_enabled}
+                              onChange={e => setCustomizerConfig({ ...customizerConfig, eps_enabled: e.target.checked })}
+                              className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
+                            />
+                          </div>
                         </div>
-                        <input
-                          type="checkbox"
-                          checked={ecomConfig.bkash_enabled}
-                          onChange={e => setEcomConfig({ ...ecomConfig, bkash_enabled: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
-                        />
-                      </div>
 
-                      {/* EPS Multi-Channel Online */}
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center justify-between">
-                        <div>
-                          <div className="text-xs font-bold text-slate-900">EPS Online Payment</div>
-                          <div className="text-[11px] text-slate-500">Cards, NetBanking, Nagad, Rocket</div>
+                        {/* Delivery Charges */}
+                        <div className="pt-2 border-t border-slate-200">
+                          <h4 className="text-xs font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+                            <Truck className="w-3.5 h-3.5 text-indigo-600" />
+                            Default Delivery Fees
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Inside Dhaka (BDT)</label>
+                              <input
+                                type="number"
+                                value={customizerConfig.delivery_charge_inside_dhaka}
+                                onChange={e => setCustomizerConfig({ ...customizerConfig, delivery_charge_inside_dhaka: Number(e.target.value) })}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono outline-none focus:border-indigo-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-semibold text-slate-700 mb-1">Outside Dhaka (BDT)</label>
+                              <input
+                                type="number"
+                                value={customizerConfig.delivery_charge_outside_dhaka}
+                                onChange={e => setCustomizerConfig({ ...customizerConfig, delivery_charge_outside_dhaka: Number(e.target.value) })}
+                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono outline-none focus:border-indigo-500"
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <input
-                          type="checkbox"
-                          checked={ecomConfig.eps_enabled}
-                          onChange={e => setEcomConfig({ ...ecomConfig, eps_enabled: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded border-slate-300 cursor-pointer accent-indigo-600"
-                        />
-                      </div>
-                    </div>
+                      </>
+                    )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Delivery Charge (Inside Dhaka) ৳
-                        </label>
-                        <input
-                          type="number"
-                          value={ecomConfig.delivery_charge_inside_dhaka}
-                          onChange={e => setEcomConfig({ ...ecomConfig, delivery_charge_inside_dhaka: parseFloat(e.target.value) || 0 })}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Delivery Charge (Outside Dhaka) ৳
-                        </label>
-                        <input
-                          type="number"
-                          value={ecomConfig.delivery_charge_outside_dhaka}
-                          onChange={e => setEcomConfig({ ...ecomConfig, delivery_charge_outside_dhaka: parseFloat(e.target.value) || 0 })}
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all font-bold"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end pt-3 border-t border-slate-100">
+                    <div className="flex justify-end pt-2">
                       <button
                         onClick={handleSaveCustomizer}
-                        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all cursor-pointer"
+                        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
                       >
-                        Save Widget Settings
+                        <Settings2 className="w-3.5 h-3.5" />
+                        <span>Save Customization</span>
                       </button>
                     </div>
                   </div>
@@ -493,19 +838,24 @@ export default function WebsitesView() {
             )}
           </div>
 
-          {/* Right Col: Live Interactive Widget Preview Simulator with Product Cards */}
+          {/* Right Col: Live CDN Widget Simulator */}
           {selectedSite && (
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <h3 className="font-bold text-sm text-slate-900 mb-1 flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-indigo-600" /> Live CDN Widget Simulator
-                </h3>
+            <div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm sticky top-4">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-indigo-600" /> Live CDN Widget Simulator
+                  </h3>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getCategoryBadge(selectedSite.business_category).badgeClass}`}>
+                    {getCategoryBadge(selectedSite.business_category).label}
+                  </span>
+                </div>
                 <p className="text-xs text-slate-500 mb-4">
-                  Interactive storefront preview on <span className="text-indigo-600 font-mono font-semibold">{selectedSite.domain}</span>.
+                  Interactive storefront preview on <span className="text-indigo-600 font-mono font-semibold">{selectedSite.domain || "connected site"}</span>.
                 </p>
 
                 {/* Chatbox Preview Frame */}
-                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-md flex flex-col h-[460px] bg-slate-50">
+                <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-md flex flex-col h-[490px] bg-slate-50">
                   
                   {/* Header */}
                   <div
@@ -515,7 +865,16 @@ export default function WebsitesView() {
                     <div>
                       <h4 className="font-bold text-xs">{selectedSite.header_title}</h4>
                       <span className="text-[10px] opacity-90 flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse"></span> Online • AI Commerce
+                        <span className={`h-1.5 w-1.5 rounded-full animate-pulse ${
+                          currentCategory === "erp" ? "bg-blue-300" : "bg-emerald-300"
+                        }`}></span>
+                        <span>
+                          {currentCategory === "services"
+                            ? "Online • Services & Bookings"
+                            : (currentCategory === "erp"
+                              ? "Online • Enterprise B2B & SLA"
+                              : "Online • AI Commerce")}
+                        </span>
                       </span>
                     </div>
                     <span className="text-xs cursor-pointer opacity-80 hover:opacity-100">✕</span>
@@ -529,7 +888,7 @@ export default function WebsitesView() {
                         className={`flex flex-col ${m.sender === "user" ? "items-end" : "items-start"}`}
                       >
                         <div
-                          className={`p-2.5 rounded-xl max-w-[90%] leading-relaxed ${
+                          className={`p-2.5 rounded-xl max-w-[90%] leading-relaxed whitespace-pre-line ${
                             m.sender === "user"
                               ? "bg-indigo-600 text-white rounded-br-none"
                               : "bg-white text-slate-800 border border-slate-200 rounded-bl-none shadow-xs"
@@ -538,8 +897,8 @@ export default function WebsitesView() {
                           {m.text}
                         </div>
 
-                        {/* Interactive In-Chat Product Cards Carousel */}
-                        {m.hasProducts && products.length > 0 && (
+                        {/* Interactive In-Chat Product Cards Carousel (E-Commerce only) */}
+                        {m.hasProducts && currentCategory === "ecommerce" && products.length > 0 && (
                           <div className="mt-2 w-full space-y-2">
                             {products.slice(0, 2).map(prod => (
                               <div
@@ -576,13 +935,96 @@ export default function WebsitesView() {
                     ))}
                   </div>
 
+                  {/* Adaptive Quick Action Chips */}
+                  <div className="px-2.5 py-1.5 bg-slate-100 border-t border-slate-200 flex items-center gap-1.5 overflow-x-auto text-[10.5px]">
+                    {currentCategory === "services" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleSendPreview(undefined, "I want to schedule a consultation appointment")}
+                          className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                        >
+                          📅 Book Consultation
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSendPreview(undefined, "Tell me about your available services and pricing")}
+                          className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                        >
+                          💼 Our Services
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSendPreview(undefined, "Can I talk to a consultant?")}
+                          className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                        >
+                          👤 Talk to Consultant
+                        </button>
+                      </>
+                    ) : currentCategory === "erp" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleSendPreview(undefined, "I want to schedule a live product demo")}
+                          className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                        >
+                          📅 Book Live Demo
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSendPreview(undefined, "I need to open an urgent support ticket")}
+                          className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                        >
+                          🎫 Open SLA Ticket
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSendPreview(undefined, "Escalate to dedicated specialist")}
+                          className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                        >
+                          👤 Talk to Specialist
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleSendPreview(undefined, "show products")}
+                          className="px-2 py-1 bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                        >
+                          🛍️ Browse Products
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSendPreview(undefined, "I want to track my order")}
+                          className="px-2 py-1 bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                        >
+                          📦 Track Order
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSendPreview(undefined, "Talk to human agent")}
+                          className="px-2 py-1 bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                        >
+                          👤 Support Agent
+                        </button>
+                      </>
+                    )}
+                  </div>
+
                   {/* Composer */}
                   <form onSubmit={handleSendPreview} className="p-2 border-t border-slate-200 bg-white flex gap-1.5">
                     <input
                       type="text"
                       value={previewInput}
                       onChange={e => setPreviewInput(e.target.value)}
-                      placeholder="Type 'show products' or 'price'..."
+                      placeholder={
+                        currentCategory === "services"
+                          ? "Type 'book consultation' or 'our services'..."
+                          : (currentCategory === "erp"
+                            ? "Type 'open ticket' or 'book demo'..."
+                            : "Type 'show products' or 'price'...")
+                      }
                       className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
                     />
                     <button
@@ -596,7 +1038,11 @@ export default function WebsitesView() {
               </div>
 
               <div className="text-[11px] text-slate-400 text-center mt-3">
-                Live CDN Widget • Autonomous In-Chat Order Desk
+                {currentCategory === "services"
+                  ? "Live CDN Widget • Autonomous Consultation & Booking Desk"
+                  : (currentCategory === "erp"
+                    ? "Live CDN Widget • Autonomous Enterprise Support & SLA Desk"
+                    : "Live CDN Widget • Autonomous In-Chat Order Desk")}
               </div>
             </div>
           )}
@@ -620,13 +1066,13 @@ export default function WebsitesView() {
 
             <form onSubmit={handleAddWebsite} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Website Name *</label>
+                <label className="block font-semibold text-slate-700 mb-1">Website / Storefront Name *</label>
                 <input
                   type="text"
                   required
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
-                  placeholder="e.g. Padma Mart Main Storefront"
+                  placeholder="e.g. Padma Mart Main Storefront or Apex Consulting Portal"
                   className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-medium"
                 />
               </div>
@@ -638,7 +1084,7 @@ export default function WebsitesView() {
                   required
                   value={newDomain}
                   onChange={e => setNewDomain(e.target.value)}
-                  placeholder="e.g. shop.padmamart.com.bd"
+                  placeholder="e.g. yourstore.com or consulting.bd"
                   className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-mono"
                 />
               </div>
@@ -650,11 +1096,12 @@ export default function WebsitesView() {
                   onChange={e => setNewCategory(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 cursor-pointer transition-all font-medium"
                 >
-                  <option value="ecommerce">E-Commerce Store (Products, In-Chat Orders, COD, bKash)</option>
-                  <option value="healthcare">Healthcare & Hospital (Doctor Appointments, Tests)</option>
-                  <option value="realestate">Real Estate & Property (Listings, Site Visits)</option>
-                  <option value="education">Education & Academy (Courses, Admission Inquiries)</option>
-                  <option value="saas_general">General Corporate / SaaS (Support & Leads)</option>
+                  <option value="ecommerce">🛍️ E-Commerce Store (Products, In-Chat Orders, COD, bKash)</option>
+                  <option value="services">💼 Services & Bookings (Leads, Appointments, WhatsApp)</option>
+                  <option value="erp">🏢 ERP / Corporate B2B (SLA Support, Knowledge Base, Demo Booking)</option>
+                  <option value="healthcare">🏥 Healthcare & Clinic (Doctor Appointments)</option>
+                  <option value="realestate">🏠 Real Estate & Property (Listings, Site Visits)</option>
+                  <option value="education">🎓 Education & Academy (Course Inquiries, Admissions)</option>
                 </select>
               </div>
 
@@ -677,7 +1124,7 @@ export default function WebsitesView() {
                     type="text"
                     value={newHeader}
                     onChange={e => setNewHeader(e.target.value)}
-                    placeholder="Padma Mart AI"
+                    placeholder="Live AI Assistant"
                     className="w-full px-3 py-2 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-medium"
                   />
                 </div>
@@ -714,7 +1161,7 @@ export default function WebsitesView() {
         </div>
       )}
 
-      {/* Modal: Edit Website Domain */}
+      {/* Modal: Edit Website Domain & Business Model */}
       {showEditModal && selectedSite && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in-95">
@@ -724,8 +1171,8 @@ export default function WebsitesView() {
                   <Globe className="w-4 h-4" />
                 </span>
                 <div>
-                  <h3 className="font-bold text-base text-slate-900">Edit Storefront Domain</h3>
-                  <p className="text-xs text-slate-500">Update your website address and widget title</p>
+                  <h3 className="font-bold text-base text-slate-900">Edit Storefront & Category</h3>
+                  <p className="text-xs text-slate-500">Update website domain and business model category</p>
                 </div>
               </div>
               <button
@@ -739,13 +1186,13 @@ export default function WebsitesView() {
 
             <form onSubmit={handleUpdateSite} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Storefront / Website Name</label>
+                <label className="block font-semibold text-slate-700 mb-1">Storefront / Portal Name *</label>
                 <input
                   type="text"
                   required
                   value={editSiteName}
                   onChange={e => setEditSiteName(e.target.value)}
-                  placeholder="e.g. Padma Fashion Storefront"
+                  placeholder="e.g. CRM Matrix Portal"
                   className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-medium"
                 />
               </div>
@@ -757,12 +1204,74 @@ export default function WebsitesView() {
                   required
                   value={editSiteDomain}
                   onChange={e => setEditSiteDomain(e.target.value)}
-                  placeholder="e.g. padmafashion.com or yourstore.com"
+                  placeholder="e.g. crmmatrix.com or yourstore.com"
                   className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 transition-all font-medium"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">
-                  Enter your real website domain where the chat widget is installed (e.g. padmafashion.com)
+                  Enter your real website domain where the chat widget is embedded
                 </p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1.5">Business Model / Category *</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setEditSiteCategory("ecommerce")}
+                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                      editSiteCategory === "ecommerce"
+                        ? "bg-indigo-50 border-indigo-600 ring-1 ring-indigo-600 text-indigo-950 font-bold shadow-xs"
+                        : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-base">🛍️</span>
+                      {editSiteCategory === "ecommerce" && <Check className="w-3 h-3 text-indigo-600" />}
+                    </div>
+                    <div>
+                      <div className="font-bold text-[11px]">E-Commerce</div>
+                      <div className="text-[9px] text-slate-500 font-normal leading-tight">Products & COD</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditSiteCategory("erp")}
+                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                      editSiteCategory === "erp"
+                        ? "bg-blue-50 border-blue-600 ring-1 ring-blue-600 text-blue-950 font-bold shadow-xs"
+                        : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-base">🏢</span>
+                      {editSiteCategory === "erp" && <Check className="w-3 h-3 text-blue-600" />}
+                    </div>
+                    <div>
+                      <div className="font-bold text-[11px]">ERP / B2B</div>
+                      <div className="text-[9px] text-slate-500 font-normal leading-tight">SLA & Knowledge</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEditSiteCategory("services")}
+                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                      editSiteCategory === "services"
+                        ? "bg-emerald-50 border-emerald-600 ring-1 ring-emerald-600 text-emerald-950 font-bold shadow-xs"
+                        : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-base">💼</span>
+                      {editSiteCategory === "services" && <Check className="w-3 h-3 text-emerald-600" />}
+                    </div>
+                    <div>
+                      <div className="font-bold text-[11px]">Services</div>
+                      <div className="text-[9px] text-slate-500 font-normal leading-tight">Leads & Bookings</div>
+                    </div>
+                  </button>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
@@ -775,7 +1284,7 @@ export default function WebsitesView() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isUpdatingSite || !editSiteDomain.trim()}
+                  disabled={isUpdatingSite}
                   className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm cursor-pointer flex items-center gap-1.5"
                 >
                   {isUpdatingSite && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}

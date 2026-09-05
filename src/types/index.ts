@@ -106,6 +106,13 @@ export interface Website {
     eps_enabled?: boolean;
     delivery_charge_inside_dhaka?: number;
     delivery_charge_outside_dhaka?: number;
+    lead_capture_enabled?: boolean;
+    booking_enabled?: boolean;
+    whatsapp_connect_enabled?: boolean;
+    service_catalog_enabled?: boolean;
+    sla_tickets_enabled?: boolean;
+    demo_scheduler_enabled?: boolean;
+    dedicated_manager_enabled?: boolean;
   };
   branding_config?: {
     bot_avatar_url?: string;

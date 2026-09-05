@@ -99,6 +99,7 @@ export default function PricingPage() {
   const [adminName, setAdminName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [businessCategory, setBusinessCategory] = useState<"ecommerce" | "erp" | "services">("ecommerce");
   const [isLoading, setIsLoading] = useState(false);
 
   const cleanDomainStr = (d: string) => {
@@ -217,6 +218,7 @@ export default function PricingPage() {
           password: password,
           subscription_tier: selectedTier,
           billing_cycle: isAnnual ? "annual" : "monthly",
+          business_category: businessCategory,
           website_domain: sanitizedDomain
         }));
       }
@@ -265,6 +267,8 @@ export default function PricingPage() {
         admin_email: adminEmail,
         password: password,
         subscription_tier: selectedTier,
+        billing_cycle: isAnnual ? "annual" : "monthly",
+        business_category: businessCategory,
         website_domain: sanitizedDomain
       });
 
@@ -585,6 +589,69 @@ export default function PricingPage() {
                   <span>Your Organization & Storefront Details</span>
                 </h4>
 
+                {/* Business Model / Industry Type Selector */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1.5">Business Model / Industry Type *</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setBusinessCategory("ecommerce")}
+                      className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                        businessCategory === "ecommerce"
+                          ? "bg-[#00C978]/15 border-[#00C978] ring-1 ring-[#00C978] text-white font-bold shadow-xs"
+                          : "bg-slate-950 border-slate-700 text-slate-300 hover:border-slate-500"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-base">🛍️</span>
+                        {businessCategory === "ecommerce" && <Check className="w-3 h-3 text-[#00C978]" />}
+                      </div>
+                      <div>
+                        <div className="font-bold text-[11px] text-white">E-Commerce</div>
+                        <div className="text-[9px] text-[#759B87] font-normal leading-tight">Products & COD</div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setBusinessCategory("erp")}
+                      className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                        businessCategory === "erp"
+                          ? "bg-blue-500/15 border-blue-500 ring-1 ring-blue-500 text-white font-bold shadow-xs"
+                          : "bg-slate-950 border-slate-700 text-slate-300 hover:border-slate-500"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-base">🏢</span>
+                        {businessCategory === "erp" && <Check className="w-3 h-3 text-blue-400" />}
+                      </div>
+                      <div>
+                        <div className="font-bold text-[11px] text-white">ERP / B2B</div>
+                        <div className="text-[9px] text-slate-400 font-normal leading-tight">SLA & Knowledge</div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setBusinessCategory("services")}
+                      className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                        businessCategory === "services"
+                          ? "bg-emerald-500/15 border-emerald-500 ring-1 ring-emerald-500 text-white font-bold shadow-xs"
+                          : "bg-slate-950 border-slate-700 text-slate-300 hover:border-slate-500"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-base">💼</span>
+                        {businessCategory === "services" && <Check className="w-3 h-3 text-emerald-400" />}
+                      </div>
+                      <div>
+                        <div className="font-bold text-[11px] text-white">Services</div>
+                        <div className="text-[9px] text-slate-400 font-normal leading-tight">Leads & Bookings</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-300 mb-1">Company / Organization Name *</label>
                   <input
@@ -592,7 +659,7 @@ export default function PricingPage() {
                     required
                     value={orgName}
                     onChange={e => setOrgName(e.target.value)}
-                    placeholder="e.g. Padma Fashion BD"
+                    placeholder={businessCategory === "ecommerce" ? "e.g. Padma Fashion BD" : (businessCategory === "services" ? "e.g. Apex Digital Consulting" : "e.g. ERP Matrix Solutions")}
                     className="w-full px-3 py-2 bg-slate-950 text-white font-medium placeholder:text-slate-500 border border-slate-700 rounded-xl text-xs outline-none focus:border-[#00C978] transition-all"
                   />
                 </div>

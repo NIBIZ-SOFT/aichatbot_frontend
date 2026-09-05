@@ -395,11 +395,12 @@ export default function SettingsView() {
                   onChange={e => setBusinessCategory(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-slate-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 cursor-pointer text-xs font-medium transition-all"
                 >
-                  <option value="ecommerce">E-Commerce & Retail Store</option>
-                  <option value="healthcare">Healthcare & Clinic</option>
-                  <option value="realestate">Real Estate & Property</option>
-                  <option value="education">Education & Coaching</option>
-                  <option value="saas_general">General Corporate / SaaS</option>
+                  <option value="ecommerce">🛍️ E-Commerce & Retail Store (Products & COD)</option>
+                  <option value="services">💼 Services & Consulting (Leads, Bookings & WhatsApp)</option>
+                  <option value="erp">🏢 ERP / Corporate B2B (SLA Tickets & Knowledge)</option>
+                  <option value="healthcare">🏥 Healthcare & Clinic (Appointments)</option>
+                  <option value="realestate">🏠 Real Estate & Property (Listings)</option>
+                  <option value="education">🎓 Education & Coaching (Admissions)</option>
                 </select>
               </div>
 

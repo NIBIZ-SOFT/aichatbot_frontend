@@ -1883,8 +1883,15 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                       <span className="text-[11px] text-slate-400 font-semibold">/ month</span>
                     </div>
                     {!isFree && (
-                      <div className="text-[10px] text-slate-400">
-                        Annual: ৳{plan.annual_price_bdt.toLocaleString()}/mo (billed annually)
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[11px] flex-wrap">
+                        <span className="text-slate-500 font-medium">
+                          Annual: <strong className="text-slate-800 font-mono">৳{(plan.annual_price_bdt || 0).toLocaleString()}</strong>/mo
+                        </span>
+                        {plan.monthly_price_bdt > (plan.annual_price_bdt || 0) && (plan.annual_price_bdt || 0) > 0 && (
+                          <span className="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-extrabold text-[10px] border border-emerald-200">
+                            {Math.round(((plan.monthly_price_bdt - plan.annual_price_bdt) / plan.monthly_price_bdt) * 100)}% OFF
+                          </span>
+                        )}
                       </div>
                     )}
 
@@ -3726,41 +3733,191 @@ export default function SuperAdminView({ defaultTab = "overview" }: SuperAdminVi
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">Monthly Price (BDT ৳) *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    required
-                    value={planFormData.monthly_price_bdt}
-                    onChange={e => setPlanFormData({ ...planFormData, monthly_price_bdt: parseFloat(e.target.value) || 0 })}
-                    className="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono font-bold"
-                  />
-                </div>
+              {/* Pricing & Real-time Annual Difference Calculator */}
+              {(() => {
+                const monthlyPrice = Number(planFormData.monthly_price_bdt) || 0;
+                const annualPrice = Number(planFormData.annual_price_bdt) || 0;
+                const hasAnnual = annualPrice > 0;
+                const diffBdt = monthlyPrice - annualPrice;
+                const diffPct = monthlyPrice > 0 ? ((diffBdt / monthlyPrice) * 100) : 0;
+                const isDiscount = diffPct > 0;
+                const isMarkup = diffPct < 0;
+                const isIdentical = diffPct === 0 && hasAnnual && monthlyPrice > 0;
+                const annualSavings = diffBdt * 12;
 
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">Annual Price (BDT ৳/mo)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={planFormData.annual_price_bdt}
-                    onChange={e => setPlanFormData({ ...planFormData, annual_price_bdt: parseFloat(e.target.value) || 0 })}
-                    className="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono"
-                  />
-                </div>
+                return (
+                  <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-4 space-y-3.5 shadow-2xs">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
+                      <div className="flex items-center gap-1.5">
+                        <DollarSign className="w-4 h-4 text-indigo-600" />
+                        <span className="font-extrabold text-slate-900 text-xs">
+                          Package Pricing & Billing Tiers
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-500 font-medium">
+                        Real-time Monthly vs Annual Difference Calculator
+                      </span>
+                    </div>
 
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700">Badge Text (Optional)</label>
-                  <input
-                    type="text"
-                    value={planFormData.badge_text}
-                    onChange={e => setPlanFormData({ ...planFormData, badge_text: e.target.value })}
-                    placeholder="e.g. MOST POPULAR, 50% OFF"
-                    className="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-semibold text-indigo-600"
-                  />
-                </div>
-              </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      {/* Monthly Price */}
+                      <div className="space-y-1">
+                        <label className="block font-bold text-slate-700 text-xs flex items-center justify-between">
+                          <span>Monthly Price (BDT ৳) *</span>
+                          <span className="text-[10px] text-slate-400 font-normal">Base Rate</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-2.5 text-slate-400 font-mono font-bold text-xs">৳</span>
+                          <input
+                            type="number"
+                            min="0"
+                            required
+                            value={planFormData.monthly_price_bdt}
+                            onChange={e => setPlanFormData({ ...planFormData, monthly_price_bdt: parseFloat(e.target.value) || 0 })}
+                            className="w-full pl-7 pr-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono font-bold text-slate-900 text-xs"
+                            placeholder="4990"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Annual Price */}
+                      <div className="space-y-1">
+                        <label className="block font-bold text-slate-700 text-xs flex items-center justify-between">
+                          <span>Annual Price (BDT ৳/mo)</span>
+                          {isDiscount && (
+                            <span className="text-[10px] font-black text-emerald-700 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300">
+                              -{diffPct.toFixed(1)}% OFF
+                            </span>
+                          )}
+                          {isMarkup && (
+                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300">
+                              +{Math.abs(diffPct).toFixed(1)}% Markup
+                            </span>
+                          )}
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-2.5 text-slate-400 font-mono font-bold text-xs">৳</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={planFormData.annual_price_bdt}
+                            onChange={e => setPlanFormData({ ...planFormData, annual_price_bdt: parseFloat(e.target.value) || 0 })}
+                            className="w-full pl-7 pr-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono font-bold text-slate-900 text-xs"
+                            placeholder="4240"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Badge Text */}
+                      <div className="space-y-1">
+                        <label className="block font-bold text-slate-700 text-xs flex items-center justify-between">
+                          <span>Badge Text (Optional)</span>
+                          <span className="text-[10px] text-slate-400 font-normal">Card Tag</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={planFormData.badge_text}
+                          onChange={e => setPlanFormData({ ...planFormData, badge_text: e.target.value })}
+                          placeholder="e.g. Save 15%, POPULAR"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-semibold text-indigo-600 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Discount Presets & Live Calculation Bar */}
+                    {monthlyPrice > 0 && (
+                      <div className="pt-2 border-t border-slate-200/80 space-y-2.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                          <span className="font-bold text-slate-600 flex items-center gap-1">
+                            <Percent className="w-3 h-3 text-indigo-600" /> Quick 1-Click Discount Presets:
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {[10, 15, 20, 25, 30].map(pct => {
+                              const calcAnnual = Math.round(monthlyPrice * (1 - pct / 100));
+                              const isCurrent = annualPrice === calcAnnual;
+                              return (
+                                <button
+                                  key={pct}
+                                  type="button"
+                                  onClick={() => {
+                                    setPlanFormData(prev => ({
+                                      ...prev,
+                                      annual_price_bdt: calcAnnual,
+                                      badge_text: prev.badge_text || `Save ${pct}%`
+                                    }));
+                                  }}
+                                  className={`px-2 py-0.5 rounded-lg font-mono font-bold text-[10.5px] transition-all cursor-pointer border ${
+                                    isCurrent
+                                      ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+                                      : "bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-300 border-slate-200"
+                                  }`}
+                                >
+                                  {pct}% OFF (৳{calcAnnual.toLocaleString()})
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Real-time Percentage Difference Showcase */}
+                        {isDiscount && (
+                          <div className="p-3 bg-gradient-to-r from-emerald-50 via-teal-50/70 to-emerald-50 border border-emerald-200/90 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shadow-xs shrink-0 font-mono">
+                                %{Math.round(diffPct)}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-black text-emerald-950 text-xs sm:text-sm">
+                                    {diffPct.toFixed(2)}% Difference (Annual Savings)
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] border border-emerald-300">
+                                    Save ৳{diffBdt.toLocaleString()} / month
+                                  </span>
+                                </div>
+                                <div className="text-[11px] text-emerald-800 font-medium mt-0.5 leading-relaxed">
+                                  Annual Billed: <strong className="font-mono text-emerald-950">৳{(annualPrice * 12).toLocaleString()}</strong>/yr • Customer saves <strong className="font-mono text-emerald-950">৳{annualSavings.toLocaleString()}</strong>/year compared to monthly (৳{(monthlyPrice * 12).toLocaleString()}/yr)
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setPlanFormData(prev => ({ ...prev, badge_text: `Save ${Math.round(diffPct)}%` }))}
+                              className="px-2.5 py-1 bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-[10.5px] font-bold transition-all cursor-pointer shrink-0 shadow-2xs"
+                              title="Set badge text to Save %"
+                            >
+                              + Set "Save {Math.round(diffPct)}%" Badge
+                            </button>
+                          </div>
+                        )}
+
+                        {isMarkup && (
+                          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2.5 text-xs text-amber-900">
+                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                            <div>
+                              <strong>Notice:</strong> Annual rate (৳{annualPrice.toLocaleString()}/mo) is higher than monthly rate (৳{monthlyPrice.toLocaleString()}/mo) by +{Math.abs(diffPct).toFixed(1)}% markup.
+                            </div>
+                          </div>
+                        )}
+
+                        {isIdentical && (
+                          <div className="p-2.5 bg-white border border-slate-200 rounded-xl text-[11px] text-slate-500 flex items-center gap-2">
+                            <span className="font-bold text-slate-700">0% Difference:</span>
+                            <span>Annual and monthly rates are identical (৳{monthlyPrice.toLocaleString()}/mo). No annual discount incentive.</span>
+                          </div>
+                        )}
+
+                        {!hasAnnual && (
+                          <div className="p-2 bg-white border border-dashed border-slate-200 rounded-xl text-[10.5px] text-slate-400">
+                            Tip: Set an Annual Price or click a quick preset above to offer customers an annual discount incentive.
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Quotas */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">

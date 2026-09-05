@@ -88,7 +88,7 @@ export default function AssistantsView() {
           auto_handover_keywords: ["agent", "human", "help", "support", "representative"]
         });
         setAssistants(prev => prev.map(a => a.id === editingAssistant.id ? updated : a));
-        showToast("System Prompt Updated", `${name} saved directly to PostgreSQL`, "success");
+        showToast("System Prompt Updated", `${name} saved successfully`, "success");
       } else {
         const newAst = await api.createAssistant({
           name,
@@ -183,7 +183,7 @@ export default function AssistantsView() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 text-slate-500">
           <RefreshCw className="w-8 h-8 animate-spin text-indigo-600 mb-3" />
-          <p className="text-xs font-medium">Loading assistants from PostgreSQL...</p>
+          <p className="text-xs font-medium">Loading assistants...</p>
         </div>
       ) : assistants.length === 0 ? (
         <div className="text-center py-20 rounded-3xl bg-white border border-slate-200 border-dashed p-8">

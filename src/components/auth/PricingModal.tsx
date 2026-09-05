@@ -157,11 +157,18 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
 
   // Form State
   const [orgName, setOrgName] = useState("");
+  const [websiteDomain, setWebsiteDomain] = useState("");
   const [adminName, setAdminName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [password, setPassword] = useState("");
   const [businessCategory, setBusinessCategory] = useState<"ecommerce" | "erp" | "services">("ecommerce");
   const [isLoading, setIsLoading] = useState(false);
+
+  const cleanDomainStr = (d: string) => {
+    let cleaned = d.trim().toLowerCase();
+    if (cleaned.includes("://")) cleaned = cleaned.split("://")[1];
+    return cleaned.split("/")[0].split("?")[0].split(":")[0].trim();
+  };
 
   // Auto pre-populate if user is already logged in
   useEffect(() => {
@@ -299,6 +306,10 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
       showToast("Validation Error", "Please fill in Company Name and Work Email.", "error");
       return false;
     }
+    if (!websiteDomain.trim()) {
+      showToast("Validation Error", "Please provide your Website / Storefront Domain.", "error");
+      return false;
+    }
     if (!user && (!password.trim() || password.length < 6)) {
       showToast("Validation Error", "Password must be at least 6 characters.", "error");
       return false;
@@ -312,6 +323,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
       setIsLoading(true);
       const activeCustomConfig = selectedTier === "custom" ? (customConfig || currentPlan?.customConfig) : undefined;
       const billingCycle = activeCustomConfig?.billingCycle || "monthly";
+      const sanitizedDomain = cleanDomainStr(websiteDomain);
 
       if (typeof window !== "undefined") {
         sessionStorage.setItem("aiaas_pending_signup", JSON.stringify({
@@ -322,6 +334,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
           subscription_tier: selectedTier,
           billing_cycle: billingCycle,
           business_category: businessCategory,
+          website_domain: sanitizedDomain,
           custom_config: activeCustomConfig
         }));
       }
@@ -370,6 +383,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
     try {
       const activeCustomConfig = selectedTier === "custom" ? (customConfig || currentPlan?.customConfig) : undefined;
       const billingCycle = activeCustomConfig?.billingCycle || "monthly";
+      const sanitizedDomain = cleanDomainStr(websiteDomain);
 
       const res = await api.provisionTenant({
         organization_name: orgName,
@@ -379,6 +393,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
         subscription_tier: selectedTier,
         billing_cycle: billingCycle,
         business_category: businessCategory,
+        website_domain: sanitizedDomain,
         custom_config: activeCustomConfig
       });
 
@@ -424,7 +439,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
                   Choose Jobab Chat Plan & Launch Workspace
                 </h2>
                 <p className="text-[11px] text-slate-500 hidden sm:block">
-                  Instant multi-tenant PostgreSQL provisioning & bKash checkout
+                  Instant automated workspace provisioning & bKash checkout
                 </p>
               </div>
             </div>
@@ -708,6 +723,21 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
                   </div>
 
                   <div>
+                    <label className="block font-bold text-slate-700 mb-1">Website / Storefront Domain *</label>
+                    <input
+                      type="text"
+                      required
+                      value={websiteDomain}
+                      onChange={e => setWebsiteDomain(e.target.value)}
+                      placeholder={businessCategory === "ecommerce" ? "e.g. padmafashion.com or store.com" : "e.g. mycompany.com"}
+                      className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-xl outline-none focus:border-indigo-600 transition-all"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Enter the domain where your AI chat widget will be embedded (e.g. padmafashion.com)
+                    </p>
+                  </div>
+
+                  <div>
                     <label className="block font-bold text-slate-700 mb-1">Admin Full Name *</label>
                     <input
                       type="text"
@@ -793,7 +823,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
               {isTrialEnabled && (
                 <button
                   type="button"
-                  disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                  disabled={isLoading || !orgName.trim() || !websiteDomain.trim() || !adminEmail.trim() || (!user && !password.trim())}
                   onClick={() => handleProvisionWorkspace()}
                   className="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
@@ -807,7 +837,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
               {isEpsEnabled && (
                 <button
                   type="button"
-                  disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                  disabled={isLoading || !orgName.trim() || !websiteDomain.trim() || !adminEmail.trim() || (!user && !password.trim())}
                   onClick={() => handleStartPayment("eps")}
                   className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
@@ -820,7 +850,7 @@ export default function PricingModal({ isOpen, onClose, initialSelectedTier, cus
               {isBkashEnabled && (
                 <button
                   type="button"
-                  disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                  disabled={isLoading || !orgName.trim() || !websiteDomain.trim() || !adminEmail.trim() || (!user && !password.trim())}
                   onClick={() => handleStartPayment("bkash")}
                   className="px-4 py-2 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-bold rounded-xl text-xs shadow-md shadow-pink-600/20 transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >

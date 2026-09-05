@@ -341,7 +341,7 @@ export default function PublicPageShell({ initialSlug, fallbackData }: PublicPag
                 <span className="text-xs font-extrabold text-slate-900">TLS 1.3 & AES-256</span>
               </div>
               <p className="text-[11px] text-slate-500 leading-snug">
-                Bank-grade encryption in transit and at rest across all PostgreSQL databases.
+                Bank-grade encryption in transit and at rest across all customer data stores.
               </p>
             </div>
 

@@ -66,7 +66,7 @@ export default function TeamView() {
       setSummary(data);
     } catch (e: any) {
       console.error("Failed to load team from DB:", e);
-      showToast("Error", "Could not load team members from PostgreSQL.", "error");
+      showToast("Error", "Could not load team members.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +96,7 @@ export default function TeamView() {
         department: department
       });
 
-      showToast("Member Added", `Successfully registered ${name} to your organization team in PostgreSQL.`, "success");
+      showToast("Member Added", `Successfully registered ${name} to your organization team.`, "success");
       setName("");
       setEmail("");
       setPassword("DemoPass123!");
@@ -133,7 +133,7 @@ export default function TeamView() {
         is_active: editActive
       });
 
-      showToast("Role Updated", `Updated ${editName}'s role and permissions in PostgreSQL.`, "success");
+      showToast("Role Updated", `Updated ${editName}'s role and permissions.`, "success");
       setEditingMember(null);
       fetchTeam();
     } catch (err: any) {
@@ -205,7 +205,7 @@ export default function TeamView() {
             <span>Team Members & RBAC</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Manage your organization's staff, assign support/sales roles, and customize permissions stored in PostgreSQL 18.
+            Manage your organization's staff, assign support/sales roles, and customize permissions.
           </p>
         </div>
 

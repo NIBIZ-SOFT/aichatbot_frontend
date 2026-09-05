@@ -15,7 +15,7 @@ import { calculateEstimatedMessages, enhanceFeatureWithMessages, setGlobalTokens
 
 export default function PricingPage() {
   const router = useRouter();
-  const { loginWithToken } = useAuth();
+  const { user, loginWithToken } = useAuth();
   const { currentTheme } = useTheme();
   const { showToast } = useToast();
 
@@ -95,10 +95,17 @@ export default function PricingPage() {
 
   // Form State
   const [orgName, setOrgName] = useState("");
+  const [websiteDomain, setWebsiteDomain] = useState("");
   const [adminName, setAdminName] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const cleanDomainStr = (d: string) => {
+    let cleaned = d.trim().toLowerCase();
+    if (cleaned.includes("://")) cleaned = cleaned.split("://")[1];
+    return cleaned.split("/")[0].split("?")[0].split(":")[0].trim();
+  };
 
   // Coupon State
   const [couponCodeInput, setCouponCodeInput] = useState("");
@@ -182,11 +189,15 @@ export default function PricingPage() {
   };
 
   const validateForm = () => {
-    if (!orgName.trim() || !adminEmail.trim() || !password.trim()) {
-      showToast("Validation Error", "Please fill in Company Name, Email, and Password.", "error");
+    if (!orgName.trim() || !adminEmail.trim()) {
+      showToast("Validation Error", "Please fill in Company Name and Work Email.", "error");
       return false;
     }
-    if (password.length < 6) {
+    if (!websiteDomain.trim()) {
+      showToast("Validation Error", "Please provide your Website / Storefront Domain.", "error");
+      return false;
+    }
+    if (!user && (!password.trim() || password.length < 6)) {
       showToast("Validation Error", "Password must be at least 6 characters.", "error");
       return false;
     }
@@ -197,6 +208,7 @@ export default function PricingPage() {
     if (!validateForm()) return;
     try {
       setIsLoading(true);
+      const sanitizedDomain = cleanDomainStr(websiteDomain);
       if (typeof window !== "undefined") {
         sessionStorage.setItem("aiaas_pending_signup", JSON.stringify({
           organization_name: orgName,
@@ -204,7 +216,8 @@ export default function PricingPage() {
           admin_email: adminEmail,
           password: password,
           subscription_tier: selectedTier,
-          billing_cycle: isAnnual ? "annual" : "monthly"
+          billing_cycle: isAnnual ? "annual" : "monthly",
+          website_domain: sanitizedDomain
         }));
       }
 
@@ -245,12 +258,14 @@ export default function PricingPage() {
   const handleProvisionWorkspace = async (trxData?: any) => {
     setIsLoading(true);
     try {
+      const sanitizedDomain = cleanDomainStr(websiteDomain);
       const res = await api.provisionTenant({
         organization_name: orgName,
         admin_name: adminName || orgName + " Admin",
         admin_email: adminEmail,
         password: password,
-        subscription_tier: selectedTier
+        subscription_tier: selectedTier,
+        website_domain: sanitizedDomain
       });
 
       if (res.access_token) {
@@ -347,7 +362,7 @@ export default function PricingPage() {
           Launch Your AI Customer Support Platform
         </h1>
         <p className="text-xs sm:text-sm text-[#759B87] max-w-2xl mx-auto leading-relaxed">
-          Select your subscription tier. Your isolated PostgreSQL database, embeddable chat widget, and Bengali AI assistant will be provisioned instantly.
+          Select your subscription tier. Your dedicated workspace, embeddable chat widget, and Bengali AI assistant will be provisioned instantly.
         </p>
 
         {/* Billing Cycle Toggle */}
@@ -519,7 +534,7 @@ export default function PricingPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[#759B87] text-[11.5px]">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#00C978] shrink-0" />
-                  <span>Isolated PostgreSQL Multi-Tenant DB</span>
+                  <span>Dedicated Secure Workspace & Data Vault</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#00C978] shrink-0" />
@@ -563,8 +578,81 @@ export default function PricingPage() {
                 </div>
               </div>
 
+              {/* Account & Storefront Info Form */}
+              <div className="space-y-3 pt-2 border-t border-[#1A2922]">
+                <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-[#00C978]" />
+                  <span>Your Organization & Storefront Details</span>
+                </h4>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">Company / Organization Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={orgName}
+                    onChange={e => setOrgName(e.target.value)}
+                    placeholder="e.g. Padma Fashion BD"
+                    className="w-full px-3 py-2 bg-slate-950 text-white font-medium placeholder:text-slate-500 border border-slate-700 rounded-xl text-xs outline-none focus:border-[#00C978] transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">Website / Storefront Domain *</label>
+                  <input
+                    type="text"
+                    required
+                    value={websiteDomain}
+                    onChange={e => setWebsiteDomain(e.target.value)}
+                    placeholder="e.g. padmafashion.com"
+                    className="w-full px-3 py-2 bg-slate-950 text-white font-medium placeholder:text-slate-500 border border-slate-700 rounded-xl text-xs outline-none focus:border-[#00C978] transition-all"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Enter the domain where your AI chat widget will be embedded (e.g. padmafashion.com)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">Admin Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={adminName}
+                    onChange={e => setAdminName(e.target.value)}
+                    placeholder="e.g. Alex Morgan"
+                    className="w-full px-3 py-2 bg-slate-950 text-white font-medium placeholder:text-slate-500 border border-slate-700 rounded-xl text-xs outline-none focus:border-[#00C978] transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">Work Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    value={adminEmail}
+                    onChange={e => setAdminEmail(e.target.value)}
+                    placeholder="alex@company.com"
+                    className="w-full px-3 py-2 bg-slate-950 text-white font-medium placeholder:text-slate-500 border border-slate-700 rounded-xl text-xs outline-none focus:border-[#00C978] transition-all"
+                  />
+                </div>
+
+                {!user && (
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">Account Password *</label>
+                    <input
+                      type="password"
+                      required
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="Minimum 8 characters"
+                      className="w-full px-3 py-2 bg-slate-950 text-white font-medium placeholder:text-slate-500 border border-slate-700 rounded-xl text-xs outline-none focus:border-[#00C978] transition-all"
+                    />
+                  </div>
+                )}
+              </div>
+
               {/* Promo / Coupon Code Input Box */}
-              <div className="space-y-2">
+              <div className="space-y-2 pt-2 border-t border-[#1A2922]">
                 <label className="block text-xs font-bold text-slate-300">Promo / Coupon Code</label>
                 <div className="flex gap-2">
                   <input
@@ -626,7 +714,7 @@ export default function PricingPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <button
                       type="button"
-                      disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                      disabled={isLoading || !orgName.trim() || !websiteDomain.trim() || !adminEmail.trim() || (!user && !password.trim())}
                       onClick={() => handleStartPayment("bkash")}
                       className="py-3 bg-[#e2136e] hover:bg-[#c00f5c] text-white font-black rounded-xl text-xs shadow-md shadow-pink-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                     >
@@ -636,7 +724,7 @@ export default function PricingPage() {
 
                     <button
                       type="button"
-                      disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                      disabled={isLoading || !orgName.trim() || !websiteDomain.trim() || !adminEmail.trim() || (!user && !password.trim())}
                       onClick={() => handleStartPayment("eps")}
                       className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-xs shadow-md shadow-emerald-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                     >
@@ -647,7 +735,7 @@ export default function PricingPage() {
 
                   <button
                     type="button"
-                    disabled={isLoading || !orgName.trim() || !adminEmail.trim() || !password.trim()}
+                    disabled={isLoading || !orgName.trim() || !websiteDomain.trim() || !adminEmail.trim() || (!user && !password.trim())}
                     onClick={() => handleProvisionWorkspace()}
                     className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold rounded-xl text-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer border border-slate-700"
                   >

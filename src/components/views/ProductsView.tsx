@@ -215,11 +215,11 @@ export default function ProductsView() {
       if (editingProduct) {
         const updated = await api.updateProduct(editingProduct.id, formData);
         setProducts(prev => prev.map(p => (p.id === editingProduct.id ? updated : p)));
-        showToast("Product Updated", `"${updated.title}" saved and synced with PostgreSQL.`, "success");
+        showToast("Product Updated", `"${updated.title}" saved and synced successfully.`, "success");
       } else {
         const created = await api.createProduct(formData);
         setProducts(prev => [created, ...prev]);
-        showToast("Product Added", `"${created.title}" added to catalog and vector embeddings.`, "success");
+        showToast("Product Added", `"${created.title}" added to catalog successfully.`, "success");
       }
       setShowAddModal(false);
       fetchProducts();
@@ -634,7 +634,7 @@ export default function ProductsView() {
                     {editingProduct ? "Edit Product Details" : "Add New Product"}
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    Product will automatically sync with PostgreSQL pgvector live embeddings.
+                    Product will automatically sync with AI knowledge catalog.
                   </p>
                 </div>
               </div>

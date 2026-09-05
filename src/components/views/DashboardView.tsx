@@ -107,7 +107,7 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
             AI Customer Support Operations
           </h1>
           <p className="text-xs sm:text-sm text-[#759B87] leading-relaxed">
-            Real-time multi-tenant monitoring, AI autonomous conversation resolutions, and staff ticket escalations.
+            Real-time conversation monitoring, AI autonomous resolutions, and customer support ticket escalations.
           </p>
         </div>
 
@@ -202,36 +202,39 @@ export default function DashboardView({ onNavigate }: DashboardViewProps) {
           </div>
         </div>
 
-        {/* Quick System Health */}
+        {/* AI Assistant & Channels Readiness */}
         <div className="bg-white rounded-2xl border border-[#CBD7D0] shadow-sm p-5 space-y-4 flex flex-col justify-between">
           <div>
             <div className="border-b border-[#E1E8E4] pb-3 mb-3">
-              <h3 className="font-bold text-sm text-[#0F1713]">Database & Infrastructure</h3>
-              <p className="text-xs text-[#4F7863]">PostgreSQL 18 connection status</p>
+              <h3 className="font-bold text-sm text-[#0F1713]">AI Assistant & Channels</h3>
+              <p className="text-xs text-[#4F7863]">Real-time autonomous support readiness</p>
             </div>
 
             <div className="space-y-2 text-xs">
               <div className="flex justify-between items-center p-2.5 bg-[#F4F7F5] rounded-lg">
-                <span className="font-medium text-[#263D31]">PostgreSQL Engine</span>
-                <span className="text-[#008750] font-semibold bg-[#00C978]/10 px-2 py-0.5 rounded border border-[#00C978]/30 text-[11px]">Connected (5432)</span>
+                <span className="font-medium text-[#263D31]">AI Autonomous Bot</span>
+                <span className="text-[#008750] font-semibold bg-[#00C978]/10 px-2 py-0.5 rounded border border-[#00C978]/30 text-[11px] flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00C978] animate-pulse"></span>
+                  Active (24/7)
+                </span>
               </div>
               <div className="flex justify-between items-center p-2.5 bg-[#F4F7F5] rounded-lg">
-                <span className="font-medium text-[#263D31]">Database Name</span>
-                <span className="font-mono text-[#0F1713] font-semibold bg-white px-2 py-0.5 rounded border border-[#CBD7D0] text-[11px]">ai_chatbot</span>
+                <span className="font-medium text-[#263D31]">Knowledge Base</span>
+                <span className="text-[#008750] font-semibold bg-[#00C978]/10 px-2 py-0.5 rounded border border-[#00C978]/30 text-[11px]">Trained & Synced</span>
               </div>
               <div className="flex justify-between items-center p-2.5 bg-[#F4F7F5] rounded-lg">
-                <span className="font-medium text-[#263D31]">FastAPI API Gateway</span>
-                <span className="text-[#008750] font-semibold bg-[#00C978]/10 px-2 py-0.5 rounded border border-[#00C978]/30 text-[11px]">200 OK (8000)</span>
+                <span className="font-medium text-[#263D31]">Chatbot Web Widget</span>
+                <span className="text-[#008750] font-semibold bg-[#00C978]/10 px-2 py-0.5 rounded border border-[#00C978]/30 text-[11px]">Connected</span>
               </div>
               <div className="flex justify-between items-center p-2.5 bg-[#F4F7F5] rounded-lg">
-                <span className="font-medium text-[#263D31]">Multi-Tenant Isolation</span>
-                <span className="text-[#008750] font-semibold bg-[#00C978]/10 px-2 py-0.5 rounded border border-[#00C978]/30 text-[11px]">Enforced (Row-Level)</span>
+                <span className="font-medium text-[#263D31]">Human Escalation SLA</span>
+                <span className="text-[#008750] font-semibold bg-[#00C978]/10 px-2 py-0.5 rounded border border-[#00C978]/30 text-[11px]">Ready (Instant)</span>
               </div>
             </div>
           </div>
 
           <div className="p-3 bg-[#F4F7F5] rounded-xl border border-[#CBD7D0] text-[11px] text-[#263D31]">
-            <strong className="text-[#008750]">System Operational:</strong> Live queries, customer contexts, and token usage meters are synchronized with PostgreSQL.
+            <strong className="text-[#008750]">AI Operational:</strong> Autonomous AI assistant is actively monitoring your storefronts, answering visitors, and capturing qualified leads in real-time.
           </div>
         </div>
 

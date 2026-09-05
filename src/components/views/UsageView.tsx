@@ -93,7 +93,7 @@ export default function UsageView() {
     return (
       <div className="max-w-6xl mx-auto p-16 text-center text-xs text-slate-400 flex flex-col items-center gap-3 bg-white rounded-3xl border border-slate-200">
         <div className="h-8 w-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-        Calculating exact AI token consumption & RAG telemetry from PostgreSQL...
+        Calculating AI token consumption and telemetry...
       </div>
     );
   }
@@ -301,7 +301,7 @@ export default function UsageView() {
                     Daily Token Consumption & Cost Analytics
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Day-by-day prompt vs completion token volume recorded in PostgreSQL.
+                    Day-by-day prompt vs completion token volume and cost history.
                   </p>
                 </div>
 
@@ -1020,7 +1020,7 @@ export default function UsageView() {
                         <div className="p-3 bg-white rounded-xl border border-purple-100 text-[11px] text-slate-700 space-y-1.5">
                           <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
                             <Zap className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Direct PostgreSQL Engine: 0 Extra AI Generation Tokens Consumed!</span>
+                            <span>Direct Smart Matching: 0 Extra AI Generation Tokens Consumed!</span>
                           </div>
                           <div className="text-slate-600 text-[11px] font-medium pt-0.5">
                             {selectedInteraction.ui_component.type === "product_card" && (

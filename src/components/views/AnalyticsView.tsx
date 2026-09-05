@@ -83,7 +83,7 @@ export default function AnalyticsView() {
       {isLoading && !data ? (
         <div className="p-16 text-center text-xs text-slate-400 flex flex-col items-center gap-3 bg-white rounded-3xl border border-slate-200">
           <div className="h-8 w-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          Calculating real-time CSAT and performance metrics from PostgreSQL...
+          Calculating real-time CSAT and performance metrics...
         </div>
       ) : data ? (
         <>

@@ -362,7 +362,7 @@ export default function KnowledgeView() {
         content,
         source_type: "document"
       });
-      showToast("Knowledge Trained", `Document '${title}' was successfully vectorized into PostgreSQL.`, "success");
+      showToast("Knowledge Trained", `Document '${title}' was successfully trained and processed.`, "success");
       setTitle("");
       setContent("");
       setShowIngestModal(false);
@@ -389,7 +389,7 @@ export default function KnowledgeView() {
         category: faqCategory,
         faq_items: validItems
       });
-      showToast("FAQ Collection Trained", `Successfully vectorized ${validItems.length} Q&A items into PostgreSQL.`, "success");
+      showToast("FAQ Collection Trained", `Successfully trained ${validItems.length} Q&A items.`, "success");
       setFaqTitle("");
       setFaqItems([{ question: "", answer: "" }]);
       setShowIngestModal(false);
@@ -432,7 +432,7 @@ export default function KnowledgeView() {
         auto_handover_keywords: keywordsArray
       });
 
-      showToast("AI Rules Updated", "Bot personality, system prompts, and handover rules saved to PostgreSQL.", "success");
+      showToast("AI Rules Updated", "Bot personality, system prompts, and handover rules saved successfully.", "success");
       fetchAssistant();
     } catch (e: any) {
       showToast("Error", e.message || "Failed to update assistant rules", "error");
@@ -569,7 +569,7 @@ export default function KnowledgeView() {
           {isLoadingKnowledge ? (
             <div className="p-12 text-center text-xs text-slate-400 flex flex-col items-center gap-3 bg-white rounded-3xl border border-slate-200">
               <div className="h-8 w-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-              Loading vectorized knowledge bases from PostgreSQL...
+              Loading knowledge bases...
             </div>
           ) : knowledgeList.length === 0 ? (
             <div className="p-12 bg-white rounded-3xl border border-slate-200 text-center space-y-3">
@@ -1148,7 +1148,7 @@ export default function KnowledgeView() {
             </div>
 
             <div className="p-3 bg-indigo-50/80 rounded-xl border border-indigo-100 text-[11px] text-indigo-900 leading-relaxed">
-              💡 <strong>Instant Pre-Training:</strong> When you add new documents in Tab 1, they are vectorized immediately into PostgreSQL. You can test them here instantly without needing to restart!
+              💡 <strong>Instant Pre-Training:</strong> When you add new documents in Tab 1, they are processed and trained immediately for your AI bot. You can test them here instantly without needing to restart!
             </div>
           </div>
 
@@ -1163,7 +1163,7 @@ export default function KnowledgeView() {
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-bold text-base text-slate-900">Add Business Knowledge</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Vectorize product info & policies into PostgreSQL</p>
+                <p className="text-xs text-slate-500 mt-0.5">Train product info & policies into your AI model</p>
               </div>
               <button onClick={() => setShowIngestModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
                 <X className="w-5 h-5" />

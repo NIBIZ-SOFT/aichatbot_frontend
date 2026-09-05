@@ -285,7 +285,7 @@ export default function ThemeManagementTab() {
               type="text"
               value={themeForm.footer_text || ""}
               onChange={(e) => handleInputChange("footer_text", e.target.value)}
-              placeholder="© 2026 Jobab Chat Platform • Multi-Tenant PostgreSQL 18"
+              placeholder="© 2026 Jobab Chat Platform • Enterprise Autonomous AI Platform"
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 outline-none focus:border-blue-600 focus:bg-white transition-all"
             />
           </div>

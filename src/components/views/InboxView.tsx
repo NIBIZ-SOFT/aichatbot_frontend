@@ -299,7 +299,7 @@ export default function InboxView() {
 
       showToast(
         isNote ? "Internal whisper note saved" : "Message delivered",
-        `Saved directly to PostgreSQL for ${activeConv.visitor_name}`,
+        `Saved for ${activeConv.visitor_name}`,
         "success"
       );
     } catch (err) {
@@ -390,7 +390,7 @@ export default function InboxView() {
       );
       showToast(
         nextStatus === "resolved" ? "Ticket Resolved" : "Ticket Reopened",
-        "Status updated in PostgreSQL database",
+        "Status updated successfully",
         "success"
       );
     } catch (e) {
@@ -537,7 +537,7 @@ export default function InboxView() {
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto divide-y divide-slate-100 custom-scrollbar">
           {isLoading ? (
-            <div className="p-6 text-center text-xs text-slate-400">Loading queue from PostgreSQL...</div>
+            <div className="p-6 text-center text-xs text-slate-400">Loading conversation queue...</div>
           ) : filteredConversations.length === 0 ? (
             <div className="p-6 text-center text-xs text-slate-400">No conversations in this queue.</div>
           ) : (

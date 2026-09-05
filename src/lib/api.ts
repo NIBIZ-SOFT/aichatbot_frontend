@@ -229,6 +229,7 @@ export const api = {
     subscription_tier?: string;
     billing_cycle?: string;
     business_category?: string;
+    website_domain?: string;
     custom_config?: any;
   }) {
     return apiFetch("/auth/provision-tenant", {

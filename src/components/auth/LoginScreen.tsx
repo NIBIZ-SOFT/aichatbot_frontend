@@ -345,7 +345,7 @@ export default function LoginScreen() {
 
       {/* Footer */}
       <footer className="px-6 py-3.5 text-center text-xs text-slate-500 border-t border-slate-200/80 bg-white">
-        Jobab Chat Platform • Multi-Tenant PostgreSQL 18 & Google Gemini AI • ISO/IEC 27001 Security Standard
+        Jobab Chat Platform • Autonomous AI Customer Support • ISO/IEC 27001 Security Standard
       </footer>
     </div>
   );

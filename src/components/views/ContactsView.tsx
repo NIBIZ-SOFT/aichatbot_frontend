@@ -57,7 +57,7 @@ export default function ContactsView() {
       });
 
       setContacts(prev => [newContact, ...prev]);
-      showToast("Contact Added", `${name} saved directly to PostgreSQL`, "success");
+      showToast("Contact Added", `${name} saved successfully`, "success");
       setName("");
       setEmail("");
       setPhone("");
@@ -66,7 +66,7 @@ export default function ContactsView() {
       setShowModal(false);
     } catch (err) {
       console.error("Create contact error:", err);
-      showToast("Error", "Could not save contact to database", "error");
+      showToast("Error", "Could not save contact", "error");
     }
   };
 
@@ -79,7 +79,7 @@ export default function ContactsView() {
             <span>CRM Contacts & Leads</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Centralized contact directory with automatic AI lead capture synchronized with PostgreSQL.
+            Centralized contact directory with automatic AI lead capture.
           </p>
         </div>
         <button
@@ -106,7 +106,7 @@ export default function ContactsView() {
         </div>
 
         {isLoading ? (
-          <div className="p-12 text-center text-xs text-slate-400">Loading contacts from PostgreSQL...</div>
+          <div className="p-12 text-center text-xs text-slate-400">Loading contacts...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs min-w-[550px]">

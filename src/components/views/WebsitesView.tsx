@@ -935,82 +935,121 @@ export default function WebsitesView() {
                     ))}
                   </div>
 
-                  {/* Adaptive Quick Action Chips */}
-                  <div className="px-2.5 py-1.5 bg-slate-100 border-t border-slate-200 flex items-center gap-1.5 overflow-x-auto text-[10.5px]">
-                    {currentCategory === "services" ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleSendPreview(undefined, "I want to schedule a consultation appointment")}
-                          className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
-                        >
-                          📅 Book Consultation
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSendPreview(undefined, "Tell me about your available services and pricing")}
-                          className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
-                        >
-                          💼 Our Services
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSendPreview(undefined, "Can I talk to a consultant?")}
-                          className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
-                        >
-                          👤 Talk to Consultant
-                        </button>
-                      </>
-                    ) : currentCategory === "erp" ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleSendPreview(undefined, "I want to schedule a live product demo")}
-                          className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
-                        >
-                          📅 Book Live Demo
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSendPreview(undefined, "I need to open an urgent support ticket")}
-                          className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
-                        >
-                          🎫 Open SLA Ticket
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSendPreview(undefined, "Escalate to dedicated specialist")}
-                          className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
-                        >
-                          👤 Talk to Specialist
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleSendPreview(undefined, "show products")}
-                          className="px-2 py-1 bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
-                        >
-                          🛍️ Browse Products
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSendPreview(undefined, "I want to track my order")}
-                          className="px-2 py-1 bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
-                        >
-                          📦 Track Order
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSendPreview(undefined, "Talk to human agent")}
-                          className="px-2 py-1 bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
-                        >
-                          👤 Support Agent
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  {/* Adaptive Quick Action Chips (Strictly Enforces Enabled Customizer Flags) */}
+                  {(() => {
+                    const hasChips = (
+                      (currentCategory === "services" && (
+                        customizerConfig.booking_enabled ||
+                        customizerConfig.service_catalog_enabled ||
+                        customizerConfig.whatsapp_connect_enabled
+                      )) ||
+                      (currentCategory === "erp" && (
+                        customizerConfig.demo_scheduler_enabled ||
+                        customizerConfig.sla_tickets_enabled ||
+                        customizerConfig.dedicated_manager_enabled
+                      )) ||
+                      (currentCategory === "ecommerce" && (
+                        customizerConfig.show_products_carousel !== false ||
+                        customizerConfig.allow_instant_checkout !== false
+                      ))
+                    );
+
+                    if (!hasChips) return null;
+
+                    return (
+                      <div className="px-2.5 py-1.5 bg-slate-100 border-t border-slate-200 flex items-center gap-1.5 overflow-x-auto text-[10.5px]">
+                        {currentCategory === "services" ? (
+                          <>
+                            {customizerConfig.booking_enabled && (
+                              <button
+                                type="button"
+                                onClick={() => handleSendPreview(undefined, "I want to schedule a consultation appointment")}
+                                className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                              >
+                                📅 Book Consultation
+                              </button>
+                            )}
+                            {customizerConfig.service_catalog_enabled && (
+                              <button
+                                type="button"
+                                onClick={() => handleSendPreview(undefined, "Tell me about your available services and pricing")}
+                                className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                              >
+                                💼 Our Services
+                              </button>
+                            )}
+                            {customizerConfig.whatsapp_connect_enabled && (
+                              <button
+                                type="button"
+                                onClick={() => handleSendPreview(undefined, "Can I talk to a consultant?")}
+                                className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                              >
+                                👤 Talk to Consultant
+                              </button>
+                            )}
+                          </>
+                        ) : currentCategory === "erp" ? (
+                          <>
+                            {customizerConfig.demo_scheduler_enabled && (
+                              <button
+                                type="button"
+                                onClick={() => handleSendPreview(undefined, "I want to schedule a live product demo")}
+                                className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                              >
+                                📅 Book Live Demo
+                              </button>
+                            )}
+                            {customizerConfig.sla_tickets_enabled && (
+                              <button
+                                type="button"
+                                onClick={() => handleSendPreview(undefined, "I need to open an urgent support ticket")}
+                                className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                              >
+                                🎫 Open SLA Ticket
+                              </button>
+                            )}
+                            {customizerConfig.dedicated_manager_enabled && (
+                              <button
+                                type="button"
+                                onClick={() => handleSendPreview(undefined, "Escalate to dedicated specialist")}
+                                className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-blue-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                              >
+                                👤 Talk to Specialist
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            {customizerConfig.show_products_carousel !== false && (
+                              <button
+                                type="button"
+                                onClick={() => handleSendPreview(undefined, "show products")}
+                                className="px-2 py-1 bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                              >
+                                🛍️ Browse Products
+                              </button>
+                            )}
+                            {customizerConfig.allow_instant_checkout !== false && (
+                              <button
+                                type="button"
+                                onClick={() => handleSendPreview(undefined, "I want to track my order")}
+                                className="px-2 py-1 bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                              >
+                                📦 Track Order
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleSendPreview(undefined, "Talk to human agent")}
+                              className="px-2 py-1 bg-white hover:bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg shrink-0 font-medium cursor-pointer transition-colors shadow-2xs"
+                            >
+                              👤 Support Agent
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Composer */}
                   <form onSubmit={handleSendPreview} className="p-2 border-t border-slate-200 bg-white flex gap-1.5">

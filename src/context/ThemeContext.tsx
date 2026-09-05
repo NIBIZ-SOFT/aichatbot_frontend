@@ -14,6 +14,8 @@ export interface ThemeConfig {
   widget_avatar_url?: string;
   footer_text?: string;
   support_email?: string;
+  support_phone?: string;
+  company_address?: string;
   primary_color: string;
   primary_hover: string;
   dark_surface: string;
@@ -35,7 +37,9 @@ export const DEFAULT_THEME_PRESETS: ThemeConfig[] = [
     favicon_url: "https://iili.io/CsuMe3l.png",
     widget_avatar_url: "",
     footer_text: "© 2026 Jobab Chat Platform • Multi-Tenant PostgreSQL 18 & Enterprise Neural AI",
-    support_email: "support@enterprise.example",
+    support_email: "support@jobab.chat",
+    support_phone: "+880 1837-586105",
+    company_address: "Level 8, Motijheel Commercial Area, Dhaka-1000, Bangladesh",
     primary_color: "#2563EB",
     primary_hover: "#1D4ED8",
     dark_surface: "#0B0F19",
@@ -259,7 +263,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             favicon_url: res.theme.favicon_url || "",
             widget_avatar_url: res.theme.widget_avatar_url || "",
             footer_text: res.theme.footer_text || "© 2026 Jobab Chat Platform • Multi-Tenant PostgreSQL 18 & Enterprise Neural AI",
-            support_email: res.theme.support_email || "support@enterprise.example",
+            support_email: res.theme.support_email || "support@jobab.chat",
+            support_phone: res.theme.support_phone || "+880 1837-586105",
+            company_address: res.theme.company_address || "Level 8, Motijheel Commercial Area, Dhaka-1000, Bangladesh",
             primary_color: res.theme.primary_color || "#2563EB",
             primary_hover: res.theme.primary_hover || "#1D4ED8",
             dark_surface: res.theme.dark_surface || "#0B0F19",

@@ -36,7 +36,9 @@ export default function ThemeManagementTab() {
       favicon_url: themeForm.favicon_url || preset.favicon_url,
       widget_avatar_url: themeForm.widget_avatar_url || preset.widget_avatar_url,
       footer_text: themeForm.footer_text || preset.footer_text,
-      support_email: themeForm.support_email || preset.support_email
+      support_email: themeForm.support_email || preset.support_email,
+      support_phone: themeForm.support_phone || preset.support_phone,
+      company_address: themeForm.company_address || preset.company_address
     };
     setThemeForm(updated);
     // Instant Live preview
@@ -248,6 +250,32 @@ export default function ThemeManagementTab() {
               placeholder="support@yourdomain.com"
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 outline-none focus:border-blue-600 focus:bg-white transition-all"
             />
+          </div>
+
+          {/* Platform Hotline / Phone */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-700">Platform Official Hotline / Phone</label>
+            <input
+              type="text"
+              value={themeForm.support_phone || ""}
+              onChange={(e) => handleInputChange("support_phone", e.target.value)}
+              placeholder="+880 1837-586105"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 outline-none focus:border-blue-600 focus:bg-white transition-all"
+            />
+            <span className="text-[10px] text-slate-400">Displayed in billing tax invoices, receipts, and public contact sections</span>
+          </div>
+
+          {/* Company Headquarter Address */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-700">Registered Office Address</label>
+            <input
+              type="text"
+              value={themeForm.company_address || ""}
+              onChange={(e) => handleInputChange("company_address", e.target.value)}
+              placeholder="Level 8, Motijheel Commercial Area, Dhaka-1000, Bangladesh"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 outline-none focus:border-blue-600 focus:bg-white transition-all"
+            />
+            <span className="text-[10px] text-slate-400">Printed as official Issuer Address on PDF/Tax receipts and client statements</span>
           </div>
 
           {/* Footer Copyright Text */}
